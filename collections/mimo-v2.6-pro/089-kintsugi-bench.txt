@@ -1,0 +1,17 @@
+TITLE: Kintsugi Bench — Mending With Gold
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Kintsugi Bench: Mending With Gold". Model a broken celadon bowl as 16 procedural shards: a half-width profile hw(y)=250(1−0.60·t^1.25) over rim→foot is partitioned into 4 rows × 4 columns, with per-row jittered boundary parameters (±0.34) so crack lines are jagged and each cell becomes a shard polygon (3-sample curved top/bottom, straight jagged sides). Each shard records its four edges with neighbour ids. Shards scatter randomly across the bench; drag the topmost shard under the pointer — when its centroid comes within 30 px of its home it snaps home permanently. A shard's edge is stroked with a gold gradient (glow shadow, then dark hairline outline) exactly when both that shard and its neighbour are placed, so seams are gilded pair by pair. GHOST SEAT toggles the dashed shell outline, RE-SCATTER re-throws loose shards, NEW BOWL rebuilds a fresh randomized crack pattern. When all 16 sit, a pulsing halo and a caption appear; the counter reads n/16. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dim carpenter's bench with a shattered celadon bowl: the repair is the art, and gold only appears where two broken edges agree. The craft is making a procedural crack partition read as a once-whole object.
+
+MAJOR VISUAL TECHNIQUES:
+- Jittered 4×4 boundary-parameter partition of a profile curve
+- Topmost-first polygon picking with pointer drag + proximity snap
+- Conditional gold-seam stroking driven by neighbour placement state
+- Dashed shell ghost as a spatial scaffold
+- Completion halo pulse keyed to a timestamp
+
+INTENDED INTERACTION MODEL:
+Pick up shards, carry each to its faint outline, watch gold seams accrue between placed neighbours; re-scatter or recut the bowl for a fresh puzzle.

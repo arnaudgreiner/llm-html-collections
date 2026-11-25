@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domino Rally</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#f4e9d8;color:#4a3b2a;font-family:ui-monospace,Menlo,Consolas,monospace;
+  display:flex;flex-direction:column;align-items:center;gap:16px;padding:28px 14px;
+  background-image:linear-gradient(rgba(140,110,70,.06) 1px,transparent 1px),linear-gradient(90deg,rgba(140,110,70,.06) 1px,transparent 1px);
+  background-size:26px 26px}
+h1{font-size:15px;letter-spacing:.34em;text-transform:uppercase;color:#8c5a2b}
+#board{background:#fffaf0;border:2px solid #d9c7a8;border-radius:14px;box-shadow:0 20px 45px rgba(120,90,40,.22);overflow:hidden}
+canvas{display:block}
+#panel{display:flex;gap:16px;align-items:center;flex-wrap:wrap;justify-content:center;background:#fffaf0;border:1px solid #d9c7a8;border-radius:10px;padding:11px 16px}
+.row{display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:.14em;color:#93764f}
+input[type=range]{width:110px;accent-color:#c1743a}
+.row span{color:#c1743a;min-width:50px}
+button{background:#4a3b2a;border:none;color:#f7ecd9;font:10px ui-monospace,monospace;letter-spacing:.15em;padding:8px 14px;border-radius:7px;cursor:pointer}
+button:hover{background:#6a543d}
+#status{font-size:11px;letter-spacing:.12em;color:#8c5a2b;min-height:15px;text-align:center}
+#status.bad{color:#c0392b}
+</style>
+</head>
+<body>
+<h1>Domino Rally</h1>
+<div id="board"><canvas id="cv" width="760" height="300"></canvas></div>
+<div id="panel">
+  <div class="row"><label>SPACING</label><input id="gap" type="range" min="26" max="70" value="44"><span id="gapV">44px</span></div>
+  <div class="row"><label>COUNT</label><input id="cnt" type="range" min="8" max="30" value="20"><span id="cntV">20</span></div>
+  <div class="row"><label>SPEED</label><input id="spd" type="range" min="40" max="200" value="100"><span id="spdV">1.0×</span></div>
+  <button id="reset">reset line</button>
+  <button id="all">shove the row</button>
+</div>
+<div id="status">click a domino to shove it · drag one sideways to open a gap</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var W=760,H=300,GROUND=250;
+var gap=44,count=20,speed=1,reachK=1.25;
+var doms=[]; // {x, state:'up'|'fall'|'down', ang, from, drag, moved}
+function build(){
+  doms=[];
+  var startX=50;
+  for(var i=0;i<count;i++){
+    doms.push({x:startX+i*gap,state:"up",ang:0,drag:false,moved:false,fallT:0,from:null});
+  }
+}
+function topplingStart(i,when){
+  doms[i].state="fall";doms[i].ang=0;doms[i].fallT=0;doms[i].start=when;
+}
+var chainStart=null; // index triggering current wave
+function update(dt){
+  for(var i=0;i<doms.length;i++){
+    var d=doms[i];
+    if(d.state==="fall"){
+      d.fallT+=dt*speed*2.6;
+      d.ang=Math.min(Math.PI/2,d.fallT);
+      if(d.ang>=Math.PI/2-0.001)d.state="down";
+      // propagate to next
+      if(d.ang>0.55){
+        var nx=doms[i+1];
+        if(nx&&(nx.state==="up"||nx.state==="down")){
+          if(nx.state==="up"){
+            var reach=GROUND?  // reach based on domino height 62
+              62*reachK:60;
+            var gapd=nx.x-d.x;
+            if(gapd<=reach&&gapd>6){nx.state="fall";nx.ang=0;nx.fallT=0;}
+            else if(gapd>reach&&nx.state==="up"&&!d.reported){
+              setStatus("chain broken at domino "+(i+2)+" — gap of "+Math.round(gapd)+"px exceeds reach "+Math.round(reach)+"px",true);
+              d.reported=true;
+            }
+          }
+        }
+      }
+      // fall onto previous neighbour backwards? ignore (unidirectional)
+    }
+  }
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  // floor
+  ctx.fillStyle="#efe0c6";ctx.fillRect(0,GROUND,W,H-GROUND);
+  ctx.strokeStyle="#d9c7a8";ctx.lineWidth=2;
+  ctx.beginPath();ctx.moveTo(0,GROUND);ctx.lineTo(W,GROUND);ctx.stroke();
+  ctx.strokeStyle="rgba(160,130,90,.25)";ctx.lineWidth=1;
+  for(var g=0;g<W;g+=40){ctx.beginPath();ctx.moveTo(g,GROUND);ctx.lineTo(g,H);ctx.stroke();}
+  for(var i=0;i<doms.length;i++){
+    var d=doms[i];
+    ctx.save();
+    ctx.translate(d.x,GROUND);
+    ctx.rotate(d.state==="up"?0:d.ang);
+    // domino face
+    var w=11,h=62;
+    ctx.fillStyle=d.drag?"#fff":"#fffdf6";
+    ctx.strokeStyle="#8c6b45";ctx.lineWidth=1.6;
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(-w/2,-h,w,h,3);else ctx.rect(-w/2,-h,w,h);
+    ctx.fill();ctx.stroke();
+    // pip divider
+    ctx.beginPath();ctx.moveTo(-w/2+2,-h/2);ctx.lineTo(w/2-2,-h/2);
+    ctx.strokeStyle="#c9b48c";ctx.lineWidth=1;ctx.stroke();
+    // pips
+    ctx.fillStyle="#4a3b2a";
+    var pipRow=(i%3);
+    var py=pipRow===0?-h*0.75:-h*0.25;
+    ctx.beginPath();ctx.arc(0,py,1.7,0,6.283);ctx.fill();
+    if(i%2===0){ctx.beginPath();ctx.arc(0,-h*0.75,1.7,0,6.283);ctx.fill();ctx.beginPath();ctx.arc(0,-h*0.25,1.7,0,6.283);ctx.fill();}
+    ctx.restore();
+    // index label
+    ctx.fillStyle="rgba(140,90,43,.7)";
+    ctx.font="9px ui-monospace,monospace";
+    ctx.textAlign="center";
+    if(d.state==="up")ctx.fillText(String(i+1),d.x,GROUND+14);
+  }
+}
+function setStatus(msg,bad){
+  var el=document.getElementById("status");
+  el.textContent=msg;el.className=bad?"bad":"";
+}
+function topple(i){
+  var d=doms[i];if(d.state!=="up")return;
+  d.state="fall";d.ang=0;d.fallT=0;d.reported=false;
+  setStatus("shoved domino "+(i+1)+" — watch it travel");
+}
+function pickAt(mx){
+  var best=-1,bd=1e9;
+  for(var i=0;i<doms.length;i++){
+    if(doms[i].state!=="up")continue;
+    var dx=Math.abs(mx-doms[i].x);
+    if(dx<bd){bd=dx;best=i;}
+  }
+  return bd<16?best:-1;
+}
+var dragIdx=-1,dragMoved=false;
+cv.addEventListener("pointerdown",function(e){
+  var r=cv.getBoundingClientRect();
+  var mx=(e.clientX-r.left)*(W/r.width);
+  var i=pickAt(mx);
+  if(i<0)return;
+  dragIdx=i;dragMoved=false;doms[i].drag=true;
+  cv.setPointerCapture(e.pointerId);
+});
+cv.addEventListener("pointermove",function(e){
+  if(dragIdx<0)return;
+  var r=cv.getBoundingClientRect();
+  var mx=(e.clientX-r.left)*(W/r.width);
+  var d=doms[dragIdx];
+  var nx=Math.max(30,Math.min(W-30,mx));
+  if(Math.abs(nx-d.x)>2)dragMoved=true;
+  d.x=nx;
+});
+cv.addEventListener("pointerup",function(){
+  if(dragIdx<0)return;
+  var d=doms[dragIdx];d.drag=false;
+  if(!dragMoved)topple(dragIdx);
+  else setStatus("moved domino "+(dragIdx+1)+" — gaps change the reach");
+  dragIdx=-1;
+});
+document.getElementById("gap").addEventListener("input",function(){gap=+this.value;document.getElementById("gapV").textContent=gap+"px";build();setStatus("row rebuilt at "+gap+"px spacing");});
+document.getElementById("cnt").addEventListener("input",function(){count=+this.value;document.getElementById("cntV").textContent=count;build();setStatus(count+" dominos set out");});
+document.getElementById("spd").addEventListener("input",function(){speed=+this.value/100;document.getElementById("spdV").textContent=speed.toFixed(1)+"×";});
+document.getElementById("reset").addEventListener("click",function(){build();setStatus("clean line, all upright");});
+document.getElementById("all").addEventListener("click",function(){
+  if(doms[0].state!=="up"){setStatus("line is down — reset first",true);return;}
+  topple(0);
+});
+var last=0;
+function loop(now){
+  var dt=last?Math.min(0.05,(now-last)/1000):0;last=now;
+  update(dt);draw();
+  requestAnimationFrame(loop);
+}
+build();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

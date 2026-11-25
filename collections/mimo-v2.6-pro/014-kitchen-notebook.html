@@ -1,0 +1,454 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>014 · Kitchen Notebook</title>
+<style>
+:root{--paper:#fbf5e9;--paper2:#f4ead8;--ink:#241c14;--mute:#7a6a57;--red:#b8402d;
+  --sage:#5f7a58;--rule:#d8cbb4}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:
+  radial-gradient(140% 90% at 10% -10%,#fffdf7,#fbf5e9 55%),
+  var(--paper);
+  color:var(--ink);min-height:100vh;font-family:Georgia,"Times New Roman",serif;
+  background-attachment:fixed}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+  background-image:radial-gradient(rgba(120,90,50,.10) 1px,transparent 1px);
+  background-size:4px 4px}
+.wrap{max-width:1300px;margin:0 auto;padding:30px 26px 60px;position:relative;z-index:2}
+header.mast{border-bottom:3px double var(--ink);padding-bottom:16px;
+  display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap;align-items:flex-end}
+.mast .k{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.42em;
+  text-transform:uppercase;color:var(--mute);display:block;margin-bottom:8px}
+.mast h1{margin:0;font-size:clamp(38px,6vw,74px);line-height:.92;font-weight:400;letter-spacing:-.02em}
+.mast h1 i{color:var(--red);font-style:italic}
+.mast .meta{font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--mute);text-align:right;line-height:2.2}
+.mast .meta b{color:var(--red)}
+.layout{display:grid;grid-template-columns:210px minmax(0,1fr) 270px;gap:34px;margin-top:26px}
+nav.index{position:sticky;top:26px;align-self:start;
+  font-family:"Segoe UI",system-ui,sans-serif}
+nav.index h2{font-size:10px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute);
+  margin:0 0 12px;font-weight:700}
+nav.index a{display:block;padding:9px 12px;font-size:12.5px;color:var(--ink);text-decoration:none;
+  border-left:2px solid var(--rule);transition:.2s;letter-spacing:.02em}
+nav.index a:hover{background:var(--paper2);border-color:var(--ink)}
+nav.index a.on{border-color:var(--red);background:var(--paper2);font-weight:700}
+nav.index a small{display:block;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mute);margin-top:2px}
+article{min-width:0}
+section{margin-bottom:52px;scroll-margin-top:24px}
+section>h2{font-size:clamp(26px,3vw,38px);margin:0 0 4px;font-weight:400;letter-spacing:-.01em}
+.rule{height:1px;background:var(--rule);margin:14px 0 20px}
+.datum{display:flex;gap:20px;flex-wrap:wrap;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);margin-bottom:16px}
+.datum b{color:var(--ink)}
+.lede{font-size:19px;line-height:1.75;margin:0 0 18px}
+.lede::first-letter{float:left;font-size:76px;line-height:.78;padding:6px 12px 0 0;
+  color:var(--red);font-weight:700}
+p{font-size:16.5px;line-height:1.85;margin:0 0 16px}
+blockquote{margin:26px 0;padding:6px 0 6px 22px;border-left:3px solid var(--red);
+  font-style:italic;font-size:21px;line-height:1.6;color:#4a3d30}
+blockquote cite{display:block;font-style:normal;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute);margin-top:10px}
+.recipe{border-top:3px double var(--ink);padding-top:20px;margin-top:34px}
+.recipe:first-of-type{border-top:0;padding-top:0}
+.rhead{display:flex;justify-content:space-between;gap:18px;flex-wrap:wrap;align-items:baseline}
+.rhead h3{margin:0;font-size:30px;font-weight:400;letter-spacing:-.01em}
+.rhead h3 i{color:var(--red)}
+.scale{display:inline-flex;align-items:center;gap:8px;font-family:"Segoe UI",system-ui,sans-serif}
+.scale button{width:30px;height:30px;border:1.5px solid var(--ink);background:transparent;
+  color:var(--ink);font-size:16px;line-height:1;cursor:pointer;font-family:inherit;transition:.18s}
+.scale button:hover{background:var(--ink);color:var(--paper)}
+.scale span{min-width:74px;text-align:center;font-size:11px;letter-spacing:.2em;
+  text-transform:uppercase;font-weight:700}
+.rgrid{display:grid;grid-template-columns:minmax(0,240px) minmax(0,1fr);gap:28px;margin-top:18px}
+.rgrid h4{margin:0 0 10px;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--mute);font-weight:700}
+ul.ing{list-style:none;margin:0;padding:0;font-size:15px}
+ul.ing li{padding:7px 0 7px 26px;border-bottom:1px dashed var(--rule);position:relative;
+  cursor:pointer;transition:.18s;line-height:1.5}
+ul.ing li::before{content:"";position:absolute;left:0;top:11px;width:13px;height:13px;
+  border:1.5px solid var(--ink);transition:.18s}
+ul.ing li:hover{background:var(--paper2)}
+ul.ing li.done{color:var(--mute);text-decoration:line-through}
+ul.ing li.done::before{background:var(--red);border-color:var(--red);
+  box-shadow:inset 0 0 0 2px var(--paper)}
+ol.method{margin:0;padding:0;list-style:none;counter-reset:step}
+ol.method li{counter-increment:step;position:relative;padding:0 0 16px 44px;font-size:16px;
+  line-height:1.8}
+ol.method li::before{content:counter(step,decimal-leading-zero);position:absolute;left:0;top:1px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;font-weight:800;letter-spacing:.1em;
+  color:var(--red);border:1.5px solid var(--red);width:30px;height:30px;
+  display:grid;place-items:center;border-radius:50%}
+.tip{background:var(--paper2);border:1px solid var(--rule);padding:14px 16px;margin-top:14px;
+  font-size:14.5px;line-height:1.75;color:#4a3d30}
+.tip b{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--red);display:block;margin-bottom:5px}
+aside.cart{position:sticky;top:26px;align-self:start;font-family:"Segoe UI",system-ui,sans-serif}
+.card{border:1px solid var(--rule);background:#fffdf6;padding:15px 15px 17px;margin-bottom:16px}
+.card h2{margin:0 0 11px;font-size:10px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--mute);font-weight:700}
+#basket{list-style:none;margin:0;padding:0;font-size:13px;line-height:1.6}
+#basket li{display:flex;justify-content:space-between;gap:10px;padding:6px 0;
+  border-bottom:1px dashed var(--rule);cursor:pointer}
+#basket li:last-child{border-bottom:0}
+#basket li span{color:var(--mute);font-size:10px;letter-spacing:.14em;text-transform:uppercase}
+#basket li:hover{color:var(--red)}
+.empty{font-size:13px;line-height:1.7;color:var(--mute);font-family:Georgia,serif;font-style:italic}
+.bar{height:8px;background:var(--paper2);border:1px solid var(--rule);margin-top:10px}
+.bar i{display:block;height:100%;background:var(--red);width:0;transition:width .4s}
+.count{display:flex;justify-content:space-between;font-size:10.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--mute);margin-top:7px}
+.count b{color:var(--ink)}
+.stamp{width:96px;height:96px;border:2.5px solid var(--red);border-radius:50%;color:var(--red);
+  display:grid;place-items:center;text-align:center;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;font-weight:700;line-height:1.6;transform:rotate(-11deg);
+  opacity:.85;margin:6px auto 0}
+footer.foot{border-top:3px double var(--ink);margin-top:14px;padding-top:14px;
+  display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)}
+@media(max-width:1080px){.layout{grid-template-columns:180px minmax(0,1fr)}
+  aside.cart{grid-column:1/-1;position:static}
+  aside.cart .card{max-width:none}}
+@media(max-width:760px){.layout{grid-template-columns:1fr}nav.index{position:static}
+  .rgrid{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;scroll-behavior:auto!important}}
+html{scroll-behavior:smooth}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="mast">
+    <div>
+      <span class="k">Kitchen notebook · folio 014 · winter</span>
+      <h1>Salt &amp; <i>Season</i></h1>
+    </div>
+    <div class="meta">
+      Fourth edition · <b>3 recipes</b><br>
+      Tested in a domestic oven<br>
+      Yield scales from the stepper
+    </div>
+  </header>
+
+  <div class="layout">
+    <nav class="index" id="index">
+      <h2>Contents</h2>
+      <a href="#pantry" class="on">The winter pantry<small>Introduction</small></a>
+      <a href="#r1">Rye &amp; treacle loaf<small>Bread · 3 h 10</small></a>
+      <a href="#r2">Brown butter pears<small>dessert · 45 m</small></a>
+      <a href="#r3">Leek &amp; potato soup<small>soup · 55 m</small></a>
+      <a href="#colophon">Colophon<small>Notes</small></a>
+    </nav>
+
+    <article>
+      <section id="pantry">
+        <h2>The winter pantry</h2>
+        <div class="rule"></div>
+        <p class="lede">A pantry in winter is a slower thing. The fresh herbs are gone, the tomatoes
+          are memory, and what remains is the durable architecture of cooking: flour, salt, fat kept
+          cool in a crock, dried beans that have waited a season without complaint. This notebook is
+          written for that shelf.</p>
+        <p>Every recipe here starts from what keeps. Quantities are given at a stated yield, and the
+          stepper beside each title rewrites them for however many people are actually at the table —
+          no mental arithmetic over the sink. Tick an ingredient as it goes into the bowl and it
+          files itself into the shopping list on the right, so the notebook doubles as the note you
+          take to the shop.</p>
+        <blockquote>Season at the end, taste again, then season once more. Salt is not a finish, it is
+          a volume knob.<cite>Marginal note, page 41</cite></blockquote>
+        <p>Nothing here needs a machine you do not own. The bread wants time rather than technique;
+          the soup wants a low flame and a lid left slightly ajar; the pears want a pan that is
+          genuinely hot before anything goes in.</p>
+      </section>
+
+      <section id="r1" class="recipe">
+        <div class="rhead">
+          <h3>Rye &amp; <i>treacle</i> loaf</h3>
+          <div class="scale" data-yield="1" data-unit="loaf">
+            <button type="button" data-d="-1" aria-label="fewer loaves">−</button>
+            <span>1 loaf</span>
+            <button type="button" data-d="1" aria-label="more loaves">+</button>
+          </div>
+        </div>
+        <div class="datum"><span>Total <b>3 h 10</b></span><span>Rise <b>2 h</b></span>
+          <span>Oven <b>220 °C</b></span><span>Difficulty <b>easy</b></span></div>
+        <div class="rgrid">
+          <div>
+            <h4>Ingredients</h4>
+            <ul class="ing" data-base="1">
+              <li data-q="300" data-u="g">300 g dark rye flour</li>
+              <li data-q="200" data-u="g">200 g strong white flour</li>
+              <li data-q="7" data-u="g">7 g fast-action yeast</li>
+              <li data-q="12" data-u="g">12 g fine salt</li>
+              <li data-q="1" data-u="tbsp">1 tbsp black treacle</li>
+              <li data-q="330" data-u="ml">330 ml warm water</li>
+              <li data-q="20" data-u="g">20 g butter, softened</li>
+              <li data-q="1" data-u="tsp">1 tsp caraway seed</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Method</h4>
+            <ol class="method">
+              <li>Stir the flours, yeast, salt and caraway together in a wide bowl while the kettle
+                cools to warm.</li>
+              <li>Work in the treacle and butter, then the water, until you have a stiff, shaggy dough
+                — wetter than you think, drier than you fear.</li>
+              <li>Cover and leave two hours. Fold the dough over itself twice during that time, at
+                whatever intervals suit you.</li>
+              <li>Shape into a long tin loaf, prove forty minutes, then bake 220 °C for twenty minutes
+                and 200 °C for twenty more.</li>
+              <li>Cool completely on a rack. Rye finishes cooking as it cools; cutting it warm ruins
+                the crumb.</li>
+            </ol>
+            <div class="tip"><b>Margin note</b>If the loaf domes and cracks along one side, your oven
+              is hotter at the top than the dial admits — drop a shelf and rotate at the halfway mark.
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="r2" class="recipe">
+        <div class="rhead">
+          <h3>Brown butter <i>pears</i></h3>
+          <div class="scale" data-yield="4" data-unit="servings">
+            <button type="button" data-d="-1" aria-label="fewer servings">−</button>
+            <span>4 servings</span>
+            <button type="button" data-d="1" aria-label="more servings">+</button>
+          </div>
+        </div>
+        <div class="datum"><span>Total <b>45 m</b></span><span>Hands <b>10 m</b></span>
+          <span>Heat <b>medium</b></span><span>Difficulty <b>easy</b></span></div>
+        <div class="rgrid">
+          <div>
+            <h4>Ingredients</h4>
+            <ul class="ing" data-base="4">
+              <li data-q="6" data-u="">6 firm pears</li>
+              <li data-q="60" data-u="g">60 g butter</li>
+              <li data-q="60" data-u="g">60 g demerara sugar</li>
+              <li data-q="1" data-u="">1 lemon, zested</li>
+              <li data-q="0.5" data-u="tsp">½ tsp ground cinnamon</li>
+              <li data-q="150" data-u="ml">150 ml dry cider</li>
+              <li data-q="1" data-u="pinch">1 pinch sea salt</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Method</h4>
+            <ol class="method">
+              <li>Peel and quarter the pears. Melt the butter in a wide pan until it foams and then
+                smells of hazelnuts.</li>
+              <li>Scatter in the sugar, wait for it to darken one shade, then lay the pears in cut side
+                down and leave them alone for four minutes.</li>
+              <li>Add cider, cinnamon, lemon zest and salt. Shake the pan rather than stirring, and
+                reduce until the sauce coats a spoon.</li>
+              <li>Serve warm, with cold cream or nothing at all.</li>
+            </ol>
+            <div class="tip"><b>Margin note</b>Under-ripe pears hold their shape and take the sauce
+              better; a soft pear collapses into jam within a minute of the cider going in.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="r3" class="recipe">
+        <div class="rhead">
+          <h3>Leek &amp; potato <i>soup</i></h3>
+          <div class="scale" data-yield="6" data-unit="bowls">
+            <button type="button" data-d="-1" aria-label="fewer bowls">−</button>
+            <span>6 bowls</span>
+            <button type="button" data-d="1" aria-label="more bowls">+</button>
+          </div>
+        </div>
+        <div class="datum"><span>Total <b>55 m</b></span><span>Simmer <b>30 m</b></span>
+          <span>Heat <b>low</b></span><span>Difficulty <b>easy</b></span></div>
+        <div class="rgrid">
+          <div>
+            <h4>Ingredients</h4>
+            <ul class="ing" data-base="6">
+              <li data-q="5" data-u="">5 leeks, washed well</li>
+              <li data-q="700" data-u="g">700 g waxy potatoes</li>
+              <li data-q="40" data-u="g">40 g butter</li>
+              <li data-q="1.2" data-u="l">1.2 l vegetable stock</li>
+              <li data-q="2" data-u="sprigs">2 sprigs thyme</li>
+              <li data-q="1" data-u="">1 bay leaf</li>
+              <li data-q="4" data-u="tbsp">4 tbsp crème fraîche</li>
+            </ul>
+          </div>
+          <div>
+            <h4>Method</h4>
+            <ol class="method">
+              <li>Sweat the sliced leeks in butter with the lid on, over low heat, until collapsed and
+                sweet — eight minutes, no colour.</li>
+              <li>Add potatoes, stock, thyme and bay. Bring to a bare tremble and hold it there for
+                thirty minutes with the lid ajar.</li>
+              <li>Blend until pale, then loosen with hot stock. It should fall from the spoon in a
+                ribbon, not a lump.</li>
+              <li>Finish each bowl with crème fraîche and a grind of pepper.</li>
+            </ol>
+            <div class="tip"><b>Margin note</b>Sand in leeks ruins a soup invisibly. Split the leaves
+              lengthways and rinse under a running tap before slicing.</div>
+          </div>
+        </div>
+      </section>
+
+      <section id="colophon">
+        <h2>Colophon</h2>
+        <div class="rule"></div>
+        <p>Set in Georgia on a cream ground, printed one folio at a time. Quantities round to sensible
+          amounts when you scale them; where a fraction would be absurd — half a bay leaf — the recipe
+          says so instead.</p>
+        <div class="stamp">Winter<br>folio<br>014</div>
+      </section>
+    </article>
+
+    <aside class="cart">
+      <div class="card">
+        <h2>Shopping list</h2>
+        <ul id="basket"><li class="empty">Nothing ticked yet. Tick an ingredient and it files itself
+          here.</li></ul>
+      </div>
+      <div class="card">
+        <h2>Covered so far</h2>
+        <div class="bar"><i id="bar"></i></div>
+        <div class="count"><span>Ingredients</span><b><span id="doneN">0</span> / <span id="allN">0</span></b></div>
+      </div>
+      <div class="card">
+        <h2>Standing advice</h2>
+        <p style="margin:0;font-family:Georgia,serif;font-size:14px;line-height:1.75;color:#4a3d30">
+          Read the recipe once all the way through. Warm the bowls. Keep the salt within reach and the
+          lid mostly off.</p>
+      </div>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Kitchen notebook · interactive index &amp; scaled yields</span>
+    <span>014 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var FR=[[1,"1"],[.25,"¼"],[.5,"½"],[.75,"¾"],[.333,"⅓"],[.667,"⅔"],[.2,"⅕"],[.4,"⅖"],[.6,"⅗"],[.8,"⅘"]];
+  function fmt(v){
+    if(v>=100) return String(Math.round(v/5)*5);
+    if(v>=10) return String(Math.round(v));
+    var whole=Math.floor(v+1e-6), rest=v-whole;
+    for(var i=0;i<FR.length;i++){
+      if(Math.abs(rest-FR[i][0])<0.02) return (whole?whole+" ":"")+FR[i][1];
+    }
+    return (Math.round(v*100)/100).toString();
+  }
+
+  var sections=[].slice.call(document.querySelectorAll("article section"));
+  var links=[].slice.call(document.querySelectorAll("#index a"));
+
+  /* servings scaling */
+  function rescale(recipe){
+    var head=recipe.querySelector(".scale");
+    var y=+head.dataset.yield;
+    var unit=head.dataset.unit;
+    head.querySelector("span").textContent=y+" "+unit+(y===1&&unit==="servings"?"":"");
+    recipe.querySelectorAll("ul.ing li").forEach(function(li){
+      var base=+li.closest("ul.ing").dataset.base;
+      var f=y/base;
+      var q=+li.dataset.q* f, u=li.dataset.u;
+      li.dataset.cur=(Math.round(q*100)/100);
+      paint(li);
+    });
+  }
+  function paint(li){
+    var u=li.dataset.u;
+    li.textContent=fmt(+li.dataset.cur)+(u?" "+u:"")+" "+li.dataset.name;
+  }
+  /* capture original names once */
+  document.querySelectorAll("ul.ing li").forEach(function(li){
+    var txt=li.textContent.trim();
+    var m=txt.match(/^[\d¼½¾⅓⅔⅕⅖⅝.\s]+\s*(.*)$/);
+    li.dataset.name=m?m[1]:txt;
+    li.dataset.cur=li.dataset.q;
+  });
+
+  document.querySelectorAll(".scale").forEach(function(head){
+    head.addEventListener("click",function(e){
+      var b=e.target.closest("button"); if(!b) return;
+      var recipe=head.closest(".recipe");
+      var y=+head.dataset.yield + (+b.dataset.d);
+      var unit=head.dataset.unit;
+      var max=unit==="loaf"?6:(unit==="servings"?16:24);
+      var min=unit==="loaf"?1:(unit==="servings"?1:2);
+      if(y<min||y>max) return;
+      head.dataset.yield=y;
+      rescale(recipe);
+    });
+  });
+
+  /* basket */
+  var basket=document.getElementById("basket"),
+      bar=document.getElementById("bar"),
+      doneN=document.getElementById("doneN"),
+      allN=document.getElementById("allN");
+  var picked=[]; /* {li, recipeName} */
+  function renderBasket(){
+    var all=document.querySelectorAll("ul.ing li").length;
+    var done=document.querySelectorAll("ul.ing li.done").length;
+    allN.textContent=all; doneN.textContent=done;
+    bar.style.width=(all?done/all*100:0)+"%";
+    if(!picked.length){
+      basket.innerHTML='<li class="empty">Nothing ticked yet. Tick an ingredient and it files itself here.</li>';
+      return;
+    }
+    basket.innerHTML="";
+    picked.forEach(function(p){
+      var li=document.createElement("li");
+      li.innerHTML="<b>"+p.text+"</b><span>"+p.recipe+"</span>";
+      li.addEventListener("click",function(){ toggle(p.li); });
+      basket.appendChild(li);
+    });
+  }
+  function toggle(li){
+    var on=!li.classList.contains("done");
+    li.classList.toggle("done",on);
+    if(on){
+      var r=li.closest(".recipe");
+      picked.push({li:li, recipe:r?r.querySelector("h3").textContent:"Pantry",
+        text:li.textContent});
+    }else{
+      picked=picked.filter(function(p){ return p.li!==li; });
+    }
+    renderBasket();
+  }
+  document.querySelectorAll("ul.ing").forEach(function(ul){
+    ul.addEventListener("click",function(e){
+      var li=e.target.closest("li"); if(!li) return;
+      toggle(li);
+    });
+  });
+  allN.textContent=document.querySelectorAll("ul.ing li").length;
+  renderBasket();
+
+  /* index highlight */
+  if("IntersectionObserver" in window){
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(en){
+        if(!en.isIntersecting) return;
+        links.forEach(function(a){ a.classList.toggle("on", a.getAttribute("href")==="#"+en.target.id); });
+      });
+    },{rootMargin:"-15% 0px -70% 0px"});
+    sections.forEach(function(s){ io.observe(s); });
+  }
+  links.forEach(function(a){
+    a.addEventListener("click",function(e){
+      var t=document.querySelector(a.getAttribute("href"));
+      if(!t) return;
+      e.preventDefault();
+      t.scrollIntoView({behavior:reduce?"auto":"smooth",block:"start"});
+    });
+  });
+})();
+</script>
+</body>
+</html>

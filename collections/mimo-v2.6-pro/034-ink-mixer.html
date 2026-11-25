@@ -1,0 +1,286 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>034 · Ink Mixer</title>
+<style>
+:root{--bg:#f3efe6;--card:#ffffff;--ink:#211f1a;--mute:#8b857a;--line:#ddd6c8;
+  --acc:#c8452f}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(1200px 600px at 80% -10%,#fffdf8,transparent),
+  var(--bg);
+  color:var(--ink);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  min-height:100vh;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:24px 30px 14px}
+.kicker{font-size:9.5px;letter-spacing:.42em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:28px;font-weight:300;letter-spacing:-.02em}
+h1 b{font-weight:700;color:var(--acc)}
+.tag{margin-left:auto;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:var(--mute)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1.15fr) minmax(0,1fr);gap:26px;
+  padding:16px 30px 0;align-items:start}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+
+/* --- halftone overprint square --- */
+.plate{position:relative;border-radius:16px;overflow:hidden;aspect-ratio:1/1;
+  background:#fff;box-shadow:0 30px 60px rgba(60,45,20,.16),0 2px 0 #e7e0d2 inset}
+.layer{position:absolute;inset:0;mix-blend-mode:multiply;transition:background-position .18s}
+#lC{background:radial-gradient(circle at 6px 6px, rgba(0,170,230,.95) 0 3.4px, transparent 3.6px) 0 0/14px 14px}
+#lM{background:radial-gradient(circle at 6px 6px, rgba(230,0,140,.95) 0 3.4px, transparent 3.6px) 0 0/14px 14px}
+#lY{background:radial-gradient(circle at 6px 6px, rgba(255,220,0,.95) 0 3.4px, transparent 3.6px) 0 0/14px 14px}
+#lK{background:radial-gradient(circle at 6px 6px, rgba(20,18,16,.95) 0 3.4px, transparent 3.6px) 0 0/14px 14px}
+.plate .solid{position:absolute;inset:0;mix-blend-mode:normal}
+.plate .wash{position:absolute;inset:0;background:#fff}
+.plate .tagline{position:absolute;left:16px;bottom:14px;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:rgba(20,18,16,.55);mix-blend-mode:multiply}
+.plate .hexbig{position:absolute;right:16px;top:14px;font-size:12px;letter-spacing:.18em;
+  font-weight:700;mix-blend-mode:multiply}
+
+/* --- right rig --- */
+.card{background:var(--card);border:1px solid var(--line);border-radius:14px;padding:16px 17px;
+  margin-bottom:16px;box-shadow:0 10px 24px rgba(60,45,20,.06)}
+.card h2{margin:0 0 12px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--mute);font-weight:600}
+.ink{display:flex;align-items:center;gap:11px;margin-bottom:11px}
+.ink .dot{width:17px;height:17px;border-radius:50%;border:1px solid rgba(0,0,0,.25);flex:none}
+.ink .nm{width:78px;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.ink input[type=range]{flex:1;accent-color:var(--ink)}
+.ink b{width:44px;text-align:right;font-size:13px;font-variant-numeric:tabular-nums}
+.swatchRow{display:flex;align-items:center;gap:12px;margin-top:4px}
+.chipcol{width:58px;height:58px;border-radius:10px;border:1px solid rgba(0,0,0,.16);
+  box-shadow:inset 0 -18px 22px rgba(0,0,0,.14)}
+.hex{font-family:Consolas,"Courier New",monospace;font-size:19px;letter-spacing:.06em}
+.rgb{font-size:11.5px;color:var(--mute);letter-spacing:.1em;margin-top:2px}
+.cov{margin-left:auto;text-align:right}
+.cov span{display:block;font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.cov b{font-size:17px;font-variant-numeric:tabular-nums}
+
+.presets{display:grid;grid-template-columns:repeat(auto-fill,minmax(74px,1fr));gap:9px}
+.preset{border:1px solid var(--line);border-radius:9px;overflow:hidden;cursor:pointer;
+  background:#fff;padding:0;font:inherit;transition:.16s;text-align:left}
+.preset:hover{transform:translateY(-3px);box-shadow:0 10px 20px rgba(60,45,20,.14)}
+.preset i{display:block;height:34px}
+.preset span{display:block;font-size:8.6px;letter-spacing:.1em;text-transform:uppercase;
+  padding:6px 6px 7px;color:var(--ink)}
+.preset.on{outline:2px solid var(--acc);outline-offset:1px}
+
+.btns{display:flex;gap:9px}
+.btn{flex:1;font:inherit;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:10px 6px;border-radius:8px;border:1px solid var(--line);background:#fff;color:var(--ink);
+  cursor:pointer;transition:.16s}
+.btn:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-2px)}
+.btn.on{background:var(--acc);border-color:var(--acc);color:#fff}
+.log{font-family:Consolas,"Courier New",monospace;font-size:11.5px;line-height:1.8;color:#4a453c;
+  max-height:118px;overflow:auto;margin:0;padding:0;list-style:none}
+.log li{display:flex;justify-content:space-between;gap:8px;border-bottom:1px dotted var(--line)}
+.log li b{font-weight:400;color:var(--ink)}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:22px 30px 0;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">Process colour bench</span>
+  <h1>Ink <b>Mixer</b></h1>
+  <span class="tag" id="modeTag">halftone preview · 14 px cell</span>
+</header>
+
+<div class="stage">
+  <div class="plate" id="plate" aria-label="halftone overprint preview">
+    <div class="wash" id="wash"></div>
+    <div class="layer" id="lC"></div>
+    <div class="layer" id="lM"></div>
+    <div class="layer" id="lY"></div>
+    <div class="layer" id="lK"></div>
+    <div class="hexbig" id="hexBig">#000000</div>
+    <div class="tagline">multiply · c m y k in order</div>
+  </div>
+
+  <div>
+    <div class="card">
+      <h2>Ink dials · subtractive</h2>
+      <div class="ink"><span class="dot" style="background:#00aae6"></span>
+        <span class="nm">cyan</span><input id="cIn" type="range" min="0" max="100" value="0"><b id="cOut">0</b></div>
+      <div class="ink"><span class="dot" style="background:#e6008c"></span>
+        <span class="nm">magenta</span><input id="mIn" type="range" min="0" max="100" value="0"><b id="mOut">0</b></div>
+      <div class="ink"><span class="dot" style="background:#ffdc00"></span>
+        <span class="nm">yellow</span><input id="yIn" type="range" min="0" max="100" value="0"><b id="yOut">0</b></div>
+      <div class="ink"><span class="dot" style="background:#141210"></span>
+        <span class="nm">key</span><input id="kIn" type="range" min="0" max="100" value="8"><b id="kOut">8</b></div>
+
+      <div class="swatchRow">
+        <div class="chipcol" id="chipcol"></div>
+        <div>
+          <div class="hex" id="hexTxt">#000000</div>
+          <div class="rgb" id="rgbTxt">rgb 0 0 0</div>
+        </div>
+        <div class="cov"><span>total ink</span><b id="covTxt">8%</b></div>
+      </div>
+      <div class="btns" style="margin-top:13px">
+        <button class="btn" id="copy" type="button">copy hex</button>
+        <button class="btn" id="rand" type="button">random mix</button>
+        <button class="btn" id="clear" type="button">clear</button>
+      </div>
+    </div>
+
+    <div class="card">
+      <h2>Spot library · click to load</h2>
+      <div class="presets" id="presets"></div>
+    </div>
+
+    <div class="card">
+      <h2>Mix log</h2>
+      <ul class="log" id="log"><li><span>—</span><b>no mixes yet</b></li></ul>
+    </div>
+  </div>
+</div>
+
+<footer class="foot"><span>radial-gradient dot screens, multiply blended</span><span>034 / 100</span></footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var ids=["c","m","y","k"], ink={c:0,m:0,y:0,k:8};
+
+  var PRESETS=[
+    ["Harbour Blue",0,82,4,38],["Signal Red",0,94,90,4],["Field Green",86,8,84,16],
+    ["Ochre",8,32,86,7],["Plum Night",58,76,18,42],["Sea Foam",46,0,34,0],
+    ["Ember",0,74,88,20],["Slate Ink",66,52,44,60],["Citrus",2,14,96,0],
+    ["Bone Paper",3,5,14,0],["Petrol",88,58,38,46],["Rosewater",4,44,16,0]
+  ];
+
+  function toRGB(v){ return v.map(function(x){return Math.round(Math.max(0,Math.min(255,x)));}); }
+
+  /* subtractive mix with mild channel cross-talk */
+  function mix(ink){
+    var c=ink.c/100, m=ink.m/100, y=ink.y/100, k=ink.k/100;
+    var r=1-(c*0.94+m*0.12+y*0.04);
+    var g=1-(c*0.06+m*0.76+y*0.16);
+    var b=1-(c*0.10+m*0.20+y*0.82);
+    var s=(1-k);
+    r*=s; g*=s; b*=s;
+    /* ink saturation boost so mixes stay lively */
+    var mx=Math.max(r,g,b);
+    var boost=1+0.16*(1-mx);
+    return toRGB([r*255*boost, g*255*boost, b*255*boost]);
+  }
+  function hex(rgb){
+    return "#"+rgb.map(function(v){return ("0"+v.toString(16)).slice(-2);}).join("").toUpperCase();
+  }
+
+  var plate=document.getElementById("plate");
+  var wash=document.getElementById("wash");
+
+  function apply(){
+    var rgb=mix(ink), h=hex(rgb);
+    wash.style.background="rgb("+rgb.join(",")+")";
+    ["C","M","Y","K"].forEach(function(L){
+      var el=document.getElementById("l"+L);
+      var pct=ink[L.toLowerCase()]/100;
+      el.style.display=pct<=0.001?"none":"block";
+      /* dot screen: opacity scales coverage, offset rotates the screen angle */
+      el.style.opacity=pct.toFixed(3);
+      el.style.backgroundPosition=(pct*17).toFixed(1)+"px "+(pct*11).toFixed(1)+"px";
+    });
+    document.getElementById("hexTxt").textContent=h;
+    document.getElementById("hexBig").textContent=h;
+    document.getElementById("rgbTxt").textContent="rgb "+rgb.join(" · ");
+    document.getElementById("chipcol").style.background=h;
+    var total=ink.c+ink.m+ink.y+ink.k;
+    document.getElementById("covTxt").textContent=Math.round(total/4)+"%";
+    document.getElementById("modeTag").textContent=
+      total>300?"rich black territory · over 300% ink":("halftone preview · "+total+"% total ink");
+    ids.forEach(function(id){ document.getElementById(id+"Out").textContent=ink[id]; });
+    try{ navigator.clipboard; }catch(e){ clipboard=h; }
+  }
+  var clipboard="#000000";
+
+  ids.forEach(function(id){
+    document.getElementById(id+"In").addEventListener("input",function(){
+      ink[id]=parseInt(this.value,10);
+      [].forEach.call(document.querySelectorAll(".preset"),function(p){p.classList.remove("on");});
+      apply();
+    });
+  });
+
+  /* presets */
+  (function(){
+    var host=document.getElementById("presets");
+    PRESETS.forEach(function(p){
+      var b=document.createElement("button");
+      b.type="button"; b.className="preset";
+      var temp=mix({c:p[1],m:p[2],y:p[3],k:p[4]});
+      b.innerHTML='<i style="background:'+hex(temp)+'"></i><span>'+p[0]+'</span>';
+      b.addEventListener("click",function(){
+        ink.c=p[1]; ink.m=p[2]; ink.y=p[3]; ink.k=p[4];
+        ids.forEach(function(id){
+          document.getElementById(id+"In").value=ink[id];
+        });
+        [].forEach.call(host.querySelectorAll(".preset"),function(x){x.classList.remove("on");});
+        b.classList.add("on");
+        apply(); log(p[0],hex(temp));
+      });
+      host.appendChild(b);
+    });
+  })();
+
+  function log(name,h){
+    var el=document.getElementById("log");
+    if(el.dataset.init!=="1"){ el.innerHTML=""; el.dataset.init="1"; }
+    var li=document.createElement("li");
+    var t=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    li.innerHTML='<span>'+p(t.getHours())+":"+p(t.getMinutes())+":"+p(t.getSeconds())+'</span>'+
+      '<b>'+name+"  "+h+'</b>';
+    el.insertBefore(li,el.firstChild);
+    while(el.children.length>7) el.removeChild(el.lastChild);
+  }
+
+  document.getElementById("rand").addEventListener("click",function(){
+    ids.forEach(function(id){
+      ink[id]=Math.floor(Math.random()*101);
+      document.getElementById(id+"In").value=ink[id];
+    });
+    [].forEach.call(document.querySelectorAll(".preset"),function(p){p.classList.remove("on");});
+    apply(); log("random mix",hex(mix(ink)));
+  });
+
+  document.getElementById("clear").addEventListener("click",function(){
+    ids.forEach(function(id){ ink[id]=0; document.getElementById(id+"In").value=0; });
+    [].forEach.call(document.querySelectorAll(".preset"),function(p){p.classList.remove("on");});
+    apply(); log("cleared","#FFFFFF");
+  });
+
+  document.getElementById("copy").addEventListener("click",function(){
+    var btn=this, h=hex(mix(ink));
+    var done=function(ok){
+      btn.textContent=ok?"copied "+h:"select: "+h;
+      btn.classList.add("on");
+      setTimeout(function(){ btn.textContent="copy hex"; btn.classList.remove("on"); },1500);
+    };
+    if(navigator.clipboard && navigator.clipboard.writeText){
+      navigator.clipboard.writeText(h).then(function(){done(true);},function(){done(false);});
+    }else{ done(false); }
+  });
+
+  /* screen angles: nudging background-position makes the rosette breathe on move */
+  if(!reduce){
+    plate.addEventListener("pointermove",function(e){
+      var r=plate.getBoundingClientRect();
+      var dx=((e.clientX-r.left)/r.width-0.5)*10;
+      var dy=((e.clientY-r.top)/r.height-0.5)*10;
+      document.getElementById("lM").style.backgroundPosition=(dx+7)+"px "+(-dy+4)+"px";
+      document.getElementById("lY").style.backgroundPosition=(-dx+2)+"px "+(dy+9)+"px";
+    });
+    plate.addEventListener("pointerleave",apply);
+  }
+
+  apply();
+})();
+</script>
+</body>
+</html>

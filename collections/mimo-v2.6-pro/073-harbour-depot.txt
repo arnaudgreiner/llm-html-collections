@@ -1,0 +1,17 @@
+TITLE: Harbour Depot — Sokoban Berths
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Harbour Depot: Sokoban Berths". Build a five-level Sokoban puzzle played on a 720×520 canvas rendered as a timber quay: alternating plank floor tiles, dark warehouse walls with lit top edges, mooring-ring goal circles, gradient wooden crates with diagonal cross-bracing (green-tinted with a glow ring when berthed), and a teal shunter with radial shading, soft drop shadows under every object. Movement interpolates smoothly toward the logical grid every frame (exponential ease), pushes slide the crate in lockstep, and pushing into a wall is rejected. Full state undo stack (300 deep), reset, per-level par readout, move and push counters, on-screen d-pad plus arrow/WASD keyboard control (Z undo, R reset), five hand-authored levels (open slip, twin berth, divide, three slips, the shed), a hint button per level, and a berth-cleared overlay with next-level navigation that tracks cleared berths. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A night shift at a small freight quay: warm plank tones, amber cargo, sea-teal accents and engraved cargo-manifest labels. The craft is in the separation of logical grid state from rendered pixel state — every object glides while the rules stay discrete, which makes hard sokoban moves readable instead of jumpy.
+
+MAJOR VISUAL TECHNIQUES:
+- Grid logic vs pixel lerp: positions eased with 1−0.0008^dt so pushes and walks glide
+- Two-pass tile pass (parity planks, wall highlight bars) then shadowed sprites
+- Gradient crates that re-tint green when the tile is a goal, with confirmation ring
+- Undo as full state snapshots including counters, restoring animation targets too
+- Radial-gradient shunter with drop shadow; canvas rounded-rect helper for crates
+
+INTENDED INTERACTION MODEL:
+Steer with arrows/WASD or the d-pad, push crates onto mooring rings, rewind mistakes with UNDO, restart a berth, ask for a hint, jump between the five berths, and clear a level to raise the completion overlay with your move/push totals against par.

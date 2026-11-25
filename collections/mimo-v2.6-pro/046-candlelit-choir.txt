@@ -1,0 +1,17 @@
+TITLE: Candlelit Choir — Six Voices in the Stalls
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Candlelit Choir", with no external resources. Crypt palette: near-black brown background with an amber pool at the top, a hall panel with a 6px wood-tone frame and heavy inset shadow; flame-orange and gold accents; header with kicker, thin/accent title and lux/chord counters. Stage: a wide 900×430 SVG banner — a double stone arch (two nested quadratic paths), a glowing back-wall ellipse at 7% opacity, a wood floor, and six hooded singers generated into a #singers group, each with a robe path on a shared linear gradient, a hood, an ellipse face filled by its own per-singer radialGradient, dot eyes, an animated mouth ellipse, an open book and a candle with a teardrop flame plus a halo ellipse from a shared radial gradient; small plaques top-left and top-right. Below, a three-column console: voice mix (six labelled sliders), candles (brightness and volume rows with light-all/snuff-all buttons and a monospace log line) and a chant book (three verse buttons with mode labels plus a tempo slider).
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like standing at the back of a cold chapel where the only light is the candles the singers are holding, and every face is lit from underneath.
+
+MAJOR VISUAL TECHNIQUES:
+- Per-singer inline radialGradient in a defs block, with stop colours rewritten per frame to fake candle-lit faces
+- Flame drawn as a teardrop path scaled from its tip with layered sine noise for flicker
+- WebAudio: six oscillators (sawtooth basses, triangle upper voices) with per-voice LFO vibrato, gliding between chord frequencies with setTargetAtTime
+- Chord progression on a bar-length timeout derived from the tempo slider, restarting when tempo changes
+- Sway as a rotate about the stall origin on the same transform that carries position and scale
+
+INTENDED INTERACTION MODEL:
+The choir sings on load (browser audio unlocks on first pointer interaction); each voice-mix slider lowers that singer's gain and stops their mouth moving; brightness scales the face gradients, flame scale and halo opacity, with SNUFF ALL taking the hall to near-black while the voices hold; light-all restores it. Verse buttons switch chord progressions and restart the chant, tempo slider changes the bar length, volume drives the master gain. The readouts show live lux and chord name. Reduced motion runs a single flicker pass with static half-open mouths and no rAF loop, keeping every control live.

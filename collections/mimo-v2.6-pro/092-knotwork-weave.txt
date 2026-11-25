@@ -1,0 +1,17 @@
+TITLE: Knotwork — Over, Under, Over
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Knotwork: Over, Under, Over". Render alternating Celtic-style interlace: family A lines y=x+b (b stepped p√2 across [−W,H]) and family B lines y=−x+a, both wobbled perpendicular by A·sin(t/(1.6p)·2π+phase). Crossings are nominal intersections ((a−b)/2,(a+b)/2); over/under is a checkerboard parity of (i+j+flipSeed), overridable per crossing by clicking (overrides keyed by rounded center). Draw order: all B ribbons, all A ribbons, then a re-stroked local patch of B (points within 0.78p of center) wherever B must pass over — seamless because the patch is the same color as its own ribbon. Clipped to an emblem path cycling PANEL / ROUND / LOZENGE / GUILD, outlined in dark plus gold hairline. Controls: DENSER (spacing 48–90), WIDER (16–38), FLIP WEAVE (global parity, clears overrides), SHAPE, PALETTE (4 duotones); hover reports the crossing's current over-strand. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A woven emblem on dark vellum where every crossing obeys the alternating rule until you deliberately break one — the page is both the ornament and the rule-checker.
+
+MAJOR VISUAL TECHNIQUES:
+- Two-family diagonal lattice with sinusoidal perpendicular wobble
+- Parity-driven alternating over/under with local patch occlusion
+- Per-crossing click overrides on a keyed hash
+- Emblem clipping paths with double-outline edge
+- Duotone palette swaps on a live rebuild
+
+INTENDED INTERACTION MODEL:
+Hover to read a crossing's state, click to flip it, cycle density/width/shape/palette to re-cut the knot; FLIP WEAVE resets the global alternation.

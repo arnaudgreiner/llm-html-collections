@@ -1,0 +1,18 @@
+TITLE: Lunar Phase Wheel
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Lunar Phase Wheel". On a midnight-navy radial gradient, show a 330px SVG moon with a soft halo: a dark disc whose lit region is a single SVG path built from an outer semicircle plus a terminator ellipse whose rx = R·|cos(2πp)| (sweep flags flipped for crescent vs gibbous, mirrored for the waning half), with faint mare craters clipped to that lit path via clipPath, a 30-tick outer ring marking the synodic month, and gold-tinted highlights. Beside it, a readout card names the phase, illumination percentage, moon age, days to the next full moon and elongation; sliders drive DAY (0–29.5 d) and a GOLDEN tint control; buttons pause/play the month's motion and jump straight to new moon. Below, a 30-cell strip of tiny generated moon glyphs — each its own SVG built by the same path function — acts as a clickable calendar that jumps the main wheel to that day. The month auto-advances slowly from the animation loop until paused. All in one file, no external assets.
+
+INTENDED DESIGN DESCRIPTION:
+The page is an almanac plate printed in gold on night sky: one luminous moon, engraved tick ring, quiet serif titling and monospace ephemeris numbers. The terminator path is the craft here — the crescent's concave arc and the gibbous's bulge are computed, not faked, so the moon slides through its whole cycle smoothly as the slider or clock moves. The strip of thirty miniature phases underneath makes the same geometry legible at a glance.
+
+MAJOR VISUAL TECHNIQUES:
+- SVG terminator path: semicircle arc + elliptical arc with phase-dependent rx and sweep
+- clipPath-limited crater group so mare only appear on the lit side
+- Shared path builder reused to render 30 miniature phase glyphs for the calendar strip
+- Synodic math: illumination (1−cos 2πp)/2, age, elongation, days-to-full
+- Auto-advancing slider driven from rAF with play/pause toggle
+- Radial night-sky gradient, outer glow filter, engraved 30-tick month ring
+
+INTENDED INTERACTION MODEL:
+Drag DAY to sweep the moon through the whole 29.53-day cycle — crescent, quarter, gibbous, full and back — and watch name, illumination, age and elongation update together; drag GOLDEN to warm the lit surface. Click any glyph in the 30-day strip to jump the wheel to that day (the selection outlines), press "jump to new moon" to reset, and pause/play to stop or restart the drifting month.

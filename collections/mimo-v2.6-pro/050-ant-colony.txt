@@ -1,0 +1,17 @@
+TITLE: Ant Colony — Pheromone Trails on Living Soil
+
+FULL PROMPT:
+Build one self-contained HTML page, "Ant Colony", with no external resources, no canvas libraries and no fonts. Palette: cool damp soil greens-black with amber food, mint home-pheromone haze, sage worker ants; header with kicker, light/accent title, and tabular counters for carried home, live ants and tick. Stage: left a 900×560 canvas #sim (CSS-scaled, crosshair cursor) with a corner .readout block (granary, food left, laden, efficiency) sitting absolutely over it; right a rail with a colony card (state table, three range sliders for ants 20–400, evaporation, sensing distance, and drop-food/reset/trails/pause buttons) plus a field-notes card with a live monospace log.
+
+INTENDED DESIGN DESCRIPTION:
+It should look like watching a real ant nest from above: pheromone routes brightening where they pay off and evaporating where they do not, with the colony visibly finding and exhausting food.
+
+MAJOR VISUAL TECHNIQUES:
+- Dual Float32Array pheromone grids (home and food) over a 6px cell resolution, drawn as translucent filled rects
+- Three-point steering sensors sampling the complementary grid at ±0.55 rad plus a centre bonus
+- Decay gradient: home deposit fades with steps since the nest so trails point the right way
+- Evaporation pass every other frame with an under-threshold zeroing to keep the grid sparse
+- Objects drawn per frame: caches with amount-scaled radius and a dashed spent marker, nest ring, rotated triangle ants carrying a pale grain
+
+INTENDED INTERACTION MODEL:
+Click anywhere on the soil to drop a 650-unit food cache (or press drop food for a random one), slide ant count to spawn or retire workers live, tune evaporation and sensing distance to change how fast routes form, toggle trail rendering, pause the run, and reset to a fresh colony. Delivered loads, caches left, laden workers, efficiency and a rolling field-notes log update every frame; reduced motion still runs the sim but draws once immediately.

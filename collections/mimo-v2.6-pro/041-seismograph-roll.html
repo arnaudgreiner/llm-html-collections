@@ -1,0 +1,320 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>041 · Seismograph Roll</title>
+<style>
+:root{--bg:#171310;--paper:#f2e7d0;--ink:#2a2119;--mute:#8b7a63;--red:#c0392b;
+  --amber:#e0a34a;--line:#d8c9ab}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(700px 400px at 20% 0%,#241d17,transparent),
+  var(--bg);color:#eadfce;min-height:100vh;
+  font-family:"Courier New",ui-monospace,monospace;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:1px solid #2f271f}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:#8b7a63}
+h1{margin:0;font-size:26px;font-weight:400}
+h1 b{font-weight:700;color:var(--amber)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:#8b7a63}
+.meta b{color:var(--red);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;padding:20px 28px 0}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+.drum{position:relative;background:var(--paper);border:6px solid #3b3128;border-radius:4px;
+  box-shadow:0 14px 34px rgba(0,0,0,.5);overflow:hidden}
+canvas{display:block;width:100%;height:auto}
+.hud{position:absolute;left:14px;top:12px;display:flex;gap:15px;flex-wrap:wrap;
+  font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:#7a6a54;pointer-events:none}
+.hud b{color:var(--red);font-variant-numeric:tabular-nums}
+.hud b.live{color:#1d7a4f}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:#211b15;border:1px solid #342b22;border-radius:12px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:#8b7a63}
+.slab{display:flex;align-items:center;gap:9px;margin-bottom:11px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:#8b7a63}
+.slab input{flex:1;accent-color:var(--amber)}
+.slab b{color:#eadfce;width:54px;text-align:right;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:9px;flex-wrap:wrap}
+.b{flex:1;min-width:88px;font:inherit;font-size:10px;letter-spacing:.16em;text-transform:uppercase;
+  font-weight:700;padding:11px 7px;border-radius:8px;border:1px solid #4a3d30;
+  background:#2b241c;color:#eadfce;cursor:pointer;transition:.15s}
+.b:hover{transform:translateY(-2px);border-color:var(--amber);color:var(--amber)}
+.b.quake{background:var(--red);border-color:var(--red);color:#fff3e6}
+.b.quake:hover{color:#fff}
+ul.log{list-style:none;margin:0;padding:0;max-height:230px;overflow:auto}
+ul.log li{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;
+  padding:7px 2px;border-bottom:1px dotted #3a3128;color:#bdae99;font-variant-numeric:tabular-nums}
+ul.log li b{color:var(--amber);font-weight:700}
+ul.log li.big b{color:var(--red)}
+.legend{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;margin-top:11px;
+  font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:#8b7a63}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">station 041 · drum recorder</span>
+  <h1>Seismograph <b>Roll</b></h1>
+  <span class="meta">events <b id="evCount">0</b> · peak <b id="evPeak">0.0</b></span>
+</header>
+
+<div class="stage">
+  <main class="drum">
+    <canvas id="trace" width="780" height="430"></canvas>
+    <div class="hud">
+      <span>gain <b id="hGain">1.00×</b></span>
+      <span>rms <b id="hRms">0.00</b></span>
+      <span>paper <b id="hSpd">1.0</b></span>
+      <span>state <b class="live" id="hState">QUIET</b></span>
+    </div>
+  </main>
+
+  <aside class="rig">
+    <section class="card">
+      <h2>Recorder settings</h2>
+      <label class="slab">gain <input id="gain" type="range" min="40" max="300" value="100"><b id="gainOut">1.00×</b></label>
+      <label class="slab">microseism <input id="noise" type="range" min="0" max="90" value="26"><b id="noiseOut">0.26</b></label>
+      <label class="slab">paper speed <input id="spd" type="range" min="4" max="30" value="12"><b id="spdOut">1.2</b></label>
+      <p style="font-size:11px;line-height:1.7;color:#8b7a63;margin:4px 0 0">
+        The drum turns continuously; the pen never lifts. Ground motion is written as
+        vertical deflection against a ruled time axis.</p>
+    </section>
+
+    <section class="card">
+      <h2>Trigger an event</h2>
+      <div class="btns">
+        <button class="b" id="m3" type="button">M 3.2 local</button>
+        <button class="b" id="m5" type="button">M 5.1 regional</button>
+      </div>
+      <div class="btns" style="margin-top:9px">
+        <button class="b quake" id="m7" type="button">M 6.8 major</button>
+        <button class="b" id="clear" type="button">clear log</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Event log</h2>
+      <ul class="log" id="log">
+        <li><span>drum started · station quiet</span><b>—</b></li>
+      </ul>
+      <div class="legend"><span>red = trace</span><span>green = quiet</span></div>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:19px 28px 0;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:#8b7a63">
+  <span>ruled drum · exponential decay envelope · triggered log</span><span>041 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var cv=G("trace"), ctx=cv.getContext("2d");
+  var W=cv.width, H=cv.height, MID=H*0.5, AMP=H*0.40;
+
+  var STEP=2;
+  var N=Math.floor(W/STEP)+2;
+  var samples=new Array(N);
+  for(var i=0;i<N;i++) samples[i]=0;
+
+  var gain=1, noise=0.26, speed=1.2;
+  var events=[];
+  var scroll=0;
+  var evCount=0, evPeak=0;
+  var DEFS={
+    m3:{mag:0.42,tau:55,freq:0.62,life:170,name:"M 3.2 local",depth:8},
+    m5:{mag:0.72,tau:85,freq:0.48,life:250,name:"M 5.1 regional",depth:22},
+    m7:{mag:1.15,tau:130,freq:0.36,life:380,name:"M 6.8 major",depth:64}
+  };
+
+  function trigger(key){
+    var d=DEFS[key];
+    if(!d) return;
+    events.push({age:0,life:d.life,tau:d.tau,freq:d.freq,mag:d.mag});
+    evCount++;
+    var mag=(d.mag+Math.random()*0.4).toFixed(1)*1;
+    if(mag>evPeak) evPeak=mag;
+    G("evCount").textContent=evCount;
+    G("evPeak").textContent=evPeak.toFixed(1);
+    log(d.name+" · "+d.depth+" km", d.mag>0.6);
+    setState("EVENT");
+    if(!reduce) draw();
+  }
+
+  var logEl=G("log");
+  function log(txt,big){
+    var li=document.createElement("li");
+    if(big) li.className="big";
+    var t=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    li.innerHTML="<span>"+p(t.getHours())+":"+p(t.getMinutes())+":"+p(t.getSeconds())+
+      " · "+txt+"</span><b>ON</b>";
+    logEl.insertBefore(li,logEl.firstChild);
+    while(logEl.children.length>7) logEl.removeChild(logEl.lastChild);
+  }
+
+  var stateTimer=null;
+  function setState(s){
+    G("hState").textContent=s;
+    if(stateTimer) clearTimeout(stateTimer);
+    if(s!=="QUIET") stateTimer=setTimeout(function(){ setState("QUIET"); },1400);
+  }
+
+  function nextSample(){
+    events.forEach(function(e){ e.age++; e.life--; });
+    events=events.filter(function(e){ return e.life>0; });
+    var v=(Math.random()-0.5)*noise;
+    events.forEach(function(e){
+      var env=Math.exp(-e.age/e.tau);
+      v+=Math.sin(e.age*e.freq)*env*e.mag;
+      v+=(Math.random()-0.5)*env*e.mag*0.5;
+    });
+    v*=gain;
+    if(v>1.25) v=1.25;
+    if(v<-1.25) v=-1.25;
+    return v;
+  }
+
+  function draw(){
+    /* paper */
+    ctx.fillStyle="#f2e7d0";
+    ctx.fillRect(0,0,W,H);
+
+    /* scrolling vertical time rules */
+    var rule=24*speed;
+    var off=scroll%rule;
+    ctx.strokeStyle="rgba(150,125,95,.35)";
+    ctx.lineWidth=1;
+    for(var x=rule-off;x<W;x+=rule){
+      ctx.beginPath(); ctx.moveTo(x+.5,0); ctx.lineTo(x+.5,H); ctx.stroke();
+    }
+    /* heavier rule every 5th */
+    var off5=(rule*5)-((scroll)%(rule*5));
+    ctx.strokeStyle="rgba(140,112,80,.6)";
+    for(var x5=off5;x5<W;x5+=rule*5){
+      ctx.beginPath(); ctx.moveTo(x5+.5,0); ctx.lineTo(x5+.5,H); ctx.stroke();
+    }
+    /* horizontal channels */
+    ctx.strokeStyle="rgba(160,135,100,.4)";
+    for(var y=MID-AMP;y<=MID+AMP+1;y+=AMP/2){
+      ctx.beginPath(); ctx.moveTo(0,y+.5); ctx.lineTo(W,y+.5); ctx.stroke();
+    }
+    /* centre baseline */
+    ctx.strokeStyle="rgba(60,45,30,.55)";
+    ctx.beginPath(); ctx.moveTo(0,MID+.5); ctx.lineTo(W,MID+.5); ctx.stroke();
+
+    /* trace */
+    ctx.strokeStyle="#c0392b";
+    ctx.lineWidth=1.6;
+    ctx.lineJoin="round";
+    ctx.beginPath();
+    for(var i=0;i<N;i++){
+      var px=i*STEP;
+      var py=MID-samples[i]*AMP;
+      if(i===0) ctx.moveTo(px,py); else ctx.lineTo(px,py);
+    }
+    ctx.stroke();
+
+    /* pen carriage */
+    var lastY=MID-samples[N-1]*AMP;
+    ctx.strokeStyle="rgba(43,33,24,.75)";
+    ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(W-10,0); ctx.lineTo(W-10,H); ctx.stroke();
+    ctx.fillStyle="#2b2118";
+    ctx.beginPath();
+    ctx.moveTo(W-4,lastY); ctx.lineTo(W-18,lastY-7); ctx.lineTo(W-18,lastY+7);
+    ctx.closePath(); ctx.fill();
+    ctx.fillStyle="#c0392b";
+    ctx.beginPath(); ctx.arc(W-18,lastY,3,0,Math.PI*2); ctx.fill();
+
+    /* magnitude band labels on the left margin */
+    ctx.fillStyle="rgba(70,54,38,.65)";
+    ctx.font="9.5px 'Courier New',monospace";
+    ctx.textAlign="left";
+    ctx.fillText("+1.0",6,MID-AMP+12);
+    ctx.fillText("0.0",6,MID-4);
+    ctx.fillText("-1.0",6,MID+AMP-2);
+
+    /* time ticks bottom */
+    ctx.textAlign="center";
+    for(var t=0;t<5;t++){
+      var tx=(t*W/4)+8-((scroll*0.35)%40);
+      ctx.fillText("−"+((4-t)*10)+"s",tx,H-7);
+    }
+  }
+
+  function readouts(){
+    var s=0;
+    for(var i=0;i<N;i++) s+=samples[i]*samples[i];
+    var rms=Math.sqrt(s/N);
+    G("hRms").textContent=rms.toFixed(2);
+    G("hGain").textContent=gain.toFixed(2)+"×";
+    G("hSpd").textContent=speed.toFixed(1);
+  }
+
+  function tick(){
+    scroll+=speed;
+    samples.push(nextSample());
+    samples.shift();
+    draw();
+    if(tickCount++%10===0) readouts();
+    requestAnimationFrame(tick);
+  }
+  var tickCount=0;
+
+  /* controls */
+  G("gain").addEventListener("input",function(){
+    gain=parseInt(this.value,10)/100;
+    G("gainOut").textContent=gain.toFixed(2)+"×";
+    readouts();
+    if(reduce) draw();
+  });
+  G("noise").addEventListener("input",function(){
+    noise=parseInt(this.value,10)/100;
+    G("noiseOut").textContent=noise.toFixed(2);
+    if(reduce) draw();
+  });
+  G("spd").addEventListener("input",function(){
+    speed=parseInt(this.value,10)/10;
+    G("spdOut").textContent=speed.toFixed(1);
+    if(reduce) draw();
+  });
+  G("m3").addEventListener("click",function(){ trigger("m3"); });
+  G("m5").addEventListener("click",function(){ trigger("m5"); });
+  G("m7").addEventListener("click",function(){ trigger("m7"); });
+  G("clear").addEventListener("click",function(){
+    logEl.innerHTML="";
+    evCount=0; evPeak=0;
+    G("evCount").textContent="0";
+    G("evPeak").textContent="0.0";
+    setState("QUIET");
+  });
+
+  /* seed a plausible quiet-day trace */
+  for(var s0=0;s0<N;s0++){
+    samples[s0]=(Math.random()-0.5)*noise;
+  }
+
+  readouts();
+  if(reduce){
+    /* static drum: one small event already written on the paper */
+    for(var k=0;k<60;k++){
+      var age=k+40;
+      var env=Math.exp(-age/55);
+      samples.push((Math.random()-0.5)*noise + Math.sin(age*0.62)*env*0.42);
+      samples.shift();
+    }
+    draw();
+  }else{
+    requestAnimationFrame(tick);
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+TITLE: Piano Roll — The Perforated Tune
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Piano Roll: The Perforated Tune". Scroll a perforated player-piano roll vertically past a gold play-line at y=430: 15 lanes of 26 px (y from 40), future notes above the line at yOf(t)=PLAY_Y−(t−now)·PPS·tempo. Three deterministic tunes (pentatonic minuet with bass, clockmaker arpeggio at 0.25 s, slow swell chords) loop on a 16 s duration; when now crosses a note's start it fires once per loop, lighting its left-column key (7 px slide + warm color, decay 700 ms) and sounding a triangle-wave WebAudio tone at 261.63·2^((14−lane)/12) Hz with 550 ms exp decay — the AudioContext is created only inside the WIND UP click gesture. Paper renders as a leather-dark strip with scrolling sprocket perforations (20 px period), holes as rounded capsules with gold edge glints, lane guides, note-name keys (C4…B5), and play-line telemetry. Controls: WIND UP/STOP, ROLL A/B/C, TEMPO 1.0/1.5/0.6×; stats show notes, bar, loop. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark workshop with a mechanical roll winding past the play-line — the tune exists as physical holes before it exists as sound, and the keys answer the paper.
+
+MAJOR VISUAL TECHNIQUES:
+- Time-to-y paper scroll with sprocket perforation phase sync
+- Note capsules clipped to the paper viewport with edge glints
+- Gesture-gated WebAudio with envelope-gated triangle voices
+- Key strike animation with slide + color decay
+- Loop-scoped fire-once bookkeeping
+
+INTENDED INTERACTION MODEL:
+Wind the roll up, swap between three tunes, change tempo; keys drop exactly as their holes cross the line.

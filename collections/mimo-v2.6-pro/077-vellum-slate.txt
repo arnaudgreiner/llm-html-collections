@@ -1,0 +1,17 @@
+TITLE: Vellum — Handwriting Practice Slate
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Vellum: Handwriting Practice Slate". Render a 960×430 parchment slate on canvas where pointer strokes are drawn as smoothed quadratic-centreline ink lines whose width varies per stroke. Four model hands (Italic Hand, Mono Upright, Script Swash, Block Rubric) each define their own font stack, baseline rhythm, slant and line height. Guides draw triple ruled bands (red top line, blue baseline, dashed x-height) per line; the trace ghost renders the model phrase letter-by-letter with per-glyph slant transforms at 10% opacity so handwriting follows it. WET INK mode ages each stroke over six seconds: alpha and specular sheen decay from glossy wet to matte dry, with a rAF re-render while anything is drying. Stats track stroke count, accumulated ink time and specimen count; KEEp miniaturises the current slate into a shelf of tappable specimen thumbnails that delete on click. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A scriptorium bench: cream paper inside an oiled wood frame, engraved tabular chrome around it, red/blue rulings doing the structure. The craft is time as material — ink visibly dries, and the ghost letterform underneath turns raw mouse scribble into a legible practice session.
+
+MAJOR VISUAL TECHNIQUES:
+- Quadratic midpoint smoothing of pointer polylines for calligraphic curves
+- Per-stroke wet-age model: alpha + highlight decay driven by birth timestamp
+- Per-glyph canvas transform (translate → slant skew → fill) for the ghost hand
+- Layered parchment: gradient wash + deterministic speckle grain + rule lines
+- Offscreen downscale for specimen thumbnails pinned to a DOM shelf
+
+INTENDED INTERACTION MODEL:
+Write with mouse or finger over the ghost letters, toggle guides/ghost/wet ink, cycle the four model hands, clear the slate, and keep miniature specimens of finished sheets; every stroke and second is counted.

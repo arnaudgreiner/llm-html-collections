@@ -1,0 +1,213 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Twist Cube — 3×3</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#100e15;color:#9a93ad;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:16px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.42em;color:#a48bff;text-transform:uppercase;font-weight:600}
+.wrap{display:flex;gap:18px;flex-wrap:wrap;justify-content:center;align-items:stretch;width:100%;max-width:980px}
+.scene{position:relative;width:min(86vw,400px);height:min(86vw,400px);perspective:1000px;touch-action:none;cursor:grab;background:radial-gradient(circle at 50% 42%,#1a1724 0%,#100e15 70%);border:1px solid #262133;border-radius:14px}
+.scene:active{cursor:grabbing}
+.cube{position:absolute;left:50%;top:50%;width:0;height:0;transform-style:preserve-3d;transform:rotateX(-26deg) rotateY(-34deg)}
+.cubie{position:absolute;width:56px;height:56px;left:-28px;top:-28px;transform-style:preserve-3d;transition:transform .07s linear}
+.face{position:absolute;width:56px;height:56px;border:4px solid #0a0c0f;border-radius:6px;box-shadow:inset 0 0 0 2px rgba(0,0,0,.18),inset 0 3px 6px rgba(255,255,255,.14)}
+.face.f{transform:translateZ(28px)}
+.face.k{transform:rotateY(180deg) translateZ(28px)}
+.face.r{transform:rotateY(90deg) translateZ(28px)}
+.face.l{transform:rotateY(-90deg) translateZ(28px)}
+.face.t{transform:rotateX(90deg) translateZ(28px)}
+.face.b{transform:rotateX(-90deg) translateZ(28px)}
+.panel{background:#15121c;border:1px solid #262133;border-radius:14px;padding:16px;display:flex;flex-direction:column;gap:12px;min-width:250px}
+.sect{font-size:9px;letter-spacing:.3em;color:#5d5673;text-transform:uppercase}
+#st{font-size:13px;color:#7fd7a8;letter-spacing:.08em;min-height:34px;line-height:1.35}
+#st.busy{color:#a48bff}
+#st.win{color:#7fd7a8;text-shadow:0 0 14px rgba(127,215,168,.4)}
+.moves{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}
+.moves button,.acts button{background:#1c1826;border:1px solid #322b45;color:#c3b9e6;font:inherit;font-size:12px;padding:9px 0;border-radius:8px;cursor:pointer;letter-spacing:.08em;transition:.12s}
+.moves button:hover,.acts button:hover{background:#262036;border-color:#4d4270}
+.moves button:active{transform:translateY(1px)}
+.acts{display:grid;grid-template-columns:1fr 1fr;gap:7px}
+.acts button{letter-spacing:.14em;font-weight:700}
+.acts button.sc{background:#a48bff;border-color:#a48bff;color:#141020}
+.acts button.sc:hover{background:#b7a2ff}
+.stats{display:flex;gap:16px;font-size:10.5px;color:#6b6484}
+.stats b{color:#e7e1f7;font-weight:600}
+.tip{font-size:10px;color:#5d5673;line-height:1.6;border-top:1px dashed #262133;padding-top:10px}
+.legend{display:flex;gap:9px;flex-wrap:wrap}
+.sw{width:16px;height:16px;border-radius:4px;border:2px solid #0a0c0f;box-shadow:inset 0 2px 3px rgba(255,255,255,.2)}
+</style>
+</head>
+<body>
+<h1>Twist Cube · 3×3</h1>
+<div class="wrap">
+  <div class="scene" id="scene"><div class="cube" id="cube"></div></div>
+  <aside class="panel">
+    <div class="sect">state</div>
+    <div id="st">SCRAMBLED — YOUR MOVE</div>
+    <div class="stats"><span>MOVES <b id="mv">0</b></span><span>TIME <b id="tm">0:00</b></span></div>
+    <div class="sect">twist a face</div>
+    <div class="moves" id="moves"></div>
+    <div class="sect">board</div>
+    <div class="acts"><button id="scr" class="sc">SCRAMBLE</button><button id="rst">RESET</button></div>
+    <div class="sect">sticker colours</div>
+    <div class="legend">
+      <span class="sw" style="background:#f4f4f2"></span><span class="sw" style="background:#ffd500"></span><span class="sw" style="background:#009e4f"></span><span class="sw" style="background:#0051ba"></span><span class="sw" style="background:#c41e3a"></span><span class="sw" style="background:#ff5800"></span>
+    </div>
+    <div class="tip">Drag the cube to orbit the view. Each button twists one face 90°, the primed (′) button twists it the other way. Solve all six faces to stop the clock.</div>
+  </aside>
+</div>
+<script>
+(function(){
+"use strict";
+var SP=58;
+var scene=document.getElementById("scene"),cube=document.getElementById("cube");
+var stEl=document.getElementById("st"),mvEl=document.getElementById("mv"),tmEl=document.getElementById("tm");
+var cubies=[],busy=false,moves=0,timing=false,elapsed=0,moveStart=0;
+function rot(v,a,s){
+  var x=v[0],y=v[1],z=v[2];
+  if(a===0)return s>0?[x,-z,y]:[x,z,-y];
+  if(a===1)return s>0?[z,y,-x]:[-z,y,x];
+  return s>0?[-y,x,z]:[y,-x,z];
+}
+function baseT(c){
+  var C=c.cols,P=c.pos;
+  return "matrix3d("+C[0][0]+","+C[0][1]+","+C[0][2]+",0,"+
+    C[1][0]+","+C[1][1]+","+C[1][2]+",0,"+
+    C[2][0]+","+C[2][1]+","+C[2][2]+",0,"+
+    (P[0]*SP)+","+(P[1]*SP)+","+(P[2]*SP)+",1)";
+}
+function build(){
+  cube.innerHTML="";cubies=[];
+  for(var x=-1;x<=1;x++)for(var y=-1;y<=1;y++)for(var z=-1;z<=1;z++){
+    if(x===0&&y===0&&z===0)continue;
+    var el=document.createElement("div");el.className="cubie";
+    var defs=[["r",x===1?"#c41e3a":0],["l",x===-1?"#ff5800":0],["t",y===-1?"#f4f4f2":0],["b",y===1?"#ffd500":0],["f",z===1?"#009e4f":0],["k",z===-1?"#0051ba":0]];
+    for(var i=0;i<defs.length;i++){
+      var f=document.createElement("div");f.className="face "+defs[i][0];
+      f.style.background=defs[i][1]||"#111418";
+      el.appendChild(f);
+    }
+    cube.appendChild(el);
+    var c={el:el,pos:[x,y,z],ip:[x,y,z],cols:[[1,0,0],[0,1,0],[0,0,1]]};
+    el.style.transform=baseT(c);
+    cubies.push(c);
+  }
+}
+function inLayer(c,a,l){return c.pos[a]===l;}
+function applyState(list,a,s){
+  list.forEach(function(c){
+    c.pos=rot(c.pos,a,s);
+    c.cols=[rot(c.cols[0],a,s),rot(c.cols[1],a,s),rot(c.cols[2],a,s)];
+    c.el.style.transition="none";
+    c.el.style.transform=baseT(c);
+  });
+  void cube.offsetWidth;
+  list.forEach(function(c){c.el.style.removeProperty("transition");});
+}
+function twist(a,l,s,animate,done){
+  var list=cubies.filter(function(c){return inLayer(c,a,l);});
+  if(!animate){
+    applyState(list,a,s);
+    if(done)done();
+    return;
+  }
+  busy=true;
+  var unit=[[1,0,0],[0,1,0],[0,0,1]][a];
+  list.forEach(function(c){
+    c.el.style.transition="transform .32s cubic-bezier(.4,.05,.25,1)";
+    c.el.style.transform="rotate3d("+unit[0]+","+unit[1]+","+unit[2]+","+(s*90)+"deg) "+baseT(c);
+  });
+  setTimeout(function(){
+    applyState(list,a,s);
+    busy=false;
+    if(done)done();
+  },340);
+}
+function isSolved(){
+  for(var i=0;i<cubies.length;i++){
+    var c=cubies[i];
+    if(c.pos[0]!==c.ip[0]||c.pos[1]!==c.ip[1]||c.pos[2]!==c.ip[2])return false;
+    for(var j=0;j<3;j++)for(var k=0;k<3;k++)if(c.cols[j][k]!==(j===k?1:0))return false;
+  }
+  return true;
+}
+function fmtT(s){return Math.floor(s/60)+":"+(s%60<10?"0":"")+(s%60);}
+function startTimer(){if(!timing){timing=true;moveStart=Date.now()-elapsed*1000;}}
+function userMove(a,l,s){
+  if(busy)return;
+  moves++;mvEl.textContent=moves;startTimer();
+  stEl.className="busy";stEl.textContent="TWISTING…";
+  twist(a,l,s,true,function(){
+    if(isSolved()){
+      timing=false;
+      stEl.className="win";
+      stEl.textContent="SOLVED IN "+moves+" MOVES · "+fmtT(elapsed);
+    }else{
+      stEl.className="";
+      stEl.textContent="WORKING — KEEP GOING";
+    }
+  });
+}
+var MOVES=[["U",1,-1,-1],["U′",1,-1,1],["D",1,1,1],["D′",1,1,-1],
+  ["L",0,-1,-1],["L′",0,-1,1],["R",0,1,1],["R′",0,1,-1],
+  ["F",2,1,1],["F′",2,1,-1],["B",2,-1,-1],["B′",2,-1,1]];
+var movesBox=document.getElementById("moves");
+MOVES.forEach(function(m){
+  var b=document.createElement("button");
+  b.textContent=m[0];
+  b.addEventListener("click",function(){userMove(m[1],m[2],m[3]);});
+  movesBox.appendChild(b);
+});
+function scramble(n){
+  if(busy)return;
+  for(var i=0;i<n;i++){
+    var a=(Math.random()*3)|0,l=Math.random()<0.5?-1:1,s=Math.random()<0.5?-1:1;
+    applyState(cubies.filter(function(c){return inLayer(c,a,l);}),a,s);
+  }
+  moves=0;mvEl.textContent="0";elapsed=0;tmEl.textContent="0:00";timing=false;
+  stEl.className="";stEl.textContent="SCRAMBLED — YOUR MOVE";
+}
+document.getElementById("scr").addEventListener("click",function(){scramble(22);});
+document.getElementById("rst").addEventListener("click",function(){
+  if(busy)return;
+  cubies.forEach(function(c){
+    c.pos=[c.ip[0],c.ip[1],c.ip[2]];
+    c.cols=[[1,0,0],[0,1,0],[0,0,1]];
+    c.el.style.transition="none";
+    c.el.style.transform=baseT(c);
+  });
+  void cube.offsetWidth;
+  cubies.forEach(function(c){c.el.style.removeProperty("transition");});
+  moves=0;mvEl.textContent="0";elapsed=0;tmEl.textContent="0:00";timing=false;
+  stEl.className="win";stEl.textContent="SOLVED STATE — SCRAMBLE TO PLAY";
+});
+var rx=-26,ry=-34,drag=false,lx=0,ly=0;
+function applyView(){cube.style.transform="rotateX("+rx+"deg) rotateY("+ry+"deg)";}
+scene.addEventListener("pointerdown",function(e){
+  drag=true;lx=e.clientX;ly=e.clientY;
+  if(scene.setPointerCapture)scene.setPointerCapture(e.pointerId);
+});
+scene.addEventListener("pointermove",function(e){
+  if(!drag)return;
+  ry+=(e.clientX-lx)*0.45;
+  rx=Math.max(-90,Math.min(90,rx-(e.clientY-ly)*0.45));
+  lx=e.clientX;ly=e.clientY;applyView();
+});
+scene.addEventListener("pointerup",function(){drag=false;});
+scene.addEventListener("pointercancel",function(){drag=false;});
+setInterval(function(){
+  if(timing){
+    elapsed=Math.floor((Date.now()-moveStart)/1000);
+    tmEl.textContent=fmtT(elapsed);
+  }
+},500);
+build();
+applyView();
+scramble(22);
+})();
+</script>
+</body>
+</html>

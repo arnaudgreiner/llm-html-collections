@@ -1,0 +1,18 @@
+TITLE: Origami Studio — Paper Crane in Six Creases
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Origami Studio: Paper Crane in Six Creases". Stage a 240 mm washi square on a wood-grain desk with vignette lighting and drop shadow, then fold it through six named creases (valley fold, halve, kite, pivot, lift neck-and-tail, head). Each fold is a real 3D hinge: the flap is an absolutely-positioned copy of the sheet clipped to its region, with transform-origin set on the hinge midpoint and a three-part transform rotate(θ) rotateX(a) rotate(−θ) that rotates the flap about the hinge line, transitioning between fold states in 0.85 s with a shading overlay that darkens as the underside rolls into view. A left-hand step timeline (00–06) jumps directly to any state — folds beyond it unwind in reverse. Controls: BACK / FOLD / AUTOPLAY (1.7 s cadence) / RESET, four washi colour swatches that retint the whole model, a progress bar, a crease count, and on completion a bobbing SVG paper crane with independently fluttering wings. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A warm craft table: walnut desk stripes, lamp-glow radial highlight, bone-white paper with fine woven grain, burnt-orange accent for the active crease. The design's honesty is in the folding mechanics — clip-path flaps rotating on true hinge axes with backface shading, so every step reads as paper physically turning over rather than a slide transition.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS 3D hinge trick: rotate(θ) rotateX(a) rotate(−θ) about a chosen transform-origin to fold about an arbitrary in-plane crease line
+- clip-path polygon layers stacked with z-index promotion when folded
+- Backface shading overlay fading in with the fold to fake paper underside
+- Crease-line highlight fading in after each valley fold
+- Transition-tree unwinding: any target step recomputes the whole layer state
+- SVG crane with fill-box transform-origin wing flutter and whole-body bob keyframes
+
+INTENDED INTERACTION MODEL:
+Step forward/back through creases, click any timeline row to jump (folding forward or unwinding in reverse), autoplay the sequence at a folding rhythm, switch washi stock colours, reset to the flat sheet, and reach the completed crane state with a live count of creases made.

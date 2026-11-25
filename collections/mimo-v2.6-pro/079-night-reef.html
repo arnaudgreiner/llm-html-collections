@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Night Reef — Diffusion-Limited Coral Garden</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#050a10;color:#9fb8c4;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#5fd0c8;text-transform:uppercase}
+h1 i{font-style:normal;color:#e88fb0}
+#tank{background:#071119;border:1px solid #14262f;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:8px;background:#040c13;cursor:crosshair;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:940px}
+button{background:#0a1720;border:1px solid #1c3542;color:#a9c4d0;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#5fd0c8;color:#d8fffa}
+button.on{background:#5fd0c8;border-color:#5fd0c8;color:#04222a;font-weight:700}
+label{font-size:9.5px;letter-spacing:.14em;color:#5b7280;display:flex;gap:7px;align-items:center}
+input[type=range]{width:110px;accent-color:#5fd0c8}
+select{background:#0a1720;border:1px solid #1c3542;color:#a9c4d0;font:inherit;font-size:9.5px;padding:7px 9px;border-radius:6px}
+select:focus{outline:none;border-color:#5fd0c8}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#5b7280}
+.stat b{color:#5fd0c8}
+.stat b.r{color:#e88fb0}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#3d5260;text-align:center;max-width:900px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Night Reef <i>M79</i> · diffusion-limited coral</h1>
+<div id="tank"><canvas id="cv" width="940" height="520"></canvas></div>
+<div class="bar">
+  <button id="bGrow" class="on">⏸ GROW</button>
+  <button id="bSeed">⚓ PLANT ROCK</button>
+  <button id="bReset">↺ RESET REEF</button>
+  <label>species
+    <select id="sp">
+      <option value="staghorn">STAGHORN</option>
+      <option value="fan">SEA FAN</option>
+      <option value="brain">BRAIN KNOB</option>
+      <option value="lace">WHITE LACE</option>
+    </select>
+  </label>
+  <label>nutrients <input type="range" id="rate" min="1" max="8" value="3"></label>
+  <span class="stat">cells <b id="mN">1</b> · walkers <b id="mW">3</b> · attached/sec <b id="mR" class="r">0</b></span>
+</div>
+<div class="hint">particles drift in the dark current and freeze where they touch the reef — a real diffusion-limited aggregation garden · PLANT ROCK then click the tank to seed a new colony head · switch species to change step, stickiness and glow</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=940,H=520;
+var COLS=Math.ceil(W/4),ROWS=Math.ceil(H/4);
+var SPEC={
+  staghorn:{step:5,stick:4,walkers:3,base:"#5fd0c8",tip:"#b8fff4",glow:0.9},
+  fan:{step:7,stick:3,walkers:4,base:"#e88fb0",tip:"#ffd9e6",glow:0.8},
+  brain:{step:3,stick:6,walkers:2,base:"#e8c56a",tip:"#fff3c4",glow:0.6},
+  lace:{step:6,stick:3,walkers:5,base:"#9fb8c4",tip:"#ffffff",glow:1.0}
+};
+var sp=SPEC.staghorn,rate=3,growing=true,plantMode=false;
+var grid=new Uint8Array(COLS*ROWS);
+var parts=[],walkers=[],total=1;
+var recent=[],attached=0,attAcc=[],lastT=0;
+function idx(x,y){return y*COLS+x;}
+function toCell(x,y){return [Math.floor(x/4),Math.floor(y/4)];}
+function occupied(cx,cy,r){
+  if(cx<0||cy<0||cx>=COLS||cy>=ROWS)return false;
+  var rr=r||0;
+  for(var dy=-rr;dy<=rr;dy++)for(var dx=-rr;dx<=rr;dx++){
+    var nx=cx+dx,ny=cy+dy;
+    if(nx<0||ny<0||nx>=COLS||ny>=ROWS)continue;
+    if(grid[idx(nx,ny)])return true;
+  }
+  return false;
+}
+function plant(x,y){
+  var c=toCell(x,y);
+  if(c[0]<0||c[1]<0||c[0]>=COLS||c[1]>=ROWS)return;
+  grid[idx(c[0],c[1])]=1;
+  parts.push({x:c[0]*4+2,y:c[1]*4+2,t:performance.now()});
+  recent.push(parts.length-1);
+  total++;
+}
+function spawnWalker(){
+  var edge=Math.floor(Math.random()*4);
+  var x,y;
+  if(edge===0){x=Math.random()*W;y=6;}
+  else if(edge===1){x=W-6;y=Math.random()*H;}
+  else if(edge===2){x=Math.random()*W;y=H-6;}
+  else{x=6;y=Math.random()*H;}
+  walkers.push({x:x,y:y});
+}
+function reset(){
+  grid=new Uint8Array(COLS*ROWS);
+  parts=[];walkers=[];total=1;recent=[];attached=0;
+  var cx=Math.floor(COLS/2),cy=Math.floor(ROWS/2);
+  grid[idx(cx,cy)]=1;
+  parts.push({x:cx*4+2,y:cy*4+2,t:performance.now()});
+  for(var i=0;i<sp.walkers;i++)spawnWalker();
+  document.getElementById("mN").textContent=total;
+}
+function applySpecies(){
+  sp=SPEC[document.getElementById("sp").value];
+  walkers=[];
+  for(var i=0;i<sp.walkers;i++)spawnWalker();
+  document.getElementById("mW").textContent=sp.walkers;
+}
+document.getElementById("sp").addEventListener("change",applySpecies);
+document.getElementById("rate").addEventListener("input",function(){rate=Number(this.value);});
+document.getElementById("bGrow").addEventListener("click",function(){
+  growing=!growing;this.className=growing?"on":"";
+  this.textContent=growing?"⏸ GROW":"▶ GROW";
+});
+document.getElementById("bSeed").addEventListener("click",function(){
+  plantMode=!plantMode;this.className=plantMode?"on":"";
+});
+document.getElementById("bReset").addEventListener("click",reset);
+cv.addEventListener("pointerdown",function(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  if(plantMode){plant(x,y);plantMode=false;
+    document.getElementById("bSeed").className="";}
+  else plant(x,y);
+});
+function step(){
+  var n=walkers.length;
+  for(var i=0;i<n;i++){
+    var w=walkers[i];
+    var ang=Math.random()*6.2832;
+    w.x+=Math.cos(ang)*sp.step;
+    w.y+=Math.sin(ang)*sp.step;
+    if(w.x<4||w.y<4||w.x>W-4||w.y>H-4){walkers[i]=null;spawnWalker();continue;}
+    var c=toCell(w.x,w.y);
+    var stickR=Math.max(1,Math.round(sp.stick/4));
+    if(occupied(c[0],c[1],stickR)){
+      if(c[0]>=0&&c[1]>=0&&c[0]<COLS&&c[1]<ROWS&&!grid[idx(c[0],c[1])]){
+        grid[idx(c[0],c[1])]=1;
+        parts.push({x:c[0]*4+2,y:c[1]*4+2,t:performance.now()});
+        recent.push(parts.length-1);
+        total++;attached++;
+      }
+      walkers[i]=null;spawnWalker();
+    }
+  }
+  walkers=walkers.filter(Boolean);
+}
+function hexToRgb(h){return [parseInt(h.slice(1,3),16),parseInt(h.slice(3,5),16),parseInt(h.slice(5,7),16)];}
+var baseRgb=hexToRgb(sp.base),tipRgb=hexToRgb(sp.tip);
+function render(now){
+  // water
+  var bg=ax.createLinearGradient(0,0,0,H);
+  bg.addColorStop(0,"#062033");bg.addColorStop(0.55,"#04121f");bg.addColorStop(1,"#020a11");
+  ax.fillStyle=bg;ax.fillRect(0,0,W,H);
+  // caustics
+  ax.globalAlpha=0.06;
+  ax.strokeStyle="#5fd0c8";ax.lineWidth=2;
+  for(var k=0;k<5;k++){
+    ax.beginPath();
+    for(var x=0;x<=W;x+=24){
+      var y=60+k*40+Math.sin(x*0.02+now*0.0006+k)*14;
+      if(x===0)ax.moveTo(x,y);else ax.lineTo(x,y);
+    }
+    ax.stroke();
+  }
+  ax.globalAlpha=1;
+  // reef
+  var cut=parts.length-60;
+  ax.shadowBlur=6*sp.glow;
+  for(var i=0;i<parts.length;i++){
+    var p=parts[i];
+    var isNew=i>cut;
+    var t=i/parts.length;
+    var r=baseRgb[0]+(tipRgb[0]-baseRgb[0])*t,
+        g=baseRgb[1]+(tipRgb[1]-baseRgb[1])*t,
+        b=baseRgb[2]+(tipRgb[2]-baseRgb[2])*t;
+    ax.shadowColor="rgba("+Math.round(r)+","+Math.round(g)+","+Math.round(b)+","+(isNew?0.9:0.4)+")";
+    ax.fillStyle="rgb("+Math.round(r)+","+Math.round(g)+","+Math.round(b)+")";
+    var pulse=isNew?2.6+Math.sin(now*0.01+i)*0.7:1.7;
+    ax.fillRect(p.x-pulse/2,p.y-pulse/2,pulse,pulse);
+  }
+  ax.shadowBlur=0;
+  // walkers as motes
+  ax.fillStyle="rgba(200,240,255,.55)";
+  for(var j=0;j<walkers.length;j++){
+    ax.beginPath();ax.arc(walkers[j].x,walkers[j].y,1.6,0,6.2832);ax.fill();
+  }
+  // vignette
+  var vg=ax.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.75);
+  vg.addColorStop(0,"rgba(0,0,0,0)");vg.addColorStop(1,"rgba(0,0,0,.55)");
+  ax.fillStyle=vg;ax.fillRect(0,0,W,H);
+}
+function loop(now){
+  var dt=now-(loop.last||now);loop.last=now;
+  if(growing){
+    var per=Math.max(1,Math.round(rate));
+    for(var i=0;i<per;i++)step();
+  }
+  // stats: attachments over rolling second
+  attAcc.push({t:now,n:attached});
+  attached=0;
+  while(attAcc.length&&now-attAcc[0].t>1000)attAcc.shift();
+  var sum=0;attAcc.forEach(function(a){sum+=a.n;});
+  if(now-(loop.mt||0)>400){
+    loop.mt=now;
+    document.getElementById("mN").textContent=total;
+    document.getElementById("mR").textContent=sum;
+  }
+  render(now);
+  requestAnimationFrame(loop);
+}
+baseRgb=hexToRgb(sp.base);tipRgb=hexToRgb(sp.tip);
+document.getElementById("sp").addEventListener("change",function(){
+  baseRgb=hexToRgb(sp.base);tipRgb=hexToRgb(sp.tip);
+});
+document.getElementById("mW").textContent=sp.walkers;
+reset();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

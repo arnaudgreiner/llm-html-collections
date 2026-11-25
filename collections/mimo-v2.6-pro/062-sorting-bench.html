@@ -1,0 +1,218 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sorting Bench</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0e1116;color:#b9c6d9;font-family:ui-monospace,Menlo,Consolas,monospace;
+  display:flex;flex-direction:column;align-items:center;gap:15px;padding:26px 14px}
+h1{font-size:14px;letter-spacing:.36em;color:#7fdbca;text-transform:uppercase}
+#bench{background:#151a22;border:1px solid #26314a;border-radius:12px;padding:16px;box-shadow:0 22px 55px rgba(0,0,0,.55)}
+canvas{display:block;border-radius:6px;background:#0b0e13}
+#stats{display:flex;gap:24px;justify-content:center;font-size:11px;color:#6d7d97;letter-spacing:.1em;flex-wrap:wrap}
+#stats b{color:#7fdbca;font-weight:600}
+#panel{display:flex;gap:10px;flex-wrap:wrap;justify-content:center;align-items:center;background:#151a22;
+  border:1px solid #26314a;border-radius:10px;padding:12px 16px}
+.algo{background:#1b2330;border:1px solid #31405d;color:#b9c6d9;font:10px ui-monospace,monospace;letter-spacing:.13em;
+  padding:8px 13px;border-radius:7px;cursor:pointer}
+.algo.on{background:#7fdbca;color:#0b0e13;border-color:#7fdbca}
+button{background:#1b2330;border:1px solid #31405d;color:#b9c6d9;font:10px ui-monospace,monospace;letter-spacing:.14em;
+  padding:8px 14px;border-radius:7px;cursor:pointer}
+button:hover{border-color:#7fdbca}
+.row{display:flex;align-items:center;gap:8px;font-size:10px;letter-spacing:.14em;color:#6d7d97}
+input[type=range]{width:110px;accent-color:#7fdbca}
+.row span{color:#7fdbca;min-width:44px}
+#legend{display:flex;gap:18px;font-size:10px;letter-spacing:.12em;color:#6d7d97}
+.dot{display:inline-block;width:9px;height:9px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+</style>
+</head>
+<body>
+<h1>Sorting Bench</h1>
+<div id="bench"><canvas id="cv" width="680" height="300"></canvas></div>
+<div id="stats">
+  <div>ALGORITHM <b id="sAlgo">BUBBLE</b></div>
+  <div>N <b id="sN">40</b></div>
+  <div>COMPARISONS <b id="sCmp">0</b></div>
+  <div>WRITES <b id="sWr">0</b></div>
+  <div>PROGRESS <b id="sPr">0%</b></div>
+  <div>STATE <b id="sState">IDLE</b></div>
+</div>
+<div id="legend">
+  <span><span class="dot" style="background:#e0b64f"></span>comparing</span>
+  <span><span class="dot" style="background:#ff6b6b"></span>writing</span>
+  <span><span class="dot" style="background:#7fdbca"></span>settled</span>
+  <span><span class="dot" style="background:#3c6ea8"></span>pending</span>
+</div>
+<div id="panel">
+  <button class="algo on" data-a="bubble">BUBBLE</button>
+  <button class="algo" data-a="selection">SELECTION</button>
+  <button class="algo" data-a="insertion">INSERTION</button>
+  <button class="algo" data-a="shell">SHELL</button>
+  <div class="row"><label>SIZE</label><input id="size" type="range" min="8" max="80" value="40"><span id="sizeV">40</span></div>
+  <div class="row"><label>SPEED</label><input id="spd" type="range" min="1" max="60" value="14"><span id="spdV">14/s</span></div>
+  <button id="shuffle">shuffle</button>
+  <button id="run">run</button>
+  <button id="step">step</button>
+</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ctx=cv.getContext("2d");
+var W=680,H=300;
+var n=40,algo="bubble",speed=14;
+var data=[],ops=[],ptr=0,running=false,cmp=0,wr=0,ended=false;
+var done={},marked=0;
+var hl={cmpA:-1,cmpB:-1,wrA:-1,wrB:-1};
+function shuffleData(){
+  data=[];
+  for(var i=0;i<n;i++)data.push(8+Math.floor(Math.random()*(H-30)));
+  ops=[];ptr=0;cmp=0;wr=0;done={};marked=0;ended=false;running=false;
+  hl={cmpA:-1,cmpB:-1,wrA:-1,wrB:-1};
+  document.getElementById("run").textContent="run";
+  setState("IDLE");draw();
+}
+function setState(s){document.getElementById("sState").textContent=s;}
+function buildOps(){
+  ops=[];
+  done={};marked=0;ended=false;
+  var a=data.slice();
+  function cmp(i,j){ops.push({t:"c",i:i,j:j});}
+  function sw(i,j){var x=a[i];a[i]=a[j];a[j]=x;ops.push({t:"w",i:i,j:j});}
+  function write(i,v){a[i]=v;ops.push({t:"o",i:i,v:v});}
+  function mark(i){ops.push({t:"m",i:i});}
+  if(algo==="bubble"){
+    for(var e=n-1;e>0;e--){
+      for(var i=0;i<e;i++){
+        cmp(i,i+1);
+        if(a[i]>a[i+1])sw(i,i+1);
+      }
+      mark(e);
+    }
+    mark(0);
+  }else if(algo==="selection"){
+    for(var s=0;s<n-1;s++){
+      var mn=s;
+      for(var j=s+1;j<n;j++){
+        cmp(mn,j);
+        if(a[j]<a[mn])mn=j;
+      }
+      if(mn!==s)sw(s,mn);
+      mark(s);
+    }
+    mark(n-1);
+  }else if(algo==="insertion"){
+    mark(0);
+    for(var i2=1;i2<n;i2++){
+      var key=a[i2],jj=i2-1;
+      while(jj>=0){
+        cmp(jj,i2);
+        if(a[jj]>key){write(jj+1,a[jj]);jj--;}
+        else break;
+      }
+      write(jj+1,key);
+      mark(i2);
+    }
+  }else if(algo==="shell"){
+    var gaps=[],g=Math.floor(n/2);
+    while(g>0){gaps.push(g);g=Math.floor(g/2);}
+    gaps.forEach(function(gp){
+      for(var i3=gp;i3<n;i3++){
+        var v=a[i3],j4=i3;
+        while(j4>=gp){
+          ops.push({t:"c",i:j4-gp,j:j4});
+          if(a[j4-gp]>v){write(j4,a[j4-gp]);j4-=gp;}
+          else break;
+        }
+        write(j4,v);
+      }
+    });
+    for(var m=0;m<n;m++)mark(m);
+  }
+  ops.push({t:"end"});
+}
+function applyOp(op){
+  if(op.t==="c"){hl.cmpA=op.i;hl.cmpB=op.j;cmp++;}
+  else if(op.t==="w"){hl.wrA=op.i;hl.wrB=op.j;
+    var t=data[op.i];data[op.i]=data[op.j];data[op.j]=t;wr++;}
+  else if(op.t==="o"){hl.wrA=op.i;hl.wrB=-1;data[op.i]=op.v;wr++;}
+  else if(op.t==="m"){if(!done[op.i]){done[op.i]=1;marked++;}hl.cmpA=hl.cmpB=hl.wrA=hl.wrB=-1;}
+  else if(op.t==="end"){
+    for(var q=0;q<n;q++)if(!done[q]){done[q]=1;marked++;}
+    ended=true;running=false;setState("SORTED");
+    document.getElementById("run").textContent="run";
+    hl.cmpA=hl.cmpB=hl.wrA=hl.wrB=-1;
+  }
+}
+function draw(){
+  ctx.clearRect(0,0,W,H);
+  var bw=W/n;
+  for(var i=0;i<n;i++){
+    var h=data[i];
+    var color="#3c6ea8";
+    if(done[i])color="#7fdbca";
+    if(i===hl.cmpA||i===hl.cmpB)color="#e0b64f";
+    if(i===hl.wrA||i===hl.wrB)color="#ff6b6b";
+    ctx.fillStyle=color;
+    var x=i*bw+1,w=Math.max(2,bw-2);
+    ctx.beginPath();
+    if(ctx.roundRect)ctx.roundRect(x,H-h,w,h,[3,3,0,0]);else ctx.rect(x,H-h,w,h);
+    ctx.fill();
+  }
+  document.getElementById("sCmp").textContent=cmp;
+  document.getElementById("sWr").textContent=wr;
+  document.getElementById("sPr").textContent=Math.round(100*marked/n)+"%";
+}
+function tick(){
+  if(running&&ops.length){
+    for(var k=0;k<speed&&ptr<ops.length;k++){
+      applyOp(ops[ptr++]);
+      if(!running)break;
+    }
+    if(ptr>=ops.length)running=false;
+  }
+  draw();
+  requestAnimationFrame(tick);
+}
+function start(){
+  if(ended)shuffleData();
+  if(!ops.length||ptr>=ops.length){
+    if(!data.length)shuffleData();
+    buildOps();
+    ptr=0;cmp=0;wr=0;done={};marked=0;
+  }
+  running=true;setState("RUNNING");
+  document.getElementById("run").textContent="pause";
+}
+function pause(){running=false;setState("PAUSED");document.getElementById("run").textContent="run";}
+document.getElementById("run").addEventListener("click",function(){running?pause():start();});
+document.getElementById("step").addEventListener("click",function(){
+  if(ended)shuffleData();
+  if(!ops.length||ptr>=ops.length){
+    if(!data.length)shuffleData();
+    buildOps();ptr=0;cmp=0;wr=0;done={};marked=0;
+  }
+  if(running)pause();
+  if(ptr<ops.length){applyOp(ops[ptr++]);setState("PAUSED");}
+  draw();
+});
+document.getElementById("shuffle").addEventListener("click",function(){shuffleData();});
+document.getElementById("size").addEventListener("input",function(){
+  n=+this.value;document.getElementById("sizeV").textContent=n;document.getElementById("sN").textContent=n;shuffleData();
+});
+document.getElementById("spd").addEventListener("input",function(){speed=+this.value;document.getElementById("spdV").textContent=speed+"/s";});
+document.querySelectorAll(".algo").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll(".algo").forEach(function(x){x.classList.remove("on");});
+    b.classList.add("on");algo=b.dataset.a;
+    document.getElementById("sAlgo").textContent=b.textContent;
+    shuffleData();
+  });
+});
+shuffleData();
+requestAnimationFrame(tick);
+})();
+</script>
+</body>
+</html>

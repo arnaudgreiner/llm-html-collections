@@ -1,0 +1,19 @@
+TITLE: Paper & Poetry — Scroll-Revealed Chapbook
+
+FULL PROMPT:
+Create one fully self-contained HTML page named "Paper & Poetry", a six-part poetry chapbook rendered as an editorial reading surface, with all CSS and JavaScript inline and nothing loaded from the network. Use a warm paper ground (#f7f3ea) with near-black ink (#1b1917), rust accents (#8a3324) and hairline rules (#d8d1c2), plus a subtle woven paper texture built from repeating gradients. Build a three-column sheet: a sticky left rail carrying a roman numeral folio and running note, a 66-character main measure holding the header and six stanzas, and a sticky right rail of sidenotes and an abstract figure block. Give the opening paragraph a rust italic drop cap. Each poem line is its own span that begins blurred, transparent and offset downward, then resolves in sequence when its stanza scrolls into view. Top the page with a rust-to-gold reading-progress bar bound to scroll position.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a well-set chapbook on uncoated stock — unhurried, generous and typographically confident, with the whitespace of a real book rather than a web layout. Content is deliberately off-centre: instruments and apparatus sit in the rails while the verse keeps a narrow, comfortable measure. Rust is used only for emphasis (drop cap, folio numeral, hover states) so the eye reads black first. Georgia carries the poetry; a tracked sans carries the machinery.
+
+MAJOR VISUAL TECHNIQUES:
+- IntersectionObserver-driven staggered line reveals using per-line CSS custom-property delays
+- Blur-to-sharp text entrance with transition-delay staggering rather than JavaScript timers
+- A true float: first-letter drop cap in italic rust
+- Sticky rails on both flanks with a narrow reading measure between them
+- Scroll-bound progress bar computed from document height
+- Cross-highlighting between sidenotes and their stanzas in both directions
+- A composited abstract figure made entirely from gradients and a circle pseudo-element
+
+INTENDED INTERACTION MODEL:
+Scrolling reveals each stanza line by line exactly once, as it enters the viewport. Hovering a sidenote rust-colours the border of its stanza and nudges the note itself, while hovering a stanza lights its note. A progress bar tracks how much of the collection has been read. With prefers-reduced-motion, all lines render fully resolved and scrolling is instant; below 960px the three-column sheet collapses to a single flow and the rails become inline blocks.

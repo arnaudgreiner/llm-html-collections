@@ -1,0 +1,19 @@
+TITLE: Synth Sunset — Procedural Retrowave Horizon
+
+FULL PROMPT:
+Generate a single self-contained HTML page called "Synth Sunset", a retrowave poster scene built entirely from gradients, canvas and inline CSS, with no external fonts, images or scripts. Behind everything, a fixed scene layer stacks a magenta-violet sky gradient, a canvas holding seventy twinkling stars, a procedurally striped sun (a clipped circle filled with a vertical gradient and cut by horizontal bands that widen toward its base), three seeded mountain ridge layers with a neon rim stroke, a glowing horizon rule, and a perspective road plane whose horizontal bands scroll toward the viewer. In front of it, place a chrome-to-neon clipped headline reading "SUNSET PROTOCOL", a lede, three glass chips, and a control panel with a three-swatch palette deck (Miami, Ice Coast, Burnout), a cruise slider bound to the road's animation speed, and a four-item feature grid.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read as a record sleeve for a drive that never ends: enormous glowing type floating over an infinite horizon, instrument controls sitting under it like a car stereo. Composition is a centred column over the fixed scene, with the panel kept translucent so the horizon remains visible through it. The palette is hot magenta against deep violet with cyan as the only cool note, and every glow is a drop-shadow or box-shadow rather than a blur filter.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas sun with destination-out composite banding for the classic sliced disc
+- Seeded pseudo-random mountain ridge generation with a rim-light stroke
+- Perspective rotateX road plane with two independently animating background layers
+- Gradient-clipped text plus stacked drop-shadows for neon headline glow
+- CSS custom properties retinting the whole scene from a palette deck
+- Pointer-driven parallax drift applied to sun and ridge coordinates
+- Twinkle via per-star sine phase
+
+INTENDED INTERACTION MODEL:
+Moving the pointer horizontally drifts the sun and mountains with easing, simulating steering. Clicking a palette swatch swaps the CSS variables and canvas colours instantly and marks the active swatch. Dragging the cruise slider changes its numeric readout and the road grid's animation duration so the speed is genuinely felt; with prefers-reduced-motion the road animation is paused and stars hold a constant brightness. Everything degrades to a legible single column on small screens.

@@ -1,0 +1,302 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Constellation Drafting Table</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#05060c;color:#8a93b8;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#9db4ff;text-transform:uppercase}
+.stage{position:relative;width:100%;max-width:980px;border-radius:14px;overflow:hidden;border:1px solid #1a1f33;box-shadow:0 30px 70px rgba(0,0,0,.6)}
+canvas{display:block;width:100%;cursor:crosshair}
+#tip{position:absolute;pointer-events:none;background:rgba(8,10,18,.92);border:1px solid #2b3554;border-radius:8px;padding:8px 11px;font-size:10.5px;line-height:1.65;letter-spacing:.06em;color:#c3cdf2;display:none;white-space:nowrap;z-index:3}
+#tip b{color:#ffd479;font-weight:600}
+#tip .g{color:#6f7ba6}
+.bar{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;max-width:980px;background:#0a0c15;border:1px solid #1a1f33;border-radius:12px;padding:12px 15px}
+.bar span.lab{font-size:9.5px;letter-spacing:.2em;color:#57608c}
+input[type=text]{background:#0e1120;border:1px solid #232a45;border-radius:7px;color:#e6ebff;font:inherit;font-size:12.5px;padding:9px 12px;width:170px;letter-spacing:.14em;outline:none}
+input[type=text]:focus{border-color:#9db4ff}
+button{background:#111527;border:1px solid #262e4e;color:#98a4d6;font:inherit;font-size:10.5px;padding:9px 14px;border-radius:7px;cursor:pointer;letter-spacing:.14em}
+button:hover{border-color:#3c477a}
+button.on{background:#9db4ff;border-color:#9db4ff;color:#0a0c18;font-weight:700}
+button.go{background:#ffd479;border-color:#ffd479;color:#171204;font-weight:700}
+.cols{display:flex;gap:13px;flex-wrap:wrap;width:100%;max-width:980px}
+.pane{flex:1;min-width:260px;background:#0a0c15;border:1px solid #1a1f33;border-radius:12px;padding:13px 15px}
+.ph{font-size:9.5px;letter-spacing:.26em;color:#57608c;margin-bottom:9px;display:flex;justify-content:space-between}
+.ph b{color:#9db4ff}
+#lines,#saves{display:flex;flex-direction:column;gap:6px;max-height:170px;overflow-y:auto}
+.li{display:flex;align-items:center;gap:9px;font-size:10.5px;color:#8f9ac6;background:#0e1120;border:1px solid #1b2138;border-radius:7px;padding:7px 10px}
+.li .d{color:#ffd479;margin-left:auto}
+.li .x{background:none;border:0;color:#5a628c;cursor:pointer;font-size:13px;padding:0 2px}
+.li .x:hover{color:#ff7a8a}
+.chip{display:flex;align-items:center;gap:9px;font-size:10.5px;letter-spacing:.1em;background:#0e1120;border:1px solid #1b2138;border-radius:7px;padding:7px 10px;cursor:pointer;color:#98a4d6}
+.chip:hover{border-color:#3c477a;color:#c3cdf2}
+.chip .x{margin-left:auto;background:none;border:0;color:#5a628c;cursor:pointer;font-size:13px}
+.chip .x:hover{color:#ff7a8a}
+.hint{font-size:9.5px;color:#4c5480;line-height:1.7;margin-top:9px;border-top:1px dashed #1a1f33;padding-top:8px}
+.empty{font-size:10px;color:#4c5480;font-style:italic}
+.status{font-size:10px;letter-spacing:.16em;color:#57608c}
+.status b{color:#9db4ff}
+.status.arm b{color:#ffd479}
+</style>
+</head>
+<body>
+<h1>Constellation Drafting Table</h1>
+<div class="stage" id="stage">
+  <canvas id="sky" height="480"></canvas>
+  <div id="tip"></div>
+</div>
+<div class="bar">
+  <span class="lab" id="st" >FIELD <b>—</b></span>
+  <span class="lab" id="arm" >LINK <b>IDLE</b></span>
+  <button id="gridBtn">GRID: OFF</button>
+  <button id="clrLines">CLEAR LINES</button>
+  <span class="lab">SAMPLES</span>
+  <button data-s="orion">ORION</button>
+  <button data-s="dipper">BIG DIPPER</button>
+</div>
+<div class="cols">
+  <div class="pane">
+    <div class="ph"><span>SKETCHED LINES</span><b id="ln">0</b></div>
+    <div id="lines"><div class="empty">Click one star, then another, to draw a line.</div></div>
+    <div class="hint">Chain mode: after a link lands, the second star stays armed. Click empty sky or press ESC to disarm. Distance uses an arbitrary 40 ly-per-pixel scale, as is tradition for invented skies.</div>
+  </div>
+  <div class="pane">
+    <div class="ph"><span>SAVED CONSTELLATIONS</span><b id="sv">0</b></div>
+    <div class="bar" style="padding:0;border:0;background:none;justify-content:flex-start;margin-bottom:9px">
+      <input type="text" id="cname" placeholder="name it…" spellcheck="false">
+      <button id="save" class="go">SAVE</button>
+    </div>
+    <div id="saves"></div>
+    <div class="hint">Saving snapshots the current sky — stars, lines and all. Click a saved card to reload it.</div>
+  </div>
+</div>
+<div class="status" id="hint2">Hover a star to inspect · click two stars to draft a line</div>
+<script>
+(function(){
+"use strict";
+var stage=document.getElementById("stage");
+var sky=document.getElementById("sky"),cx=sky.getContext("2d");
+var tip=document.getElementById("tip");
+var W=960,H=480;
+var stars=[],lines=[],hover=-1,armed=-1,grid=false,saves=[];
+function rng(seed){return function(){seed=(seed*1664525+1013904223)>>>0;return seed/4294967296;};}
+function makeStars(n,seed){
+  var r=rng(seed),out=[];
+  for(var i=0;i<n;i++){
+    out.push({x:0.03+r()*0.94,y:0.04+r()*0.92,mag:0.4+r()*4.8,ph:r()*6.28,sp:0.7+r()*2.2,id:"HIP-"+(2400+i*13)});
+  }
+  return out;
+}
+function loadPattern(name){
+  var pts,lns;
+  if(name==="dipper"){
+    pts=[[0.70,0.50],[0.74,0.58],[0.64,0.62],[0.60,0.54],[0.52,0.50],[0.44,0.46],[0.36,0.42]];
+    lns=[[0,1],[1,2],[2,3],[3,0],[3,4],[4,5],[5,6]];
+  }else{
+    pts=[[0.45,0.30],[0.58,0.32],[0.47,0.50],[0.51,0.515],[0.55,0.53],[0.43,0.68],[0.58,0.70]];
+    lns=[[0,2],[1,4],[2,3],[3,4],[2,5],[4,6]];
+  }
+  stars=pts.map(function(p,i){
+    return {x:p[0],y:p[1],mag:i===0||i===6?0.6:1.6+i*0.3,ph:i*1.1,sp:1+i*0.3,id:"HIP-"+(5100+i*37)};
+  });
+  lines=lns.slice();
+  armed=-1;hover=-1;
+  render();
+}
+function render(){
+  var box=document.getElementById("lines");
+  box.innerHTML="";
+  document.getElementById("ln").textContent=lines.length;
+  if(!lines.length){
+    box.innerHTML='<div class="empty">Click one star, then another, to draw a line.</div>';
+  }
+  lines.forEach(function(l,idx){
+    var a=stars[l[0]],b=stars[l[1]];
+    var d=Math.round(Math.hypot(a.x-b.x,a.y-b.y)*Math.min(W,H)*40);
+    var row=document.createElement("div");row.className="li";
+    row.innerHTML='<span>'+a.id+' → '+b.id+'</span><span class="d">'+d.toLocaleString()+' ly</span>';
+    var x=document.createElement("button");x.className="x";x.textContent="×";
+    x.addEventListener("click",function(){lines.splice(idx,1);render();});
+    row.appendChild(x);
+    box.appendChild(row);
+  });
+  document.getElementById("st").innerHTML="FIELD <b>"+stars.length+"★</b>";
+  var armEl=document.getElementById("arm");
+  if(armed>=0){armEl.className="lab";armEl.innerHTML='LINK <b>ARMED · '+stars[armed].id+'</b>';}
+  else armEl.innerHTML='LINK <b>IDLE</b>';
+}
+function renderSaves(){
+  var box=document.getElementById("saves");
+  box.innerHTML="";
+  document.getElementById("sv").textContent=saves.length;
+  if(!saves.length)box.innerHTML='<div class="empty">Nothing saved yet.</div>';
+  saves.forEach(function(s,i){
+    var c=document.createElement("div");c.className="chip";
+    c.innerHTML='<span>✦ '+s.name+'</span><span class="d" style="color:#57608c">'+s.stars.length+'★ '+s.lines.length+'⌁</span>';
+    var x=document.createElement("button");x.className="x";x.textContent="×";
+    x.addEventListener("click",function(e){e.stopPropagation();saves.splice(i,1);renderSaves();});
+    c.appendChild(x);
+    c.addEventListener("click",function(){
+      stars=s.stars.map(function(o){return Object.assign({},o);});
+      lines=s.lines.map(function(l){return l.slice();});
+      armed=-1;render();
+    });
+    box.appendChild(c);
+  });
+}
+function draw(t){
+  var w=sky.width,h=sky.height;
+  var g=cx.createLinearGradient(0,0,0,h);
+  g.addColorStop(0,"#070a18");g.addColorStop(0.55,"#0a0c1e");g.addColorStop(1,"#0d0a1c");
+  cx.fillStyle=g;cx.fillRect(0,0,w,h);
+  [["rgba(74,42,122,.16)",0.22,0.30,0.5],["rgba(31,77,95,.15)",0.75,0.62,0.45],["rgba(95,42,77,.13)",0.55,0.15,0.4]].forEach(function(n){
+    var rg=cx.createRadialGradient(n[1]*w,n[2]*h,0,n[1]*w,n[2]*h,n[3]*w);
+    rg.addColorStop(0,n[0]);rg.addColorStop(1,"rgba(0,0,0,0)");
+    cx.fillStyle=rg;cx.fillRect(0,0,w,h);
+  });
+  cx.save();
+  cx.translate(w/2,h/2);cx.rotate(-0.38);cx.translate(-w/2,-h/2);
+  var mg=cx.createLinearGradient(0,-h*0.3,0,h*0.3);
+  mg.addColorStop(0,"rgba(180,200,255,0)");
+  mg.addColorStop(0.5,"rgba(180,200,255,.05)");
+  mg.addColorStop(1,"rgba(180,200,255,0)");
+  cx.fillStyle=mg;cx.fillRect(-w,-h*0.3,w*3,h*0.6);
+  cx.restore();
+  if(grid){
+    cx.strokeStyle="rgba(120,150,255,.13)";cx.lineWidth=1;
+    cx.font="9px ui-monospace,Menlo,monospace";cx.fillStyle="rgba(120,150,255,.4)";
+    for(var i=1;i<12;i++){
+      var gx=i*w/12;
+      cx.beginPath();
+      for(var y=0;y<=h;y+=12){
+        var xx=gx+Math.sin(y/h*Math.PI)*9;
+        if(y===0)cx.moveTo(xx,y);else cx.lineTo(xx,y);
+      }
+      cx.stroke();
+      cx.fillText((i*2)+"h",gx+4,12);
+    }
+    for(var j=1;j<8;j++){
+      var gy=j*h/8;
+      cx.beginPath();cx.moveTo(0,gy);cx.lineTo(w,gy);cx.stroke();
+      cx.fillText((90-j*22.5).toFixed(0)+"°",6,gy-4);
+    }
+  }
+  lines.forEach(function(l){
+    var a=stars[l[0]],b=stars[l[1]];
+    var x1=a.x*w,y1=a.y*h,x2=b.x*w,y2=b.y*h;
+    cx.strokeStyle="rgba(255,212,121,.5)";cx.lineWidth=1.3;
+    cx.shadowColor="rgba(255,212,121,.7)";cx.shadowBlur=6;
+    cx.beginPath();cx.moveTo(x1,y1);cx.lineTo(x2,y2);cx.stroke();
+    cx.shadowBlur=0;
+    if(l[0]===hover||l[1]===hover){
+      cx.fillStyle="rgba(255,212,121,.75)";
+      cx.fillText((Math.round(Math.hypot(a.x-b.x,a.y-b.y)*Math.min(w,h)*40)).toLocaleString()+" ly",(x1+x2)/2+6,(y1+y2)/2-6);
+    }
+  });
+  for(var s=0;s<stars.length;s++){
+    var st=stars[s];
+    var x=st.x*w,y=st.y*h;
+    var tw=0.78+0.22*Math.sin(t/1000*st.sp+st.ph);
+    var r=Math.max(1.1,4.4-st.mag*0.72);
+    var isHov=s===hover,isArmed=s===armed;
+    var alpha=tw*(st.mag<1?1:0.82);
+    cx.fillStyle="rgba(255,255,255,"+alpha+")";
+    if(st.mag<1.1){
+      cx.shadowColor="rgba(160,190,255,.9)";cx.shadowBlur=9;
+    }
+    cx.beginPath();cx.arc(x,y,isHov||isArmed?r+1.2:r,0,6.2832);cx.fill();
+    cx.shadowBlur=0;
+    if(st.mag<1.1){
+      cx.strokeStyle="rgba(200,220,255,"+(alpha*0.5)+")";cx.lineWidth=1;
+      cx.beginPath();cx.moveTo(x-r*4,y);cx.lineTo(x+r*4,y);cx.moveTo(x,y-r*4);cx.lineTo(x,y+r*4);cx.stroke();
+    }
+    if(isHov||isArmed){
+      cx.strokeStyle=isArmed?"#ffd479":"#9db4ff";cx.lineWidth=1.4;
+      cx.beginPath();cx.arc(x,y,r+7,0,6.2832);cx.stroke();
+      cx.setLineDash([3,6]);cx.strokeStyle="rgba(157,180,255,.4)";
+      cx.beginPath();cx.moveTo(0,y);cx.lineTo(x-r-9,y);cx.moveTo(x+r+9,y);cx.lineTo(w,y);
+      cx.moveTo(x,0);cx.lineTo(x,y-r-9);cx.moveTo(x,y+r+9);cx.lineTo(x,h);
+      cx.stroke();cx.setLineDash([]);
+    }
+  }
+  requestAnimationFrame(draw);
+}
+function pos(e){
+  var r=sky.getBoundingClientRect();
+  return {x:(e.clientX-r.left)/r.width,y:(e.clientY-r.top)/r.height,
+    px:e.clientX-r.left,py:e.clientY-r.top};
+}
+function findStar(px,py){
+  var best=-1,bd=16*16;
+  for(var i=0;i<stars.length;i++){
+    var dx=stars[i].x*sky.width-px,dy=stars[i].y*sky.height-py;
+    var d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=i;}
+  }
+  return best;
+}
+sky.addEventListener("pointermove",function(e){
+  var p=pos(e);
+  hover=findStar(p.px,p.py);
+  if(hover>=0){
+    var st=stars[hover];
+    tip.style.display="block";
+    tip.style.left=Math.min(p.px+16,sky.clientWidth-190)+"px";
+    tip.style.top=Math.min(p.py+16,sky.height-90)+"px";
+    var ra=(st.x*24);
+    var rh=Math.floor(ra),rm=Math.floor((ra-rh)*60);
+    var dec=(90-st.y*180);
+    tip.innerHTML='<b>'+st.id+'</b><br><span class="g">mag</span> '+st.mag.toFixed(1)+
+      ' &nbsp; <span class="g">RA</span> '+rh+'h '+(rm<10?"0":"")+rm+'m'+
+      '<br><span class="g">DEC</span> '+(dec>=0?"+":"")+dec.toFixed(1)+'°';
+  }else tip.style.display="none";
+});
+sky.addEventListener("pointerleave",function(){hover=-1;tip.style.display="none";});
+sky.addEventListener("pointerdown",function(e){
+  var p=pos(e);
+  var i=findStar(p.px,p.py);
+  if(i<0){armed=-1;render();return;}
+  if(armed===i){armed=-1;render();return;}
+  if(armed>=0){
+    var dup=lines.some(function(l){
+      return (l[0]===armed&&l[1]===i)||(l[0]===i&&l[1]===armed);
+    });
+    if(!dup)lines.push([armed,i]);
+    armed=i;
+  }else armed=i;
+  render();
+});
+document.addEventListener("keydown",function(e){if(e.key==="Escape"){armed=-1;render();}});
+document.getElementById("gridBtn").addEventListener("click",function(){
+  grid=!grid;this.textContent="GRID: "+(grid?"ON":"OFF");this.className=grid?"on":"";
+});
+document.getElementById("clrLines").addEventListener("click",function(){
+  lines=[];armed=-1;render();
+});
+document.querySelectorAll("[data-s]").forEach(function(b){
+  b.addEventListener("click",function(){loadPattern(b.getAttribute("data-s"));});
+});
+document.getElementById("save").addEventListener("click",function(){
+  var nm=(document.getElementById("cname").value||"").trim()||
+    "FIELD "+(saves.length+1);
+  saves.push({name:nm.toUpperCase(),stars:stars.map(function(o){return Object.assign({},o);}),lines:lines.map(function(l){return l.slice();})});
+  document.getElementById("cname").value="";
+  renderSaves();
+});
+function resize(){
+  W=sky.parentNode.clientWidth;
+  sky.width=W;sky.height=Math.max(380,Math.min(520,Math.round(W*0.48)));
+  render();
+}
+window.addEventListener("resize",resize);
+stars=makeStars(230,42);
+resize();
+render();
+renderSaves();
+requestAnimationFrame(draw);
+})();
+</script>
+</body>
+</html>

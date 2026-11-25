@@ -1,0 +1,20 @@
+TITLE: Metaball Garden
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Metaball Garden". Build a full-viewport canvas on a near-black slate background where a field of invisible circular blobs fuses into one continuous organic liquid shape, drawn as glowing contour lines in a teal-to-blue-to-violet gradient. Render the field with a marching-squares contour tracer over a coarse grid: sample a scalar field equal to the summed inverse-square contribution of every blob (plus a blob that follows the pointer), compare each cell's four corners against a movable threshold, look up the 16-case segment table with linear interpolation on each edge, and stroke the resulting segment soup twice — a wide translucent pass for glow, a hairline pale pass for definition. Blobs drift with gentle velocities and bounce off the viewport edges. A translucent console panel at the top left offers sliders for blob count (4–24), threshold (surface tightness), and drift speed, plus reseed and freeze buttons; a readout panel at the top right shows live blob count, contour segment count, and smoothed frame time in milliseconds. A small uppercase hint sits at the bottom center. Everything — styling, script, glyphs — lives inside one HTML file with no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a dark laboratory window onto a single luminous liquid organism that stretches, splits and merges as its hidden cells wander. Cold obsidian space and a faintly glassy control panel frame the bright contour glow so the traced shape reads like a long-exposure photograph of bioluminescent jellyfish. The readout panel reinforces the instrument-slab feeling: the picture is also data, and the millisecond counter quietly proves it is being computed live rather than played back.
+
+MAJOR VISUAL TECHNIQUES:
+- Marching squares contour tracing with linear edge interpolation over a scalar metaball field
+- Inverse-square potential summation for smooth blob fusion
+- Double-pass stroking: wide translucent gradient pass plus hairline highlight pass
+- Linear gradient stroke (teal → blue → violet) across the whole canvas
+- Pointer-driven blob that stirs the field as it moves
+- Glassy translucent control slab with backdrop blur over near-black
+- Live performance readout (segments, frame ms) with smoothed averaging
+- requestAnimationFrame loop with clamped delta time and bouncing drift
+
+INTENDED INTERACTION MODEL:
+Move the pointer over the canvas to drag a hidden high-potential blob through the field and watch the contour lines bulge and neck around it. Click anywhere to plant a new permanent blob (the count slider follows). Use the blobs slider to grow or shrink the colony, the threshold slider to tighten or loosen the membrane, and the drift slider to set the wander speed down to zero. The reseed button scatters a fresh colony; the freeze button halts all motion for inspection and toggles back to drift when pressed again. The top-right readout continuously reports blob count, traced segments and frame cost.

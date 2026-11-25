@@ -1,0 +1,19 @@
+TITLE: Traffic Junction
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Traffic Junction". Center a 720×520 canvas on a dark slate page: a two-way four-lane crossroads with dashed centre lines, zebra crossings on all four approaches, stop bars, and grassy corner wedges. Simulate traffic honestly — a six-phase signal cycle (NS green, NS yellow, all-red, EW green, EW yellow, all-red) drives stop-line logic, cars decelerate smoothly toward red lights, hold a following gap behind the vehicle ahead, queue bumper to bumper, and accelerate away on green; vehicles are drawn as colored rounded bodies with a glass band, headlight stripe and glowing brake lights whenever they are stopped. Signal heads on posts at each corner show the live lamp with a glow halo. A control panel below carries sliders for green duration (3–12s), traffic volume, and simulation speed (0.25–2.00x), plus a pause/resume button; a stats strip reports waiting count, vehicles on road, total cleared, and the longest queue observed. All code and styling inline, no external assets.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a traffic engineer's monitor at dusk: matte asphalt, muted paint, warm amber title lettering and clinical monospace telemetry. The intersection behaves like a real signalized junction — queues form on the heavy approaches, spill back during red phases, and drain in a visible shockwave when the lamp changes — so the rhythm of the cycle becomes the page's pulse. The instrument panels frame it as a controlled study rather than a game.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas traffic simulation with six-phase signal state machine and timing accumulator
+- Car-following model: gap keeping, slow deceleration ramp, acceleration ramp
+- Stop-line logic gated by per-approach lamp state with yellow-amber dilemma handling
+- Rendered road furniture: dashed centrelines, zebra crossings, stop bars, corner wedges
+- Signal heads drawn per phase with colored glow (shadowBlur) halos
+- Brake-light glow triggered by near-zero velocity
+- Sliders for cycle timing, spawn pressure and time-scale; live queue telemetry
+
+INTENDED INTERACTION MODEL:
+Drag "GREEN" to lengthen or shorten each green phase, "TRAFFIC" to change how often vehicles arrive on all four approaches, and "SPEED" to run the whole simulation in slow motion or fast forward; watch queue lengths and the longest-queue stat respond. Press pause to freeze the junction for inspection and resume to continue. Vehicles appear continuously until paused, and the cleared counter accumulates every car that exits the frame.

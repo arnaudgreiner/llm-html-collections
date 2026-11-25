@@ -1,0 +1,334 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>011 · Transit Map</title>
+<style>
+:root{--bg:#0b1220;--panel:#111a2e;--line:#1d2942;--txt:#e8eefc;--mute:#8ea3c8;
+  --R:#ff5b5b;--Y:#ffd166;--C:#4cc9f0;--G:#7bf1a8}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--bg);color:var(--txt);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;opacity:.5;
+  background:radial-gradient(90% 60% at 20% -10%,rgba(76,201,240,.12),transparent 60%),
+             radial-gradient(70% 50% at 100% 100%,rgba(255,91,91,.10),transparent 60%)}
+.wrap{max-width:1340px;margin:0 auto;padding:26px 24px 50px;position:relative;z-index:2}
+.top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap;align-items:flex-end;
+  border-bottom:1px solid var(--line);padding-bottom:16px}
+.top h1{margin:0;font-size:clamp(30px,5vw,56px);line-height:.95;letter-spacing:-.03em;font-weight:800}
+.top h1 span{color:var(--mute);font-weight:300}
+.status{text-align:right;font-size:11px;letter-spacing:.26em;text-transform:uppercase;color:var(--mute);
+  line-height:2}
+.status b{color:var(--G);font-weight:700}
+.status .clock{color:var(--txt);font-variant-numeric:tabular-nums;letter-spacing:.16em;font-size:16px}
+.controls{display:flex;gap:9px;flex-wrap:wrap;margin:18px 0 0;align-items:center}
+button{font:inherit;font-size:11px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  padding:9px 14px;cursor:pointer;border:1.5px solid var(--line);background:var(--panel);
+  color:var(--txt);transition:.2s;display:inline-flex;align-items:center;gap:8px}
+button:hover{border-color:currentColor;transform:translateY(-2px)}
+button i{width:14px;height:14px;border-radius:50%;display:inline-block}
+button.on{background:#182443;border-color:#3a4d78;box-shadow:inset 0 0 0 1px #3a4d78}
+.sep{margin-left:auto;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.board{display:grid;grid-template-columns:minmax(0,1fr) 320px;gap:20px;margin-top:18px}
+.map{border:1px solid var(--line);background:
+  linear-gradient(180deg,#0d1730,#0a1122);padding:10px;position:relative;overflow:hidden}
+.map::after{content:"";position:absolute;inset:0;pointer-events:none;
+  background:repeating-linear-gradient(45deg,rgba(255,255,255,.02) 0 2px,transparent 2px 7px)}
+svg{display:block;width:100%;height:auto}
+.route{fill:none;stroke-width:13;stroke-linecap:round;stroke-linejoin:round;transition:opacity .35s,stroke-width .35s}
+.under{fill:none;stroke:#050a16;stroke-width:19;stroke-linecap:round;stroke-linejoin:round}
+g.line.dim .route{opacity:.16}
+g.line.pick .route{stroke-width:17}
+g.stations.dim{opacity:.16}
+.st{cursor:pointer}
+.st circle.dot{fill:#0b1220;stroke:#e8eefc;stroke-width:3;transition:.2s}
+.st.ix circle.dot{fill:#e8eefc;stroke:#0b1220;stroke-width:3}
+.st.ix circle.ring{fill:none;stroke:#e8eefc;stroke-width:3;opacity:.9}
+.st:hover circle.dot,.st.act circle.dot{fill:var(--Y);stroke:var(--Y)}
+.st:hover circle.ring,.st.act circle.ring{stroke:var(--Y)}
+.st text{font:600 11.5px "Segoe UI",system-ui,sans-serif;fill:#dbe6fb;paint-order:stroke;
+  stroke:#0a1122;stroke-width:3.5;stroke-linejoin:round;pointer-events:none}
+.st.dim{opacity:.2}
+.train{fill:#fff;stroke:#0b1220;stroke-width:2.5}
+.trail{fill:#fff;opacity:.35}
+.side{display:flex;flex-direction:column;gap:16px}
+.panel{border:1px solid var(--line);background:var(--panel);padding:16px 16px 18px}
+.panel h2{margin:0 0 10px;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+#stName{margin:0;font-size:26px;font-weight:800;letter-spacing:-.02em}
+#stMeta{margin:6px 0 0;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+#stDesc{margin:12px 0 0;font-size:13.5px;line-height:1.7;color:#c6d4ee}
+.badges{display:flex;gap:7px;flex-wrap:wrap;margin-top:12px}
+.badge{width:26px;height:26px;border-radius:50%;display:grid;place-items:center;font-size:11px;
+  font-weight:800;color:#0b1220}
+.rows{width:100%;border-collapse:collapse;font-size:12.5px}
+.rows td{padding:8px 0;border-bottom:1px dashed var(--line);color:#c6d4ee}
+.rows td:last-child{text-align:right;color:var(--txt);font-variant-numeric:tabular-nums}
+.rows tr:last-child td{border-bottom:0}
+.ticker{font-size:12.5px;line-height:1.9;color:#c6d4ee}
+.ticker div{display:flex;gap:10px;align-items:baseline;padding:4px 0;border-bottom:1px dashed var(--line)}
+.ticker div:last-child{border-bottom:0}
+.ticker b{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;padding:2px 6px;flex:none}
+.ok{background:rgba(123,241,168,.16);color:var(--G)}
+.warn{background:rgba(255,209,102,.16);color:var(--Y)}
+.hot{background:rgba(255,91,91,.16);color:var(--R)}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:20px;
+  font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(max-width:980px){.board{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <h1>Meridian <span>transit</span><br>network diagram</h1>
+    <div class="status">
+      Service <b id="svc">good</b> · weather clear<br>
+      <span class="clock" id="clock">--:--:--</span>
+    </div>
+  </header>
+
+  <div class="controls" id="controls">
+    <button class="on" data-line="ALL">All lines</button>
+    <button data-line="R"><i style="background:var(--R)"></i>Red · Ridge</button>
+    <button data-line="Y"><i style="background:var(--Y)"></i>Yellow · Yard</button>
+    <button data-line="C"><i style="background:var(--C)"></i>Cyan · Coast</button>
+    <button data-line="G"><i style="background:var(--G)"></i>Green · Grove</button>
+    <button id="bTrains">Trains: on</button>
+    <span class="sep">click a line to isolate · click a station to inspect</span>
+  </div>
+
+  <div class="board">
+    <div class="map">
+      <svg id="net" viewBox="0 0 1000 700" role="img" aria-label="Four line transit network diagram">
+        <g id="routes">
+          <g class="line" data-l="R">
+            <path class="under" d="M60 540 H300 L480 380 H700 L820 260 H960"/>
+            <path class="route" style="stroke:var(--R)" d="M60 540 H300 L480 380 H700 L820 260 H960"/>
+          </g>
+          <g class="line" data-l="Y">
+            <path class="under" d="M480 60 V380 H760 L880 500 V620"/>
+            <path class="route" style="stroke:var(--Y)" d="M480 60 V380 H760 L880 500 V620"/>
+          </g>
+          <g class="line" data-l="C">
+            <path class="under" d="M60 380 H240 L380 520 H560 L700 380 V160 H860"/>
+            <path class="route" style="stroke:var(--C)" d="M60 380 H240 L380 520 H560 L700 380 V160 H860"/>
+          </g>
+          <g class="line" data-l="G">
+            <path class="under" d="M240 60 V380 H480 V560 H740 L860 680"/>
+            <path class="route" style="stroke:var(--G)" d="M240 60 V380 H480 V560 H740 L860 680"/>
+          </g>
+        </g>
+        <g class="stations" id="stations"></g>
+        <g id="trains"></g>
+      </svg>
+    </div>
+
+    <aside class="side">
+      <section class="panel">
+        <h2>Station</h2>
+        <p id="stName">Union</p>
+        <p id="stMeta">Interchange · zone 1</p>
+        <div class="badges" id="stBadges"></div>
+        <p id="stDesc">Three lines meet beneath a single vaulted hall. Select any dot on the diagram to
+          read its record.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Counts</h2>
+        <table class="rows">
+          <tr><td>Lines</td><td>4</td></tr>
+          <tr><td>Stations</td><td id="cSt">0</td></tr>
+          <tr><td>Interchanges</td><td id="cIx">0</td></tr>
+          <tr><td>Track length</td><td>62.4 km</td></tr>
+          <tr><td>Fleet in service</td><td id="cFleet">84 / 96</td></tr>
+        </table>
+      </section>
+
+      <section class="panel">
+        <h2>Bulletins</h2>
+        <div class="ticker">
+          <div><b class="ok">good</b> Red line running to timetable between Kiln Row and East Terminal.</div>
+          <div><b class="warn">minor</b> Yellow line: 4 min dwell at Foundry, platform works until Friday.</div>
+          <div><b class="ok">good</b> Green line reopened at Southbank after overnight testing.</div>
+          <div><b class="hot">closed</b> Shipyard stair-lift out of service; use Docks entrance.</div>
+        </div>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Not to scale · schematic only · 45° geometry</span>
+    <span>011 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var NS=(function(){var d=document.createElement("div");d.innerHTML="<svg></svg>";return d.firstChild.namespaceURI;})();
+
+  var COLORS={R:"#ff5b5b",Y:"#ffd166",C:"#4cc9f0",G:"#7bf1a8"};
+  /* x, y, name, lines served, side for the label, zone, note */
+  var S=[
+    [60,540,"Quay","R","up",3,"The western terminus sits on reclaimed dock land; every train reverses here."],
+    [180,540,"Ferry","R","up",3,"Hedited for the cross-harbour ferry with a covered walkway to the pier."],
+    [300,540,"Kiln Row","R","up",2,"Former brickworks stop, now the interchange for the riverside buses."],
+    [480,380,"Union","RYG","up",1,"Three lines meet beneath a single vaulted hall — the busiest interchange on the network."],
+    [700,380,"Central","RYC","down",1,"The network's hinge: Ridge, Yard and Coast all share one island platform here."],
+    [820,260,"Ridge","R","up",2,"Cut into the hillside at the eastern end of the Ridge line."],
+    [940,260,"East Terminal","R","up",2,"Sidings, a carriage wash and the network's only turntable."],
+    [480,60,"Northgate","Y","right",2,"Northern gate to the old city wall, with a market two streets south."],
+    [480,200,"Orchard","Y","right",3,"Serves the municipal orchard and the horticultural college."],
+    [620,380,"Gallery","Y","up",1,"Direct cover-step access to the picture gallery's lower hall."],
+    [760,380,"Foundry","Y","up",2,"Platform works are under way; expect a four minute dwell."],
+    [880,500,"Summit","Y","right",3,"Highest station on the network at 96 metres above datum."],
+    [880,600,"Airport","Y","right",3,"Terminal 1 and 2 via the moving walkway; last train 00:40."],
+    [60,380,"West End","C","left",3,"Quiet western edge, single island platform with a staffed cabin."],
+    [150,380,"Muse","C","left",3,"Named for the small museum of navigation opposite the north entrance."],
+    [240,380,"West Gate","CG","left",2,"Coast and Grove share a cross-platform interchange here."],
+    [380,520,"Bridge","C","down",2,"The line crosses the river on a 1928 steel truss visible from the northbound side."],
+    [470,520,"Mill","C","down",3,"Converted textile mill now housing the network's archives."],
+    [560,520,"Bank","C","down",1,"Rush-hour flows peak at 9,400 entries per hour."],
+    [700,260,"Cathedral","C","right",1,"Short walk to the close; lifts installed on both platforms."],
+    [700,160,"Hill Park","C","right",2,"Escalator to the park ridge — the view is worth the transfer."],
+    [840,160,"Observatory","C","right",2,"Northern terminus of the Coast line with a rooftop telescope."],
+    [240,60,"Old Depot","G","left",3,"The original 1911 depot, still handling overnight maintenance."],
+    [240,200,"Cedar","G","left",3,"Tree-lined residential stop with the network's quietest platforms."],
+    [360,380,"Market","G","up",2,"Saturday traders trade directly above the concourse."],
+    [480,470,"Works","G","right",3,"Adjoins the train maintenance shed; staff entrance to the east."],
+    [480,560,"Southbank","G","left",1,"Reopened after a full rebuild of the ticket hall and lifts."],
+    [620,560,"Stadium","G","up",2,"Exit capacity doubles on match days via the temporary gateline."],
+    [740,560,"Docks","G","up",2,"Interchange for the freight quays and the coastal bus loop."],
+    [800,620,"Shipyard","G","right",3,"The stair-lift is out of service; use the Docks entrance instead."]
+  ];
+
+  var gSt=document.getElementById("stations");
+  S.forEach(function(s,i){
+    var lines=s[3];
+    var ix=lines.length>1;
+    var g=document.createElementNS(NS,"g");
+    g.setAttribute("class","st"+(ix?" ix":""));
+    g.setAttribute("transform","translate("+s[0]+","+s[1]+")");
+    g.dataset.lines=lines; g.dataset.i=i;
+    if(ix){
+      var ring=document.createElementNS(NS,"circle");
+      ring.setAttribute("class","ring"); ring.setAttribute("r","13");
+      g.appendChild(ring);
+    }
+    var dot=document.createElementNS(NS,"circle");
+    dot.setAttribute("class","dot"); dot.setAttribute("r",ix?"7":"5.5");
+    g.appendChild(dot);
+    var t=document.createElementNS(NS,"text");
+    t.textContent=s[2];
+    var dx=s[4]==="left"?-18:(s[4]==="right"?18:0);
+    var dy=s[4]==="up"?-18:26;
+    t.setAttribute("x",dx); t.setAttribute("y",dy);
+    t.setAttribute("text-anchor",s[4]==="left"?"end":(s[4]==="right"?"start":"middle"));
+    g.appendChild(t);
+    g.addEventListener("click",function(){ show(i); });
+    g.addEventListener("pointerenter",function(){ show(i); });
+    gSt.appendChild(g);
+  });
+
+  var nameEl=document.getElementById("stName"), metaEl=document.getElementById("stMeta"),
+      badges=document.getElementById("stBadges"), descEl=document.getElementById("stDesc");
+  function show(i){
+    var s=S[i];
+    nameEl.textContent=s[2];
+    var lines=s[3];
+    metaEl.textContent=(lines.length>1?"Interchange":"Station")+" · zone "+s[5]+" · "+
+      (lines.length>1?lines.length+" lines":lines+" line");
+    badges.innerHTML="";
+    lines.split("").forEach(function(L){
+      var b=document.createElement("span");
+      b.className="badge"; b.style.background=COLORS[L]; b.textContent=L;
+      badges.appendChild(b);
+    });
+    descEl.textContent=s[6];
+    Array.prototype.forEach.call(gSt.children,function(g){ g.classList.remove("act"); });
+    gSt.children[i].classList.add("act");
+  }
+  document.getElementById("cSt").textContent=S.length;
+  document.getElementById("cIx").textContent=S.filter(function(s){return s[3].length>1;}).length;
+
+  /* isolate a line */
+  var linesG=document.querySelectorAll("g.line");
+  document.getElementById("controls").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    if(b.id==="bTrains"){ setTrains(!trainsOn); return; }
+    var L=b.dataset.line;
+    document.querySelectorAll("#controls button[data-line]").forEach(function(x){
+      x.classList.toggle("on",x===b);
+    });
+    linesG.forEach(function(g){
+      var hit=(L==="ALL"||g.dataset.l===L);
+      g.classList.toggle("dim",!hit);
+      g.classList.toggle("pick",hit&&L!=="ALL");
+    });
+    Array.prototype.forEach.call(gSt.children,function(g){
+      var hit=(L==="ALL"||g.dataset.lines.indexOf(L)>-1);
+      g.classList.toggle("dim",!hit);
+    });
+  });
+
+  /* trains */
+  var gTrains=document.getElementById("trains");
+  var routes=["R","Y","C","G"].map(function(L){
+    var p=document.querySelector('g.line[data-l="'+L+'"] .route');
+    return {L:L, path:p, len:p.getTotalLength(), pos:[0.12,0.62], dir:[1,-1]};
+  });
+  routes.forEach(function(r){
+    r.dots=r.pos.map(function(){
+      var c=document.createElementNS(NS,"circle");
+      c.setAttribute("class","train"); c.setAttribute("r","8");
+      c.setAttribute("fill",COLORS[r.L]);
+      gTrains.appendChild(c);
+      return c;
+    });
+  });
+  var trainsOn=!reduce;
+  function setTrains(on){
+    trainsOn=on;
+    var b=document.getElementById("bTrains");
+    b.textContent="Trains: "+(on?"on":"off");
+    b.classList.toggle("on",on);
+    gTrains.style.display=on?"":"none";
+  }
+  setTrains(trainsOn);
+
+  var last=performance.now();
+  function tick(now){
+    var dt=Math.min(0.05,(now-last)/1000); last=now;
+    if(trainsOn){
+      routes.forEach(function(r){
+        r.pos.forEach(function(p,i){
+          p+= (0.035*(1+i*0.4))*dt*r.dir[i];
+          if(p>1){ p-=1; } if(p<0){ p+=1; }
+          r.pos[i]=p;
+          var pt=r.path.getPointAtLength(p*r.len);
+          r.dots[i].setAttribute("cx",pt.x);
+          r.dots[i].setAttribute("cy",pt.y);
+        });
+      });
+    }
+    requestAnimationFrame(tick);
+  }
+  requestAnimationFrame(tick);
+
+  /* clock */
+  function clock(){
+    var d=new Date();
+    document.getElementById("clock").textContent=
+      String(d.getHours()).padStart(2,"0")+":"+
+      String(d.getMinutes()).padStart(2,"0")+":"+
+      String(d.getSeconds()).padStart(2,"0");
+  }
+  clock(); setInterval(clock,1000);
+  show(3);
+})();
+</script>
+</body>
+</html>

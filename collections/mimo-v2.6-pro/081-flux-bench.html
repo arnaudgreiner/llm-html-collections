@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flux Bench — Iron Filings Field</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0d0f12;color:#aab4bd;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e0846f;text-transform:uppercase}
+h1 i{font-style:normal;color:#6fb6d8}
+#rig{background:#14171b;border:1px solid #232830;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:8px;background:#0a0b0d;cursor:grab;touch-action:none}
+canvas:active{cursor:grabbing}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:930px}
+button{background:#171b20;border:1px solid #2b323b;color:#b6c1cb;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e0846f;color:#ffe7e0}
+button.on{background:#e0846f;border-color:#e0846f;color:#2a0e07;font-weight:700}
+label{font-size:9.5px;letter-spacing:.14em;color:#69737d;display:flex;gap:7px;align-items:center}
+input[type=range]{width:104px;accent-color:#e0846f}
+select{background:#171b20;border:1px solid #2b323b;color:#b6c1cb;font:inherit;font-size:9.5px;padding:7px 9px;border-radius:6px}
+select:focus{outline:none;border-color:#e0846f}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#69737d}
+.stat b{color:#6fb6d8}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#474f57;text-align:center;max-width:920px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Flux Bench <i>M81</i> · iron filings field</h1>
+<div id="rig"><canvas id="cv" width="930" height="540"></canvas></div>
+<div class="bar">
+  <label>source
+    <select id="src">
+      <option value="dipole">DIPOLE PAIR</option>
+      <option value="mono">SINGLE POLE</option>
+      <option value="wire">WIRE (INTO PLATE)</option>
+      <option value="quad">QUADRUPOLE</option>
+    </select>
+  </label>
+  <label>strength <input type="range" id="str" min="20" max="100" value="60"></label>
+  <label>density <input type="range" id="den" min="20" max="70" value="44"></label>
+  <button id="bLines" class="on">⌁ FIELD LINES</button>
+  <button id="bHeat">◐ FLUX HEAT</button>
+  <button id="bShake">⇣ SHAKE PLATE</button>
+  <span class="stat">filings <b id="mN">0</b> · B̄ <b id="mB">0</b> · poles <b id="mP">2</b></span>
+</div>
+<div class="hint">every steel grain is a compass needle easing into the local field of the sources · DRAG the red/blue poles across the plate · switch source geometry to see monopole, wire and quadrupole patterns</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=930,H=540;
+var src="dipole",str=0.60,showLines=true,showHeat=false;
+var grid=[];       // {x,y,a,ta,w}
+var STEP=13;
+var poles=[];      // {q,x,y,color}
+var dragIdx=-1;
+var bAvg=0;
+function setSource(){
+  poles=[];
+  if(src==="dipole"){
+    poles.push({q:1,x:W*0.36,y:H/2,c:"#e0846f"});
+    poles.push({q:-1,x:W*0.64,y:H/2,c:"#6fb6d8"});
+  }else if(src==="mono"){
+    poles.push({q:1,x:W/2,y:H/2,c:"#e0846f"});
+  }else if(src==="wire"){
+    poles.push({q:1,x:W/2,y:H/2,c:"#c9a55b",wire:true});
+  }else{
+    poles.push({q:1,x:W*0.38,y:H*0.4,c:"#e0846f"});
+    poles.push({q:-1,x:W*0.62,y:H*0.6,c:"#6fb6d8"});
+    poles.push({q:1,x:W*0.62,y:H*0.4,c:"#6fd8b0"});
+    poles.push({q:-1,x:W*0.38,y:H*0.6,c:"#c9a55b"});
+  }
+  document.getElementById("mP").textContent=poles.length;
+}
+function buildGrid(){
+  grid=[];
+  var den=Number(document.getElementById("den").value);
+  var step=Math.max(8,74-den);
+  for(var y=step/2;y<H;y+=step){
+    for(var x=step/2;x<W;x+=step){
+      var jx=x+(Math.random()-0.5)*step*0.5;
+      var jy=y+(Math.random()-0.5)*step*0.5;
+      grid.push({x:jx,y:jy,a:Math.random()*6.2832,ta:0,w:step*0.34});
+    }
+  }
+  document.getElementById("mN").textContent=grid.length;
+}
+function field(x,y){
+  var bx=0,by=0;
+  for(var i=0;i<poles.length;i++){
+    var p=poles[i];
+    var dx=x-p.x,dy=y-p.y;
+    var r2=dx*dx+dy*dy+900;
+    if(p.wire){
+      // B circles the wire
+      var inv=p.q*str*26000/r2;
+      bx+=-dy*inv/60;by+=dx*inv/60;
+      continue;
+    }
+    var r=Math.sqrt(r2);
+    var k=p.q*str*24000/(r2*r);
+    bx+=dx*k;by+=dy*k;
+  }
+  return [bx,by];
+}
+document.getElementById("src").addEventListener("change",function(){
+  src=this.value;setSource();
+});
+document.getElementById("str").addEventListener("input",function(){
+  str=Number(this.value)/100;
+});
+document.getElementById("den").addEventListener("input",buildGrid);
+document.getElementById("bLines").addEventListener("click",function(){
+  showLines=!showLines;this.className=showLines?"on":"";
+});
+document.getElementById("bHeat").addEventListener("click",function(){
+  showHeat=!showHeat;this.className=showHeat?"on":"";
+});
+document.getElementById("bShake").addEventListener("click",function(){
+  grid.forEach(function(g){g.a=Math.random()*6.2832;g.x+=(Math.random()-0.5)*6;g.y+=(Math.random()-0.5)*6;});
+});
+// pointer
+function pos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointerdown",function(e){
+  var p=pos(e);
+  var best=-1,bd=400;
+  for(var i=0;i<poles.length;i++){
+    var dx=poles[i].x-p[0],dy=poles[i].y-p[1];
+    var d=dx*dx+dy*dy;
+    if(d<bd){bd=d;best=i;}
+  }
+  if(best>=0){dragIdx=best;cv.setPointerCapture(e.pointerId);}
+});
+cv.addEventListener("pointermove",function(e){
+  if(dragIdx<0)return;
+  var p=pos(e);
+  poles[dragIdx].x=Math.max(20,Math.min(W-20,p[0]));
+  poles[dragIdx].y=Math.max(20,Math.min(H-20,p[1]));
+});
+cv.addEventListener("pointerup",function(){dragIdx=-1;});
+cv.addEventListener("pointercancel",function(){dragIdx=-1;});
+// render
+function drawLines(){
+  ax.save();
+  ax.globalAlpha=0.5;
+  ax.lineWidth=1.1;
+  ax.strokeStyle="rgba(120,190,225,.55)";
+  for(var pi=0;pi<poles.length;pi++){
+    var p=poles[pi];
+    if(p.wire)continue;
+    if(p.q<0)continue;
+    for(var a=0;a<6.2832;a+=0.52){
+      var x=p.x+Math.cos(a)*7,y=p.y+Math.sin(a)*7;
+      ax.beginPath();ax.moveTo(x,y);
+      for(var s=0;s<150;s++){
+        var f=field(x,y);
+        var m=Math.hypot(f[0],f[1])||1;
+        x+=f[0]/m*7;y+=f[1]/m*7;
+        if(x<0||y<0||x>W||y>H)break;
+        var endPole=false;
+        for(var k=0;k<poles.length;k++){
+          if(k===pi)continue;
+          var dx=poles[k].x-x,dy=poles[k].y-y;
+          if(dx*dx+dy*dy<360)endPole=true;
+        }
+        ax.lineTo(x,y);
+        if(endPole)break;
+      }
+      ax.stroke();
+    }
+  }
+  ax.restore();
+}
+function render(){
+  // plate
+  ax.fillStyle="#0a0b0d";ax.fillRect(0,0,W,H);
+  var grain=ax.createLinearGradient(0,0,0,H);
+  grain.addColorStop(0,"rgba(30,34,40,.6)");grain.addColorStop(1,"rgba(14,16,19,.6)");
+  ax.fillStyle=grain;ax.fillRect(0,0,W,H);
+  if(showHeat){
+    for(var y=0;y<H;y+=30){
+      for(var x=0;x<W;x+=30){
+        var f=field(x,y);
+        var m=Math.min(1,Math.hypot(f[0],f[1])/2.2);
+        if(m<0.03)continue;
+        ax.fillStyle="rgba(224,132,111,"+(m*0.16)+")";
+        ax.fillRect(x,y,30,30);
+      }
+    }
+  }
+  if(showLines)drawLines();
+  // filings
+  var sum=0;
+  for(var i=0;i<grid.length;i++){
+    var g=grid[i];
+    var f2=field(g.x,g.y);
+    var mag=Math.hypot(f2[0],f2[1]);
+    sum+=mag;
+    if(mag>0.001)g.ta=Math.atan2(f2[1],f2[0]);
+    // angle ease with wraparound
+    var d=g.ta-g.a;
+    while(d>Math.PI)d-=6.2832;
+    while(d<-Math.PI)d+=6.2832;
+    g.a+=d*0.14;
+    var k=Math.min(1,mag/1.6);
+    var l=Math.round(70+k*150);
+    ax.strokeStyle="rgb("+l+","+Math.round(l*0.96)+","+Math.round(l*0.9)+")";
+    ax.lineWidth=1.6;
+    var dx=Math.cos(g.a)*g.w,dy=Math.sin(g.a)*g.w;
+    ax.beginPath();ax.moveTo(g.x-dx,g.y-dy);ax.lineTo(g.x+dx,g.y+dy);ax.stroke();
+  }
+  bAvg+=((sum/grid.length)-bAvg)*0.08;
+  // poles
+  for(var pi=0;pi<poles.length;pi++){
+    var p=poles[pi];
+    ax.shadowBlur=18;ax.shadowColor=p.c;
+    ax.fillStyle=p.c;
+    ax.beginPath();ax.arc(p.x,p.y,11,0,6.2832);ax.fill();
+    ax.shadowBlur=0;
+    ax.fillStyle="#0a0b0d";
+    ax.font="bold 11px ui-monospace,monospace";
+    ax.textAlign="center";
+    if(p.wire)ax.fillText("⊗",p.x,p.y+4);
+    else ax.fillText(p.q>0?"N":"S",p.x,p.y+4);
+    ax.textAlign="left";
+    ax.strokeStyle="rgba(255,255,255,.35)";
+    ax.lineWidth=1;
+    ax.beginPath();ax.arc(p.x,p.y,15,0,6.2832);ax.stroke();
+  }
+}
+var mt=0;
+function loop(now){
+  render();
+  if(now-mt>500){
+    mt=now;
+    document.getElementById("mB").textContent=bAvg.toFixed(2);
+  }
+  requestAnimationFrame(loop);
+}
+setSource();
+buildGrid();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

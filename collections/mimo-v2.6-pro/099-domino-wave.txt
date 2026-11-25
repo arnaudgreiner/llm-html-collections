@@ -1,0 +1,17 @@
+TITLE: Domino Line — Wave & Gaps
+
+FULL PROMPT:
+Create a self-contained interactive page titled "Domino Line: Wave & Gaps". Lay 72 dominoes along a sampled sine path y=212+92·sin(x/100)+26·sin(x/41+1.2) on a 760×430 canvas, tangent-aligned, every 19th tile (index i%19=9) missing as a dashed blue gap that hard-stops the wave. Each tile is drawn 2.5D: pivot at its front-bottom edge, face quad from ground to height 40·cosθ·0.85 pushed forward by 40·sinθ, ground shadow spanning the swept silhouette [−5cosθ, 40sinθ], eased fall rate (150+270·sin(πθ/90))°/s so the front accelerates into the next tile at θ≥68°; direction of fall is inherited by whichever neighbour the tile is aimed at, so waves run both left→right and right→left. Clicking any standing tile knocks it in the direction of the click; clicking a gap plants a tile that is struck instantly if a fallen neighbour already aims into it. HUD counts standing/fallen/gaps, buttons fire waves from either end or reset; completing all tiles freezes a wave-time banner. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A warm ivory line of tiles snaking across dark wood — a wave of falling paper-cream slabs that accelerates along the curve, halts raggedly at blue dashed gaps, and only completes when you personally bridge them.
+
+MAJOR VISUAL TECHNIQUES:
+- 2.5D foreshortened domino faces (height shrinks with cosθ, reach grows with sinθ)
+- Eased angular fall whose sine bump makes the front lurch into its neighbour
+- Directional wave inheritance enabling bidirectional propagation
+- Gap slots rendered as dashed ghost outlines that catch and hold the wave
+- Swept-silhouette ground shadows offset for depth
+
+INTENDED INTERACTION MODEL:
+Click tiles to start local waves in either direction; click gaps to bridge them (resuming a arriving wave mid-flight); buttons launch end-to-end waves or reset the line; finish state reports wave time.

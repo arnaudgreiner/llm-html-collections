@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Origami Studio — Paper Crane in Six Creases</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#191511;color:#c9bda9;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:14px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e8dcc6;text-transform:uppercase}
+h1 i{font-style:normal;color:#ff9d68}
+.wrap{display:flex;gap:16px;flex-wrap:wrap;justify-content:center;width:100%;max-width:1060px}
+.panel{background:#201a15;border:1px solid #35291f;border-radius:12px;padding:14px 16px}
+#steps{width:236px}
+.ph{font-size:9.5px;letter-spacing:.26em;color:#7d6e5c;margin-bottom:11px}
+.step{display:flex;gap:10px;align-items:baseline;padding:8px 9px;border-radius:8px;cursor:pointer;border:1px solid transparent;margin-bottom:5px;transition:.2s}
+.step:hover{border-color:#4a3a2b}
+.step b{font-size:10px;color:#6b5c4a;width:20px}
+.step span{font-size:10.5px;letter-spacing:.1em;color:#a4957f}
+.step.done b{color:#ff9d68}
+.step.done span{color:#d8c9b2}
+.step.on{background:#2a221b;border-color:#ff9d68}
+.step.on b,.step.on span{color:#ff9d68}
+#desk{flex:1;min-width:340px;background:
+  radial-gradient(ellipse at 50% 18%,rgba(255,225,180,.10),rgba(0,0,0,0) 60%),
+  repeating-linear-gradient(92deg,#241d17 0 46px,#271f19 46px 92px);
+  border:1px solid #35291f;border-radius:12px;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:13px;padding:26px 18px;position:relative;overflow:hidden}
+#desk::after{content:"";position:absolute;inset:0;pointer-events:none;box-shadow:inset 0 0 90px rgba(0,0,0,.65)}
+#stage{width:380px;height:380px;max-width:76vw;max-height:76vw;position:relative;perspective:1300px;transform-style:preserve-3d;z-index:2}
+#shadow{position:absolute;left:9%;right:9%;bottom:-14px;height:26px;background:radial-gradient(ellipse,rgba(0,0,0,.55),rgba(0,0,0,0) 70%);filter:blur(3px)}
+#paper{position:absolute;inset:0;transform-style:preserve-3d;transition:transform .7s cubic-bezier(.3,.7,.3,1)}
+#paper.spin{transform:rotateZ(-6deg) rotateX(16deg)}
+#base{position:absolute;inset:0;background:
+  linear-gradient(135deg,rgba(255,255,255,.10),rgba(0,0,0,.12)),
+  var(--paper);
+  clip-path:polygon(0 0,100% 0,100% 100%,0 100%);
+  border-radius:3px;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+#base::after{content:"";position:absolute;inset:0;background:repeating-linear-gradient(45deg,rgba(0,0,0,.035) 0 2px,rgba(255,255,255,.03) 2px 4px)}
+.flap{position:absolute;inset:0;transition:transform .85s cubic-bezier(.45,.05,.3,1);transform-style:preserve-3d;pointer-events:none}
+.flap::after{content:"";position:absolute;inset:0;background:linear-gradient(160deg,rgba(0,0,0,.34),rgba(0,0,0,.12));opacity:0;transition:opacity .85s ease}
+.flap.folded{z-index:5}
+.flap.folded::after{opacity:1}
+.crease{position:absolute;inset:0;pointer-events:none;opacity:0;transition:opacity .5s .5s;background:
+  linear-gradient(to bottom right,rgba(0,0,0,0) calc(50% - 1px),rgba(60,40,20,.55) 50%,rgba(0,0,0,0) calc(50% + 1px))}
+.crease.show{opacity:1}
+#crane{position:absolute;inset:0;display:flex;align-items:center;justify-content:center;opacity:0;transition:opacity .8s;pointer-events:none;z-index:9}
+#crane.show{opacity:1}
+#crane svg{width:82%;filter:drop-shadow(0 14px 18px rgba(0,0,0,.55));animation:bob 3.6s ease-in-out infinite}
+@keyframes bob{0%,100%{transform:translateY(0) rotate(-1.5deg)}50%{transform:translateY(-9px) rotate(1.5deg)}}
+.wL,.wR{transform-box:fill-box}
+.wL{transform-origin:100% 90%;animation:wfl 2.6s ease-in-out infinite}
+.wR{transform-origin:0% 90%;animation:wfl 2.6s ease-in-out infinite reverse}
+@keyframes wfl{0%,100%{transform:rotate(0deg)}50%{transform:rotate(-11deg)}}
+#caption{font-size:10px;letter-spacing:.3em;color:#8a7963;z-index:2;text-align:center;min-height:14px}
+#caption i{font-style:normal;color:#ff9d68}
+#side{width:250px}
+.ctlrow{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:14px}
+button{background:#2a221b;border:1px solid #4a3a2b;color:#c9bda9;font:inherit;font-size:10px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#ff9d68;color:#ffb490}
+button.on{background:#ff9d68;border-color:#ff9d68;color:#241a10;font-weight:700}
+button:disabled{opacity:.35;cursor:default}
+.sw{display:flex;gap:8px;margin-bottom:14px}
+.sw div{width:34px;height:34px;border-radius:50%;cursor:pointer;border:2px solid #46382a;transition:.15s}
+.sw div:hover,.sw div.on{border-color:#ff9d68;transform:scale(1.12)}
+.prog{height:5px;background:#171310;border-radius:5px;overflow:hidden;margin-top:4px}
+.prog i{display:block;height:100%;width:0;background:linear-gradient(90deg,#ff9d68,#ffd9a0);transition:width .7s}
+.meta{font-size:9.5px;letter-spacing:.16em;color:#7d6e5c;line-height:2}
+.meta b{color:#ff9d68}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#5d5142;text-align:center;max-width:900px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Origami Studio <i>M72</i> · six creases to a crane</h1>
+<div class="wrap">
+  <div class="panel" id="steps">
+    <div class="ph">CREASING SEQUENCE</div>
+    <div class="step on" data-go="0"><b>00</b><span>FLAT SHEET · square 24gsm</span></div>
+    <div class="step" data-go="1"><b>01</b><span>VALLEY — first diagonal</span></div>
+    <div class="step" data-go="2"><b>02</b><span>HALVE — crown to base</span></div>
+    <div class="step" data-go="3"><b>03</b><span>KITE — east point inward</span></div>
+    <div class="step" data-go="4"><b>04</b><span>PIVOT — west half swings over</span></div>
+    <div class="step" data-go="5"><b>05</b><span>LIFT — neck and tail rise</span></div>
+    <div class="step" data-go="6"><b>06</b><span>HEAD — the beak fold</span></div>
+    <div class="prog"><i id="bar"></i></div>
+  </div>
+  <div id="desk">
+    <div id="stage">
+      <div id="shadow"></div>
+      <div id="paper">
+        <div id="base"></div>
+        <div class="crease" id="cr1" style="clip-path:polygon(0 100%,100% 0,100% 100%)"></div>
+        <div class="flap" id="f1" style="clip-path:polygon(100% 0,100% 100%,0 100%);background:var(--paper);transform-origin:200px 200px"></div>
+        <div class="flap" id="f2" style="clip-path:polygon(0 0,100% 0,50% 42%);background:var(--paper);transform-origin:190px 4px"></div>
+        <div class="flap" id="f3" style="clip-path:polygon(50% 0,100% 0,100% 100%,50% 100%);background:var(--paper);transform-origin:190px 190px"></div>
+        <div class="flap" id="f4" style="clip-path:polygon(0 0,50% 0,50% 100%,0 100%);background:var(--paper);transform-origin:190px 190px"></div>
+        <div class="flap" id="f5a" style="clip-path:polygon(32% 100%,68% 100%,50% 52%);background:var(--paper);transform-origin:190px 372px"></div>
+        <div class="flap" id="f5b" style="clip-path:polygon(0 32%,0 68%,48% 50%);background:var(--paper);transform-origin:6px 190px"></div>
+        <div class="flap" id="f6" style="clip-path:polygon(44% 44%,56% 50%,44% 57%);background:var(--paper);transform-origin:186px 178px"></div>
+      </div>
+      <div id="crane">
+        <svg viewBox="0 0 400 400" aria-hidden="true">
+          <g fill="var(--paper)" stroke="rgba(0,0,0,.35)" stroke-width="2">
+            <polygon class="wL" points="196,214,118,158,52,248,188,262"/>
+            <polygon class="wR" points="204,214,282,158,348,248,212,262"/>
+            <polygon points="200,176,304,306,200,268,96,306"/>
+            <polygon points="194,214,206,214,158,84,146,92"/>
+            <polygon points="158,84,146,92,118,74"/>
+            <polygon points="194,214,206,214,262,96,274,104"/>
+            <polygon points="262,96,274,104,300,86"/>
+          </g>
+        </svg>
+      </div>
+    </div>
+    <div id="caption">STEP <i id="cnum">00</i> — <i id="cname">FLAT SHEET</i></div>
+  </div>
+  <div class="panel" id="side">
+    <div class="ph">FOLDING</div>
+    <div class="ctlrow">
+      <button id="bPrev">◄ BACK</button>
+      <button id="bNext" class="on">FOLD ►</button>
+      <button id="bAuto">AUTOPLAY</button>
+      <button id="bReset">RESET</button>
+    </div>
+    <div class="ph">WASHI STOCK</div>
+    <div class="sw">
+      <div class="on" style="background:#f4e6c8" data-c="#f4e6c8"></div>
+      <div style="background:#e8a0a8" data-c="#e8a0a8"></div>
+      <div style="background:#8fb0c9" data-c="#8fb0c9"></div>
+      <div style="background:#a8c9a0" data-c="#a8c9a0"></div>
+    </div>
+    <div class="meta">
+      creases made <b id="mCre">0</b><br>
+      sheet <b>240 × 240 mm</b><br>
+      paper <b id="mCol">BONE WHITE</b><br>
+      model <b>ORIZURU · classic crane</b>
+    </div>
+  </div>
+</div>
+<div class="hint">click any line of the sequence to jump there — folds beyond it unwind in reverse · autoplay walks the whole sequence at a slow folding rhythm</div>
+<script>
+(function(){
+"use strict";
+var FOLDS=[
+  {id:"f1",axis:"rotate(-45deg) rotateX(-176deg) rotate(45deg)"},
+  {id:"f2",axis:"rotate(-3deg) rotateX(174deg) rotate(3deg)"},
+  {id:"f3",axis:"rotate(-90deg) rotateX(-172deg) rotate(90deg)"},
+  {id:"f4",axis:"rotate(-90deg) rotateX(-172deg) rotate(90deg)"},
+  {id:"f5a",axis:"rotate(6deg) rotateX(-158deg) rotate(-6deg)"},
+  {id:"f5b",axis:"rotate(-6deg) rotateX(-158deg) rotate(6deg)"},
+  {id:"f6",axis:"rotate(-14deg) rotateX(-168deg) rotate(14deg)"}
+];
+var STEP_FLAPS=[[],["f1"],["f2"],["f3"],["f4"],["f5a","f5b"],["f6"]];
+var NAMES=["FLAT SHEET","VALLEY FOLD","HALVE","KITE","PIVOT","LIFT","HEAD"];
+var at=0,auto=null;
+var paper=document.getElementById("paper"),crane=document.getElementById("crane");
+var bar=document.getElementById("bar"),cnum=document.getElementById("cnum"),cname=document.getElementById("cname");
+function isFoldedUpTo(step){
+  var set={};
+  for(var i=1;i<=step;i++)STEP_FLAPS[i].forEach(function(f){set[f]=true;});
+  return set;
+}
+function render(){
+  var up=isFoldedUpTo(at);
+  FOLDS.forEach(function(f){
+    var el=document.getElementById(f.id);
+    if(up[f.id]){el.classList.add("folded");el.style.transform=f.axis;}
+    else{el.classList.remove("folded");el.style.transform="none";}
+  });
+  document.getElementById("cr1").classList.toggle("show",at>=1);
+  document.querySelectorAll(".step").forEach(function(s){
+    var g=Number(s.getAttribute("data-go"));
+    s.classList.toggle("on",g===at);
+    s.classList.toggle("done",g<at);
+  });
+  bar.style.width=(at/6*100)+"%";
+  cnum.textContent=("0"+at).slice(-2);
+  cname.textContent=NAMES[at];
+  document.getElementById("mCre").textContent=String(FOLDS.length*0+STEP_FLAPS.slice(1,at+1).reduce(function(n,a){return n+a.length;},0));
+  document.getElementById("bPrev").disabled=(at===0);
+  document.getElementById("bNext").disabled=(at===6);
+  crane.classList.toggle("show",at===6);
+}
+function goto(n){
+  at=Math.max(0,Math.min(6,n));
+  render();
+}
+document.querySelectorAll(".step").forEach(function(s){
+  s.addEventListener("click",function(){stopAuto();goto(Number(s.getAttribute("data-go")));});
+});
+document.getElementById("bNext").addEventListener("click",function(){stopAuto();goto(at+1);});
+document.getElementById("bPrev").addEventListener("click",function(){stopAuto();goto(at-1);});
+document.getElementById("bReset").addEventListener("click",function(){stopAuto();goto(0);});
+var bAuto=document.getElementById("bAuto");
+function stopAuto(){if(auto){clearInterval(auto);auto=null;bAuto.className="";}}
+bAuto.addEventListener("click",function(){
+  if(auto){stopAuto();return;}
+  bAuto.className="on";
+  if(at===6)goto(0);
+  auto=setInterval(function(){
+    if(at>=6){stopAuto();return;}
+    goto(at+1);
+  },1700);
+});
+var COLS={"#f4e6c8":"BONE WHITE","#e8a0a8":"SAKURA PINK","#8fb0c9":"INDIGO MIST","#a8c9a0":"MATCHA"};
+document.querySelectorAll(".sw div").forEach(function(d){
+  d.addEventListener("click",function(){
+    document.querySelectorAll(".sw div").forEach(function(o){o.className="";});
+    d.className="on";
+    var c=d.getAttribute("data-c");
+    document.documentElement.style.setProperty("--paper",c);
+    document.getElementById("mCol").textContent=COLS[c];
+  });
+});
+document.documentElement.style.setProperty("--paper","#f4e6c8");
+render();
+setTimeout(function(){paper.classList.add("spin");},600);
+})();
+</script>
+</body>
+</html>

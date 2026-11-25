@@ -1,0 +1,17 @@
+TITLE: Paperwork — Six-Fold Snowflake Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Paperwork: Six-Fold Snowflake Bench". Render a 660×660 paper snowflake built by real fold-and-cut logic: a lobed base plate traced as r(θ)=R·(0.63+0.37·|cos 3θ|^0.55) giving six arms, cut by punches replicated through the full dihedral D6 group — every cut placed in the 30° fundamental wedge appears at all six arms, mirrored, for twelve copies. Four tools (punch circle, radial slot, spike triangle, rim scallop), a size slider, and a fold/unfold toggle that sweeps the flake into view through a growing 360° angular clip while a dashed 30° wedge with guide arcs and a faint ghost preview stands behind. Offscreen buffers: flake (gradient paper fill → destination-out cuts → source-atop fibre speckle), wedge, and a tinted drop shadow. The flake idles with slow rotation; the pattern strip lists each cut newest-first as a clickable chip to delete, plus undo, clear, random and preset buttons and a punches/copies readout. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+Glacier-blue paper on ink: a cold laboratory bench where the cut geometry is visible at both scales at once — the single wedge you work in and the twelve-fold object it produces. The craft is symmetry as a rendering primitive: never draw the flake's detail, draw one fundamental domain and let D6 do the composition.
+
+MAJOR VISUAL TECHNIQUES:
+- Dihedral D6 replication of cuts (6 rotations × mirror) from one 30° wedge
+- destination-out compositing for true holes through the paper plate
+- source-atop speckle pass for deterministic fibre texture inside the silhouette
+- Swept angular clip transition (growing 360° arc) between wedge and flake views
+- Tinted drop shadow via source-in fill of a copied silhouette buffer
+
+INTENDED INTERACTION MODEL:
+Fold to the wedge, punch/slot/spike/scallop cuts with a size slider, watch the pattern strip grow (chips deletable), unfold to see all twelve copies, or click the flake to fold instantly; random and preset buttons seed new patterns.

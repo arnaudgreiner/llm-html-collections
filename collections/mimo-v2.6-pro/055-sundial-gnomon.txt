@@ -1,0 +1,18 @@
+TITLE: Sundial Gnomon
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Sundial Gnomon". On warm parchment light, present two instrument panels: a top-down horizontal sundial plate (SVG, 430px) with concentric rings, an engraved noon line, hour lines radiating at the correct angles for the chosen latitude using tan θ = sin H · tan φ, roman-ish hour numerals, a wooden gnomon triangle whose height follows the latitude slider, and a live blunt shadow bar with a rounded tip that swings across the plate as the sun moves; beside it an elevation view showing the gnomon silhouette on the ground line, a dashed ray from a glowing sun disc to the gnomon tip, and the cast shadow length on the ground. Sliders drive time of day (00:00–23:59, auto-advancing until paused), latitude (15–68°N, which re-lays every hour line), and day-of-year (declination δ = 23.44°·sin(2π(284+N)/365), labeled with a real calendar date). A readout reports sun altitude, shadow length in gnomon heights, solar declination and the current dial correction; a pause/resume button stops the sun's motion. All inline, no external assets.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a brass-and-parchment scientific instrument: ivory plate, sepia engraving, ochre gold accents and monospace field notes. As the sun slider advances, the shadow creeps around the dial like a slow hand on a clock while the elevation view shows the same moment from the side, making the geometry legible in both projections at once. Changing latitude visibly re-cuts the whole hour layout, which sells the dial as a machined object rather than a static diagram.
+
+MAJOR VISUAL TECHNIQUES:
+- Horizontal sundial hour-line formula tan θ = sin H · tan φ recomputed per latitude
+- Solar position math: hour angle, declination from day-of-year, altitude and azimuth
+- SVG plate with engraved rings, numerals, dynamic gnomon triangle and stroke-linecap shadow
+- Paired plan + elevation projections sharing one state (dashed ray, ground shadow)
+- Auto-advancing time slider driven from the animation loop with a pause toggle
+- Parchment palette, ruled instrument panels, roman numeral hour marks
+
+INTENDED INTERACTION MODEL:
+Drag TIME to sweep the shadow around the dial (or leave it running and watch it creep), drag LATITUDE to re-cut every hour line and reshape the gnomon, and drag DATE through the year to see the shadow's reach change with solar declination — longest around the winter solstice, shortest at midsummer. The pause/resume button freezes or restarts the sun. The readout updates continuously with altitude, shadow length, declination and the dial correction value, and the elevation view animates in lockstep with the plan view.

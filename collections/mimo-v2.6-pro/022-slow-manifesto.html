@@ -1,0 +1,261 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>022 · Slow Manifesto</title>
+<style>
+:root{--paper:#f7f4ec;--ink:#111;--grey:#6f6b62;--rule:#d9d3c4;--acc:#0b5fff}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;
+  -webkit-font-smoothing:antialiased}
+.progress{position:fixed;top:0;left:0;height:3px;background:var(--acc);width:0;z-index:60}
+.rail{position:fixed;top:0;right:0;height:100vh;width:230px;z-index:50;
+  border-left:1px solid var(--rule);background:rgba(247,244,236,.9);
+  backdrop-filter:blur(6px);padding:34px 24px;display:flex;flex-direction:column;gap:16px}
+.rail h4{margin:0 0 4px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--grey)}
+.rail a{display:block;text-decoration:none;color:var(--grey);font-size:14.5px;line-height:1.35;
+  padding:7px 0 7px 16px;border-left:2px solid transparent;transition:.25s}
+.rail a:hover{color:var(--ink)}
+.rail a.on{color:var(--acc);border-left-color:var(--acc);font-style:italic}
+.rail .pct{margin-top:auto;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--grey);
+  border-top:1px solid var(--rule);padding-top:14px;font-variant-numeric:tabular-nums}
+.rail .pct b{color:var(--acc);font-size:15px}
+
+.page{margin-right:230px}
+header.hero{min-height:96vh;display:flex;flex-direction:column;justify-content:center;
+  padding:60px clamp(24px,7vw,110px);border-bottom:1px solid var(--rule);position:relative}
+.eyebrow{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.5em;
+  text-transform:uppercase;color:var(--grey)}
+h1{font-size:clamp(46px,10vw,132px);line-height:.92;margin:26px 0 0;font-weight:400;
+  letter-spacing:-.035em}
+h1 em{font-style:italic;color:var(--acc)}
+.dek{max-width:46ch;font-size:clamp(17px,2vw,22px);line-height:1.6;color:#3a372f;
+  font-style:italic;margin:30px 0 0}
+.meta{margin-top:44px;display:flex;gap:30px;flex-wrap:wrap;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--grey)}
+.meta b{color:var(--ink);font-weight:700}
+.hint{position:absolute;bottom:34px;left:clamp(24px,7vw,110px);
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--grey);display:flex;align-items:center;gap:10px}
+.hint i{display:block;width:1px;height:34px;background:var(--rule);position:relative;overflow:hidden}
+.hint i::after{content:"";position:absolute;left:0;top:-34px;width:1px;height:34px;
+  background:var(--acc);animation:drop 2.2s infinite}
+@keyframes drop{to{top:34px}}
+
+section.ch{padding:clamp(70px,11vh,130px) clamp(24px,7vw,110px);
+  border-bottom:1px solid var(--rule);max-width:none}
+.ch .num{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--acc);margin-bottom:20px}
+.ch h2{font-size:clamp(30px,5vw,58px);line-height:1.04;margin:0 0 34px;font-weight:400;
+  letter-spacing:-.02em;max-width:20ch}
+.cols{columns:2;column-gap:56px;font-size:17.5px;line-height:1.85;color:#2b2924;max-width:1100px}
+.cols p{margin:0 0 1.3em;break-inside:avoid}
+.dropcap::first-letter{float:left;font-size:66px;line-height:.82;padding:6px 12px 0 0;
+  color:var(--acc);font-style:italic}
+.pull{margin:46px 0;padding:26px 0 26px 30px;border-left:3px solid var(--acc);
+  font-size:clamp(20px,2.6vw,28px);font-style:italic;line-height:1.5;max-width:26ch}
+.mark{background:linear-gradient(transparent 62%, rgba(11,95,255,.16) 62%)}
+.reveal{opacity:0;transform:translateY(26px);transition:opacity .8s ease,transform .8s ease}
+.reveal.in{opacity:1;transform:none}
+.quote{font-size:clamp(24px,3.4vw,40px);line-height:1.35;letter-spacing:-.01em;
+  max-width:24ch;margin:0}
+.quote footer{margin-top:22px;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--grey);font-style:normal}
+.end{padding:clamp(70px,11vh,130px) clamp(24px,7vw,110px) 70px}
+.end .big{font-size:clamp(38px,7vw,92px);line-height:1;letter-spacing:-.03em}
+.end .sig{margin-top:40px;display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;
+  border-top:1px solid var(--rule);padding-top:20px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--grey)}
+@media(max-width:900px){
+  .rail{display:none}
+  .page{margin-right:0}
+  .cols{columns:1}
+}
+@media(prefers-reduced-motion:reduce){
+  html{scroll-behavior:auto}
+  .reveal{opacity:1;transform:none;transition:none}
+  .hint i::after{animation:none}
+}
+</style>
+</head>
+<body>
+<div class="progress" id="prog"></div>
+
+<nav class="rail" aria-label="Contents">
+  <h4>Contents</h4>
+  <a href="#ch1" data-t="ch1">I · On slowness</a>
+  <a href="#ch2" data-t="ch2">II · The margin</a>
+  <a href="#ch3" data-t="ch3">III · Set it twice</a>
+  <a href="#ch4" data-t="ch4">IV · Nothing to sell</a>
+  <a href="#ch5" data-t="ch5">V · Colophon</a>
+  <div class="pct">read <b id="pct">0</b>%</div>
+</nav>
+
+<div class="page">
+  <header class="hero">
+    <span class="eyebrow">Folio 022 · a reading piece</span>
+    <h1>Notes toward a<br><em>slower</em> screen</h1>
+    <p class="dek">Five short chapters on why a page can be quiet, and what it costs to make
+      one so — written to be scrolled, not skimmed.</p>
+    <div class="meta">
+      <span>Words <b id="wc">1,240</b></span>
+      <span>Read time <b>7 min</b></span>
+      <span>Set in <b>Georgia</b></span>
+      <span>Edition <b>first</b></span>
+    </div>
+    <div class="hint"><i></i> scroll to begin</div>
+  </header>
+
+  <section class="ch" id="ch1">
+    <div class="num">Chapter one</div>
+    <h2>On slowness, and the machines that punish it</h2>
+    <div class="cols reveal">
+      <p class="dropcap">Every screen is built in a hurry — by someone on a deadline, inside a
+        framework someone else maintains, sized for a device nobody has decided on yet. The hurry
+        is not a moral failure. It is simply the medium's weather, and you either dress for it or
+        you get wet.</p>
+      <p>What interests me is the other possibility: a page that deliberately refuses the default
+        tempo. Not a page that loads slowly — nothing should load slowly — but a page whose
+        <span class="mark">rhythm of reading</span> is unhurried. Wide leading. A measure you can
+        actually finish a line in. Type large enough that you stop leaning forward.</p>
+      <p>The cost is real. Quiet pages convert worse, scroll less, and leave almost no trace in
+        anyone's dashboard. They are read instead, which is a different and much harder metric to
+        sell.</p>
+      <p class="pull">A screen that respects you will not fight for the second after you arrived.</p>
+      <p>So the first commitment of this piece is spacing: generous, almost uncomfortable amounts
+        of it. White space is not emptiness. It is the pause a speaker takes before the sentence
+        that matters.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="ch2">
+    <div class="num">Chapter two</div>
+    <h2>The margin is the argument</h2>
+    <div class="cols reveal">
+      <p class="dropcap">Manuscript scholars read margins first. A wide margin tells you the
+        scribe expected annotation; a narrow one tells you the parchment was expensive and the
+        patron impatient. The same is true on a screen, where margins are free and yet almost
+        never spent.</p>
+      <p>Spending them is the whole design. When text runs edge to edge the eye loses its return
+        path on the next line, and reading quietly degrades into scanning. Push the text inward
+        and something odd happens: people slow down without being told to.</p>
+      <p class="pull">Comfort is not decoration. It is the precondition for attention.</p>
+      <p>Notice, too, what a margin can hold that a line of text cannot: a rule, a folio number, a
+        running head, the small machinery of a book. This page puts a table of contents in the
+        right margin and lets it grow a progress bar, which is the only chart on the site.</p>
+      <p>None of it is clever. It is simply the layout a printed page has had for five hundred
+        years, arriving late to the web.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="ch3">
+    <div class="num">Chapter three</div>
+    <h2>Set it once, then set it again</h2>
+    <div class="cols reveal">
+      <p class="dropcap">The typographer's secret is that the first version is a probe. You set a
+        page, look at it, and discover what you actually thought. Then you set it again — tighter
+        headings, longer paragraph spacing, a hyphenation decision made on purpose rather than by
+        accident.</p>
+      <p>On a screen this loop can be almost instant, which is why it so rarely happens. The tool
+        invites continuous fiddling; continuous fiddling is not revision. Revision requires
+        stopping, judging, and changing one thing at a time.</p>
+      <p class="pull">Fiddling is the enemy of finishing, and finishing is the only proof of
+        design.</p>
+      <p>Three passes is usually enough. In the first you find the structure. In the second you
+        fix the rhythm. In the third you remove everything that was only ever there to impress
+        you — gradients, shadows, the small cleverness you added at 1 a.m.</p>
+      <p>If a thing still reads well after the third pass, it was probably going to read well
+        anyway, and the honest move is to admit that too.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="ch4">
+    <div class="num">Chapter four</div>
+    <h2>Nothing here is for sale</h2>
+    <div class="cols reveal">
+      <p class="dropcap">There is no signup form at the end of this. There is no newsletter bar
+        that slides up while you read, no cookie theatre, no second call to action parked where
+        your thumb already rests. The absence is the feature, and it is the hardest one to keep.</p>
+      <p>Every engagement mechanic is a small withdrawal from the reader's trust, made at exactly
+        the moment they were willing to extend it. Over time the account empties, and the whole
+        medium gets noisier in response.</p>
+      <p class="pull">Ask for nothing and the page becomes a gift instead of a transaction.</p>
+      <p>I do not think this scales, and I have stopped caring whether it scales. It works for a
+        folio, a letter, a manifesto — documents that were never designed to be measured in the
+        first place.</p>
+      <p>Read it once, all the way, and then go outside. That is the entire conversion funnel.</p>
+    </div>
+  </section>
+
+  <section class="ch" id="ch5">
+    <div class="num">Colophon</div>
+    <blockquote class="quote reveal">
+      “The page is not a container for the argument. It is the argument, set in type.”
+      <footer>Folio 022 · closing line</footer>
+    </blockquote>
+  </section>
+
+  <section class="end">
+    <div class="big reveal">Now go<br>sit somewhere<br><em style="color:var(--acc)">quiet.</em></div>
+    <div class="sig">
+      <span>Notes toward a slower screen · first edition</span>
+      <span>022 / 100</span>
+    </div>
+  </section>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var prog=document.getElementById("prog"), pct=document.getElementById("pct");
+  var links=[].slice.call(document.querySelectorAll(".rail a"));
+  var secs=links.map(function(a){ return document.getElementById(a.dataset.t); });
+
+  function onScroll(){
+    var h=document.documentElement;
+    var max=h.scrollHeight-h.clientHeight;
+    var p=max>0 ? Math.min(1,Math.max(0,(h.scrollTop||document.body.scrollTop)/max)) : 0;
+    prog.style.width=(p*100).toFixed(2)+"%";
+    pct.textContent=Math.round(p*100);
+
+    /* active section: last one whose top has passed a third of the viewport */
+    var mark=window.innerHeight*0.35, active=-1;
+    secs.forEach(function(s,i){
+      if(s && s.getBoundingClientRect().top<=mark) active=i;
+    });
+    links.forEach(function(a,i){ a.classList.toggle("on", i===active); });
+  }
+
+  /* reveal-on-enter */
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var items=[].slice.call(document.querySelectorAll(".reveal"));
+  if(reduce || !("IntersectionObserver" in window)){
+    items.forEach(function(n){ n.classList.add("in"); });
+  }else{
+    var io=new IntersectionObserver(function(ents){
+      ents.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    },{threshold:0.15});
+    items.forEach(function(n){ io.observe(n); });
+  }
+
+  /* word count from the real body text */
+  var words=document.querySelector(".page").innerText.trim().split(/\s+/).length;
+  document.getElementById("wc").textContent=words.toLocaleString();
+
+  document.addEventListener("scroll",onScroll,{passive:true});
+  window.addEventListener("resize",onScroll);
+  onScroll();
+})();
+</script>
+</body>
+</html>

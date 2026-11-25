@@ -1,0 +1,18 @@
+TITLE: Twenty-Six — Typing Trial with Live Meters
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Twenty-Six", with no external resources. Serif body on warm paper with a soft gradient; all UI labels in system sans with wide tracking. Header: centred kicker, "Twenty-" roman + "Six" italic gold title, and a deck explaining the trial. Four meter tiles (Words/min green, Accuracy gold with inline % unit, Characters, Misses red). The .sheet is a white rounded page with a red margin rule at 44px; inside it a .ghost header (pass label and character progress) and the passage rendered as individual <span> characters: unprompted in pale grey, .ok ink black, .no red with a translucent red wash, .cur with a blinking 2px gold caret pseudo-element. A visually hidden text input captures focus. Below: a Start pass button, a legend with styled <kbd> elements, then a two-card shelf — "Recent passes" rows (pass number, accuracy, misses, green wpm) and a "Words per minute across this session" bar chart of session results with the latest bar tinted green. Five-passage corpus in JS; two-part uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+A letterpress proofing sheet: ruled paper, one passage set in serif, everything else a small tracked instrument label.
+
+MAJOR VISUAL TECHNIQUES:
+- Per-character span corpus with className state machine (cur / ok / no) and a pseudo-caret
+- Hidden input used only as a focus sink so the document-level key handler owns typing
+- Timing starts on first printable key; a 250ms interval repaints derived meters
+- WPM = (chars/5) / minutes elapsed, accuracy = idx/(idx+misses)
+- shake() keyframe on a miss (skipped under reduced motion), Backspace stepping back
+- Session history feeding both the pass list and a percentage-height bar chart
+
+INTENDED INTERACTION MODEL:
+Click the sheet or Start pass, then type the passage literally. Correct characters darken, wrong ones flash red and count a miss, the caret blinks at the active position. On completion the pass is scored, listed, and its wpm is added to the bar chart; after a short pause the next passage loads (five total, then the set restarts). Backspace corrects, Tab or the button advances, and R restarts an untouched pass. No text leaves the page. Reduced motion disables the shake and caret blink.

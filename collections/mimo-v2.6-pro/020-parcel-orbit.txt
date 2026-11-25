@@ -1,0 +1,18 @@
+TITLE: Parcel Orbit — Canvas Orbital Dispatch Console
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Parcel Orbit", using no external resources. Use a full-viewport fixed canvas over a radial deep-space background (#0a1018 core, #05070c edge) with 220 twinkling stars. At the centre, a blue-cyan gradient hub with a ring and three green cargo pips; six gold relay stations drift on elliptical orbits (radius × 0.72 vertical squash) labelled #1..#6 and marked with a check and count once served; nine red debris shapes — squares, triangles and pentagons — rotate along wider orbits. Green cargo pods arc out from the hub with a gravity term, trail behind them, and either burst gold on capture, burst red on impact, or burn up off-screen. Sparks fade with gravity. The overlay is HTML: a two-tone header with an italic gold tail and a right-aligned read-out of delivered, lost, fuel, thrust, cargo and day; a translucent legend at right; a dispatch log bottom-left whose lines slide in; a bottom-centre glass dock with Boost, Brake, Deliver buttons, a fuel-spend stepper (−/+ with a numeric read-out) and an auto-resupply checkbox; and a two-part uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+Mission-control glass floating over a live starfield: all light is emitted by the simulation itself, and every control is a translucent panel so the orbit never stops being the subject.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas sized through devicePixelRatio (capped at 2) and rebuilt on resize
+- Elliptical orbital math with per-object angular velocity for stations and debris
+- Pod ballistics: launch vector from hub angle, gravity added per frame, terminal checks against station radius, debris radius and viewport bounds
+- Particle bursts with per-frame alpha decay and velocity-integrated spark gravity
+- Radial gradients for hub and pods instead of flat fills
+- HTML controls layered above a fixed canvas, with key bindings (Space/↑ boost, ↓ brake, Enter deliver)
+
+INTENDED INTERACTION MODEL:
+Boost launches every armed pod on a climbing vector and spends fuel; brake launches them downward instead. Delivered pods are captured by a relay within radius, lost pods hit debris or leave the field — both increment their counters and write a log line. Deliver checks whether a relay sits near the hub before crediting cargo. The stepper sizes the next fuel spend; cargo empties at zero, starting a new day and restocking the bay (45 fuel with auto-resupply on, 18 without). Fuel drains passively, and auto-resupply fires when it hits zero.

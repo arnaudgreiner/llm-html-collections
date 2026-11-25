@@ -1,0 +1,18 @@
+TITLE: Domino Rally
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Domino Rally". On gridded cream card stock, present a 760×300 canvas board with a floor line and hatched tiles below it, holding a row of 8–30 white dominoes with dark pips and index labels. Each domino topples by rotating around its base pivot on canvas; once a falling domino passes ~0.55 rad it launches its neighbour only if the gap to it is within reach (domino height × 1.25, about 78px) — otherwise the cascade halts with a red status message naming the domino and both distances. Clicking a standing domino shoves it and starts the wave; dragging one sideways repositions it (gravity-style handles clamped to the board) so the player can open or close the fatal gap; dragging without moving counts as a click. Controls: SPACING (26–70px re-lays the row), COUNT (8–30 rebuilds it), SPEED (0.4–2× fall rate), plus "reset line" and "shove the row" buttons. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page reads like a tabletop rally photographed from the side: ivory dominoes on a warm paper grid, sepia ink labels, one bold shove and then the wave. The craft is in the pivot-rotation animation — dominoes arc over with a shared fall curve and hand off to their neighbour at the tipping point — and in the honest reach rule, which makes the layout itself the puzzle rather than decoration.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas rotation animation around each domino's base pivot with eased 90° fall
+- Cascade propagation gated by physical reach distance (height × 1.25)
+- Pointer drag vs click disambiguation on the same hit targets
+- Procedural domino faces: bevel, pip divider, seed dots, index numerals
+- Board with floor line, hatched tiles and paper grid background
+- Speed multiplier applied to fall timing from the rAF delta loop
+
+INTENDED INTERACTION MODEL:
+Click any upright domino to shove it and watch the wave travel down the line (or press "shove the row" to start at the first). Drag a domino sideways to reshape the layout — open a gap wider than the reach and the cascade stops there, with the status line explaining exactly where and by how much. Slide SPACING and COUNT to rebuild the setup, SPEED to slow the fall for inspection, and "reset line" to stand everything back up.

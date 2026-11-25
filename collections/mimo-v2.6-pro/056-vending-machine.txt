@@ -1,0 +1,18 @@
+TITLE: Vending Machine
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Vending Machine". Build a red-enamel vending machine column (CSS gradients, rounded chassis, inset highlights, heavy drop shadow) with a glass products window on the left and a control side panel on the right. The window holds nine product rows, each with a helix coil drawn as a repeating linear gradient, a colored product disc (no images, pure CSS shapes) and a labelled price, plus an A1–C3 round selection button. The side panel shows a green digital CREDIT readout, $1/$2/$5 coin buttons and a return-coin button; beneath the machine sits a dark delivery chute with a hinged flap bar and a "DELIVERY CHUTE" caption. Selecting an item with enough credit runs the vend sequence: the row's coil animates (background-position spin, twice), the product disc falls from the top of the chute on a gravity-ish keyframe with a small bounce, the flap lifts and settles, and a status line under the machine narrates each stage. Selection buttons disable when credit is short. Everything is one HTML file, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a late-night corner-shop appliance rendered entirely in CSS: deep enamel red, cool glass, warm cream lettering and a single mint-green LED. The machine's weight comes from layered gradients, borders and shadows rather than photos, while the vend moment — winding coil, dropping product, flapping door — supplies the tactility. The credit panel and status line make it behave like a real purchase rather than a click toy.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered CSS gradients for enamel chassis, glass reflection and inset panel depth
+- Repeating-linear-gradient helix coils animated via background-position keyframes
+- Gravity vend animation: falling product with bounce and hinged flap lift
+- Pure-CSS product discs with inset shading (no images, no icons files)
+- Credit state model with affordability gating of selection buttons
+- Green LED-style readout with dark bevel, lettered A1–C3 selection grid
+
+INTENDED INTERACTION MODEL:
+Click $1, $2 or $5 to insert money and watch the credit readout climb; press any product button whose price is covered and the coil winds, the product drops into the chute and the status line reports each stage ("coil winding", "in the chute"). Buttons you cannot afford are disabled. Press "return coin" to cash out the credit, which resets the readout and the status line. Credit is deducted exactly, with change staying on the meter for the next purchase.

@@ -1,0 +1,18 @@
+TITLE: Pegboard Drop — Canvas Peg Physics with a Prize Bank
+
+FULL PROMPT:
+Compose exactly one self-contained HTML page, "Pegboard Drop", with no external assets. Build a dark console (#0a0e14 with a #16202e sky wash) around an 860×620 canvas: guide rails down both sides, nine staggered rows of small steel pegs (3..11 per row, alternating offsets), and five prize bins across the floor separated by hairlines with values 500/100/50/100/500. Balls are radial-gradient spheres with a velocity-scaled trail and per-ball hue. Pegs flash a pink radial halo when struck and decay back. The right rail holds a prize-bank grid whose cells lift and glow when hit, score and drops read-outs, three sliders (gravity, bounce, ball size) with live numeric labels, Release ×1 / Rain ×12 / Clear buttons, a scrolling "last landings" list, and a text read-out line that reports the last landing. Header carries a two-tone title with an italic serif tail and a meta stack of rows, pegs, balls in flight and restitution.
+
+INTENDED DESIGN DESCRIPTION:
+An arcade cabinet seen in a dark room: the only light sources are the pegs, the balls and a bin that flares when it scores, so attention stays on motion rather than chrome.
+
+MAJOR VISUAL TECHNIQUES:
+- Impulse-based circle collision with normal projection and restitution, plus a small random lateral term so identical drops diverge
+- Two physics sub-steps per frame for stability at high gravity
+- Trails drawn as a single velocity-scaled stroke segment instead of stored history
+- Radial peg halos whose alpha decays multiplicatively rather than by timers
+- Bins flashing by a decaying multiplier feeding the fill alpha directly
+- Canvas click mapped through getBoundingClientRect so a CSS-scaled canvas still aims correctly
+
+INTENDED INTERACTION MODEL:
+Click anywhere on the canvas to release a ball at that x; the buttons release from centre, rain twelve balls, or clear the board. Sliders change gravity, restitution and radius live, and the radius slider also resizes balls already in flight. Every landing adds its value, pushes a line onto the history list (capped at six) and rewrites the read-out. Under reduced motion the loop skips integration and simply draws the current state with an explanatory line.

@@ -1,0 +1,18 @@
+TITLE: Mimical Engine № 70 — Brass Gear Train
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Mimical Engine No. 70". Draw an animated brass-and-steel stationary engine on a 960×600 canvas: a 12-tooth input pinion with a rotation arrow, a compound reduction train (clutch gear + co-axial pinion + large spoked output wheel) whose tooth counts and pitch radii are derived from a module system so teeth genuinely interleave at every mesh point (phase offsets computed as half tooth-pitch), a crank on the output wheel driving a slider-cylinder piston with correct crank-slider kinematics, and a rocker beam on a rear column driven by a crank pin on the clutch gear through a connecting rod — its left end striking a brass bell at top dead centre with a flash, expanding rings and an optional WebAudio ping (audio context created only on user gesture, BELL toggle to mute). A THROTTLE slider (0–120 RPM) sets input speed, DIRECTION flips CW/CCW through the same phase math, and three REDUCTION buttons (A 8:1, B 13.3:1, C 20:1) rebuild the train live while INPUT / OUTPUT / TORQUE meters update. Piston exhaust puffs drift from the cylinder head at each top-dead-centre crossing. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a museum plate of a Victorian mill engine rendered in code: a machined grid backdrop, riveted base plate, engraved brass nameplate, trapezoidal gear teeth cut from radial brass gradients, steel rods and a piston band, with amber instrumentation chrome beneath. The craft is mechanical honesty — gear phases, crank-slider math and bell timing are all derived, not faked, so any throttle or ratio change keeps every mesh, rod and strike physically consistent.
+
+MAJOR VISUAL TECHNIQUES:
+- Module-based involute-ish gear geometry: pitch/addendum/dedendum radii, trapezoidal teeth laid at exact angular pitch, phase-correct meshing from half-tooth offsets
+- Compound gear-train kinematics: th2 = π + π/t2 − (t1/t2)·th1 and downstream, so reversal and ratio swaps stay consistent
+- Crank-slider piston: wrist x = x4 + rp·cosθ + √(L² − (rp·sinθ)²), with cylinder ribs, band lines and wrist pin
+- Rocker beam linkage with tilt from the clutch crank pin, bell-strike crossing detection and flash ring effect
+- Exhaust particle system spawned at TDC crossings, radial brass gradients, engraved nameplate emboss, grid backdrop vignette
+- Lazy AudioContext + oscillator ping with exponential gain decay, gated behind the first user gesture
+
+INTENDED INTERACTION MODEL:
+Set throttle with the slider, flip direction, switch reduction gears live, mute or unmute the bell, and watch the train, piston and rocker run in lockstep — meters read input rpm, output rpm and torque multiplier at all times.

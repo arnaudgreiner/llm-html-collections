@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Mimical Engine № 70</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0d1016;color:#8794a6;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e0b062;text-transform:uppercase}
+.stage{width:100%;max-width:980px;border-radius:14px;overflow:hidden;border:1px solid #232a36;box-shadow:0 30px 70px rgba(0,0,0,.55)}
+canvas{display:block;width:100%}
+.bar{display:flex;gap:9px;flex-wrap:wrap;justify-content:center;align-items:center;width:100%;max-width:980px;background:#11151d;border:1px solid #232a36;border-radius:12px;padding:12px 15px}
+.bar label{color:#5b6474;display:flex;gap:7px;align-items:center;font-size:9.5px;letter-spacing:.2em}
+input[type=range]{width:130px;height:3px;appearance:none;background:#1e2733;border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:#e0b062;cursor:pointer}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:#e0b062;cursor:pointer}
+button{background:#161c26;border:1px solid #2c3543;color:#9fb0c2;font:inherit;font-size:10.5px;padding:9px 14px;border-radius:7px;cursor:pointer;letter-spacing:.14em}
+button:hover{border-color:#46525f}
+button.on{background:#e0b062;border-color:#e0b062;color:#14100a;font-weight:700}
+.v{color:#e0b062}
+.meters{display:flex;gap:12px;flex-wrap:wrap;justify-content:center;width:100%;max-width:980px}
+.meter{flex:1;min-width:200px;background:#11151d;border:1px solid #232a36;border-radius:12px;padding:12px 15px}
+.mh{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:.2em;color:#5b6474;margin-bottom:8px}
+.mh b{color:#e0b062}
+.track{height:7px;background:#0b0e14;border-radius:4px;overflow:hidden}
+.fill{height:100%;background:linear-gradient(90deg,#8a6524,#e0b062);border-radius:4px;transition:width .18s}
+.fill.steel{background:linear-gradient(90deg,#3d5560,#6fd3e6)}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#4c5666}
+</style>
+</head>
+<body>
+<h1>Mimical Engine № 70 · brass gear train</h1>
+<div class="stage"><canvas id="cv" width="960" height="600"></canvas></div>
+<div class="bar">
+  <label>THROTTLE <input type="range" id="thr" min="0" max="120" value="55"><span class="v" id="thrV">55</span> RPM</label>
+  <button id="dirB">DIRECTION: CW</button>
+  <span class="v" style="font-size:9.5px;letter-spacing:.2em">REDUCTION</span>
+  <button data-r="A">A · 8:1</button>
+  <button data-r="B" class="on">B · 13.3:1</button>
+  <button data-r="C">C · 20:1</button>
+  <button id="muteB">BELL: ON</button>
+</div>
+<div class="meters">
+  <div class="meter"><div class="mh"><span>INPUT SHAFT</span><b id="inR">55.0 RPM</b></div><div class="track"><div class="fill" id="inF" style="width:46%"></div></div></div>
+  <div class="meter"><div class="mh"><span>OUTPUT WHEEL</span><b id="outR">4.1 RPM</b></div><div class="track"><div class="fill steel" id="outF" style="width:4%"></div></div></div>
+  <div class="meter"><div class="mh"><span>TORQUE MULTIPLIER</span><b id="tqR">×13.3</b></div><div class="track"><div class="fill" id="tqF" style="width:67%"></div></div></div>
+</div>
+<div class="hint">throttle drives the small input pinion · reduction switches live gears · the beam bell rings at each top dead centre</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var CW=960,CH=600;
+var RAT={A:{t2:32,t4:36},B:{t2:40,t4:48},C:{t2:48,t4:60}};
+var t1=12,t3=12,mod=3.5,add=9,ded=11;
+var S={rpm:55,dir:1,ratio:"B",muted:false};
+var th1=0,L=210,rp=70,rp2=60,beamY=76,beamHalf=160,pistonY=290,x1=130;
+var L2={x2:0,x4:0,r2:0,r4:0};
+var prevTDC=false,prevLeft=999,puffs=[],actx=null,flash=0;
+function layout(){
+  var r=RAT[S.ratio];
+  L2.r2=mod*r.t2;L2.r4=mod*r.t4;
+  L2.x2=x1+mod*t1+L2.r2;
+  L2.x4=L2.x2+mod*t3+L2.r4;
+}
+function ensureAudio(){
+  if(!actx){try{actx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){actx=null;}}
+  if(actx&&actx.state==="suspended")actx.resume();
+}
+function ping(){
+  if(S.muted||!actx)return;
+  try{
+    var o=actx.createOscillator(),g=actx.createGain(),now=actx.currentTime;
+    o.type="triangle";o.frequency.setValueAtTime(760+Math.random()*80,now);
+    o.frequency.exponentialRampToValueAtTime(520,now+0.5);
+    g.gain.setValueAtTime(0.0001,now);
+    g.gain.exponentialRampToValueAtTime(0.22,now+0.012);
+    g.gain.exponentialRampToValueAtTime(0.0001,now+0.55);
+    o.connect(g);g.connect(actx.destination);
+    o.start(now);o.stop(now+0.6);
+  }catch(e){}
+}
+function rp_(t){return mod*t;}
+function gearPath(x,y,t,ang){
+  var r=rp_(t),out=r+add,root=r-ded,tw=Math.PI/t;
+  ax.beginPath();
+  for(var i=0;i<t;i++){
+    var a=ang+i*2*tw;
+    ax.lineTo(x+root*Math.cos(a-tw*0.99),y+root*Math.sin(a-tw*0.99));
+    ax.lineTo(x+out*Math.cos(a-tw*0.5),y+out*Math.sin(a-tw*0.5));
+    ax.lineTo(x+out*Math.cos(a+tw*0.5),y+out*Math.sin(a+tw*0.5));
+    ax.lineTo(x+root*Math.cos(a+tw*0.99),y+root*Math.sin(a+tw*0.99));
+  }
+  ax.closePath();
+}
+function brassFill(x,y,r){
+  var g=ax.createRadialGradient(x-r*0.3,y-r*0.35,r*0.12,x,y,r*1.05);
+  g.addColorStop(0,"#f3cf8a");g.addColorStop(0.55,"#c9973f");g.addColorStop(1,"#7d5a20");
+  return g;
+}
+function drawGear(x,y,t,ang,small){
+  var r=rp_(t);
+  gearPath(x,y,t,ang);
+  ax.fillStyle=brassFill(x,y,r+add);ax.fill();
+  ax.strokeStyle="#5e451a";ax.lineWidth=1.4;ax.stroke();
+  if(!small){
+    ax.fillStyle="rgba(40,28,8,.55)";
+    for(var h=0;h<6;h++){
+      var a=ang*1+h*Math.PI/3;
+      var hx=x+r*0.62*Math.cos(a),hy=y+r*0.62*Math.sin(a);
+      ax.beginPath();ax.arc(hx,hy,r*0.17,0,6.2832);ax.fill();
+    }
+    ax.strokeStyle="#8a6524";ax.lineWidth=Math.max(7,r*0.12);
+    for(var s=0;s<6;s++){
+      var b=ang+s*Math.PI/3;
+      ax.beginPath();
+      ax.moveTo(x+Math.cos(b)*r*0.24,y+Math.sin(b)*r*0.24);
+      ax.lineTo(x+Math.cos(b)*r*0.86,y+Math.sin(b)*r*0.86);
+      ax.stroke();
+    }
+  }else{
+    ax.fillStyle="rgba(40,28,8,.5)";
+    ax.beginPath();ax.arc(x,y,r*0.5,0,6.2832);ax.fill();
+  }
+  var hg=ax.createRadialGradient(x-4,y-5,1,x,y,r*0.24);
+  hg.addColorStop(0,"#dfe6ee");hg.addColorStop(1,"#5a636f");
+  ax.fillStyle=hg;ax.beginPath();ax.arc(x,y,r*0.22,0,6.2832);ax.fill();
+  ax.strokeStyle="#2a303a";ax.lineWidth=2;ax.stroke();
+}
+function roundRect(x,y,w,h,r){
+  ax.beginPath();
+  ax.moveTo(x+r,y);ax.lineTo(x+w-r,y);ax.arcTo(x+w,y,x+w,y+r,r);
+  ax.lineTo(x+w,y+h-r);ax.arcTo(x+w,y+h,x+w-r,y+h,r);
+  ax.lineTo(x+r,y+h);ax.arcTo(x,y+h,x,y+h-r,r);
+  ax.lineTo(x,y+r);ax.arcTo(x,y,x+r,y,r);
+  ax.closePath();
+}
+function drawBase(){
+  var g=ax.createLinearGradient(0,540,0,600);
+  g.addColorStop(0,"#262d38");g.addColorStop(1,"#14181f");
+  ax.fillStyle=g;ax.fillRect(0,540,CW,60);
+  ax.fillStyle="#0f1219";ax.fillRect(0,540,CW,4);
+  for(var i=0;i<26;i++){
+    var x=18+i*37;
+    ax.fillStyle="#3a434f";
+    ax.beginPath();ax.arc(x,556,3.4,0,6.2832);ax.fill();
+    ax.fillStyle="#171b23";
+    ax.beginPath();ax.arc(x+1,557,1.6,0,6.2832);ax.fill();
+  }
+  var px=40,py=568,pw=330,ph=24;
+  var bg=ax.createLinearGradient(px,py,px,py+ph);
+  bg.addColorStop(0,"#d9b877");bg.addColorStop(1,"#9c7835");
+  ax.fillStyle=bg;roundRect(px,py,pw,ph,4);ax.fill();
+  ax.strokeStyle="#6d5320";ax.lineWidth=1;ax.stroke();
+  ax.fillStyle="rgba(60,42,12,.85)";ax.font="600 12px ui-monospace,Menlo,monospace";
+  ax.fillText("MIMICAL ENGINE No. 70 — BRASS & STEEL",px+14,py+16);
+  ax.fillStyle="rgba(255,240,200,.5)";
+  ax.fillText("MIMICAL ENGINE No. 70 — BRASS & STEEL",px+14,py+15.2);
+}
+function frame(dt,t){
+  th1+=S.dir*(S.rpm/60)*6.283185307179586*dt;
+  var r=RAT[S.ratio];
+  var th2=Math.PI+Math.PI/r.t2-(t1/r.t2)*th1;
+  var th4=Math.PI+Math.PI/r.t4-(t3/r.t4)*th2;
+  ax.fillStyle="#0b0e14";ax.fillRect(0,0,CW,CH);
+  var g=ax.createRadialGradient(CW*0.4,CH*0.35,60,CW*0.4,CH*0.35,CW*0.8);
+  g.addColorStop(0,"#1a212c");g.addColorStop(1,"#0b0e14");
+  ax.fillStyle=g;ax.fillRect(0,0,CW,CH);
+  ax.strokeStyle="rgba(120,140,170,.05)";
+  for(var gx=0;gx<CW;gx+=30){ax.beginPath();ax.moveTo(gx,0);ax.lineTo(gx,CH);ax.stroke();}
+  for(var gy=0;gy<CH;gy+=30){ax.beginPath();ax.moveTo(0,gy);ax.lineTo(CW,gy);ax.stroke();}
+  drawBase();
+  var colX=L2.x2;
+  ax.fillStyle="#232a36";
+  ax.fillRect(colX-13,96,26,544-96);
+  ax.fillStyle="rgba(255,255,255,.05)";ax.fillRect(colX-13,96,4,544-96);
+  var bellX=colX-beamHalf,postX=bellX;
+  ax.fillStyle="#232a36";ax.fillRect(postX-7,44,14,540-44);
+  ax.fillStyle="rgba(255,255,255,.05)";ax.fillRect(postX-7,44,4,540-44);
+  ax.strokeStyle="#39424f";ax.lineWidth=3;
+  ax.beginPath();ax.moveTo(bellX,540);ax.lineTo(bellX,36);ax.stroke();
+  var cylX=L2.x4+58,cylW=300;
+  ax.fillStyle="#1d242e";roundRect(cylX,pistonY-48,cylW,96,8);ax.fill();
+  ax.strokeStyle="#39424f";ax.lineWidth=3;roundRect(cylX,pistonY-48,cylW,96,8);ax.stroke();
+  for(var rib=1;rib<7;rib++){
+    ax.strokeStyle="rgba(160,175,195,.14)";ax.lineWidth=4;
+    ax.beginPath();ax.moveTo(cylX+rib*cylW/7,pistonY-44);ax.lineTo(cylX+rib*cylW/7,pistonY+44);ax.stroke();
+  }
+  drawGear(x1,pistonY,t1,th1,true);
+  drawGear(L2.x2,pistonY,r.t2,th2,false);
+  drawGear(L2.x2,pistonY,t3,th2,true);
+  drawGear(L2.x4,pistonY,r.t4,th4,false);
+  var tdc=Math.cos(th4)>0.995;
+  if(tdc&&!prevTDC){
+    for(var p=0;p<3;p++){
+      puffs.push({x:cylX+cylW-6,y:pistonY-52,vx:12+Math.random()*18,vy:-34-Math.random()*18,r:5+Math.random()*6,life:1});
+    }
+  }
+  prevTDC=tdc;
+  for(var i=puffs.length-1;i>=0;i--){
+    var pf=puffs[i];
+    pf.x+=pf.vx*dt;pf.y+=pf.vy*dt;pf.r+=14*dt;pf.life-=dt*0.7;
+    if(pf.life<=0){puffs.splice(i,1);continue;}
+    ax.fillStyle="rgba(180,195,215,"+(pf.life*0.3)+")";
+    ax.beginPath();ax.arc(pf.x,pf.y,pf.r,0,6.2832);ax.fill();
+  }
+  var px4=L2.x4+rp*Math.cos(th4);
+  var py4=pistonY+rp*Math.sin(th4);
+  var wristX=L2.x4+rp*Math.cos(th4)+Math.sqrt(Math.max(0,L*L-Math.pow(rp*Math.sin(th4),2)));
+  ax.strokeStyle="#c8d2de";ax.lineWidth=8;
+  ax.beginPath();ax.moveTo(px4,py4);ax.lineTo(wristX,pistonY);ax.stroke();
+  var pistCenter=Math.max(cylX+56,Math.min(cylX+cylW-56,wristX+4));
+  ax.fillStyle="#98a2ae";roundRect(pistCenter-52,pistonY-38,104,76,5);ax.fill();
+  ax.strokeStyle="#5a636f";ax.lineWidth=2;roundRect(pistCenter-52,pistonY-38,104,76,5);ax.stroke();
+  ax.strokeStyle="rgba(40,46,56,.7)";ax.lineWidth=3;
+  for(var b=1;b<4;b++){
+    ax.beginPath();ax.moveTo(pistCenter-52+b*26,pistonY-36);ax.lineTo(pistCenter-52+b*26,pistonY+36);ax.stroke();
+  }
+  var pin4x=L2.x4+rp*Math.cos(th4),pin4y=pistonY+rp*Math.sin(th4);
+  ax.strokeStyle="#5e451a";ax.lineWidth=14;
+  ax.beginPath();ax.moveTo(L2.x4,pistonY);ax.lineTo(pin4x,pin4y);ax.stroke();
+  ax.strokeStyle="#c9973f";ax.lineWidth=9;
+  ax.beginPath();ax.moveTo(L2.x4,pistonY);ax.lineTo(pin4x,pin4y);ax.stroke();
+  ax.fillStyle="#dfe6ee";
+  ax.beginPath();ax.arc(pin4x,pistonY,8,0,6.2832);ax.fill();
+  ax.strokeStyle="#39424f";ax.lineWidth=2;ax.stroke();
+  var pin2x=L2.x2+rp2*Math.cos(th2+Math.PI),pin2y=pistonY+rp2*Math.sin(th2+Math.PI);
+  var endY=beamY+(pin2y-pistonY)*0.5;
+  var leftEndY=beamY-(endY-beamY);
+  var tilt=Math.atan2(endY-beamY,beamHalf);
+  ax.save();
+  ax.translate(L2.x2,beamY);ax.rotate(tilt);
+  var beamG=ax.createLinearGradient(0,-14,0,14);
+  beamG.addColorStop(0,"#d9b877");beamG.addColorStop(0.5,"#a87f3a");beamG.addColorStop(1,"#6d5320");
+  ax.fillStyle=beamG;roundRect(-beamHalf,-14,beamHalf*2,28,14);ax.fill();
+  ax.strokeStyle="#4d3a14";ax.lineWidth=2;roundRect(-beamHalf,-14,beamHalf*2,28,14);ax.stroke();
+  ax.fillStyle="#3a2f14";
+  for(var h2=-2;h2<=2;h2++){if(h2===0)continue;ax.beginPath();ax.arc(h2*62,0,5,0,6.2832);ax.fill();}
+  ax.fillStyle="#dfe6ee";ax.beginPath();ax.arc(0,0,10,0,6.2832);ax.fill();
+  ax.strokeStyle="#5a636f";ax.lineWidth=3;ax.beginPath();ax.arc(0,0,10,0,6.2832);ax.stroke();
+  ax.fillStyle="#c9973f";
+  ax.beginPath();ax.arc(-beamHalf,0,9,0,6.2832);ax.fill();
+  ax.beginPath();ax.arc(beamHalf,0,9,0,6.2832);ax.fill();
+  ax.restore();
+  ax.strokeStyle="#c8d2de";ax.lineWidth=6;
+  ax.beginPath();ax.moveTo(pin2x,pin2y);ax.lineTo(L2.x2+beamHalf,beamY);ax.stroke();
+  ax.fillStyle="#dfe6ee";
+  ax.beginPath();ax.arc(pin2x,pin2y,7,0,6.2832);ax.fill();
+  ax.strokeStyle="#5e451a";ax.lineWidth=10;
+  ax.beginPath();ax.moveTo(L2.x2,pistonY);ax.lineTo(pin2x,pin2y);ax.stroke();
+  ax.fillStyle="rgba(20,16,8,.9)";ax.beginPath();ax.arc(L2.x2,pistonY,14,0,6.2832);ax.fill();
+  if(leftEndY<50&&prevLeft>=50){
+    ping();flash=1;
+  }
+  prevLeft=leftEndY;
+  if(flash>0)flash=Math.max(0,flash-dt*2.2);
+  var bellY=26;
+  ax.save();
+  var bg2=ax.createLinearGradient(bellX-20,bellY-20,bellX+20,bellY+20);
+  bg2.addColorStop(0,flash>0?"#fff3c9":"#e0b062");bg2.addColorStop(1,"#8a6524");
+  ax.fillStyle=bg2;
+  ax.beginPath();
+  ax.moveTo(bellX-19,bellY+18);
+  ax.quadraticCurveTo(bellX-17,bellY-16,bellX,bellY-17);
+  ax.quadraticCurveTo(bellX+17,bellY-16,bellX+19,bellY+18);
+  ax.closePath();ax.fill();
+  ax.fillStyle="#5e451a";ax.fillRect(bellX-22,bellY+16,44,6);
+  ax.fillStyle="#3a2f14";ax.beginPath();ax.arc(bellX,bellY+22,4.5,0,6.2832);ax.fill();
+  if(flash>0){
+    ax.strokeStyle="rgba(255,225,150,"+(flash*0.8)+")";ax.lineWidth=3;
+    ax.beginPath();ax.arc(bellX,bellY+18,20+(1-flash)*46,0,6.2832);ax.stroke();
+    ax.strokeStyle="rgba(255,225,150,"+(flash*0.45)+")";
+    ax.beginPath();ax.arc(bellX,bellY+18,14+(1-flash)*78,0,6.2832);ax.stroke();
+  }
+  ax.restore();
+  ax.save();
+  ax.translate(L2.x4,pistonY);
+  ax.rotate(th4);
+  ax.strokeStyle="#dfe6ee";ax.lineWidth=6;
+  ax.beginPath();ax.moveTo(0,0);ax.lineTo(rp-8,0);ax.stroke();
+  ax.restore();
+  ax.fillStyle="#2a303a";ax.beginPath();ax.arc(L2.x4,pistonY,13,0,6.2832);ax.fill();
+  ax.fillStyle="#dfe6ee";ax.beginPath();ax.arc(L2.x4,pistonY,6,0,6.2832);ax.fill();
+  ax.save();
+  ax.translate(x1,pistonY);
+  ax.strokeStyle="rgba(224,176,98,"+(0.35+0.4*Math.abs(Math.sin(th1)))+")";
+  ax.lineWidth=4;
+  ax.beginPath();
+  var a0=S.dir>0?-1.2:1.2,a1=S.dir>0?1.1:-1.1;
+  ax.arc(0,0,mod*t1+26,a0,a1);
+  ax.stroke();
+  ax.fillStyle="rgba(224,176,98,.75)";
+  ax.beginPath();
+  var tipA=a1,tx=Math.cos(tipA)*(mod*t1+26),ty=Math.sin(tipA)*(mod*t1+26);
+  ax.moveTo(tx,ty);
+  ax.lineTo(Math.cos(tipA-0.16)*(mod*t1+34),Math.sin(tipA-0.16)*(mod*t1+34));
+  ax.lineTo(Math.cos(tipA+0.16)*(mod*t1+34),Math.sin(tipA+0.16)*(mod*t1+34));
+  ax.closePath();ax.fill();
+  ax.restore();
+  ax.font="10px ui-monospace,Menlo,monospace";
+  ax.fillStyle="rgba(150,165,185,.7)";
+  ax.fillText("INPUT 12T",x1-26,pistonY+rp_(t1)+42);
+  ax.fillText("WHEEL "+r.t4+"T",L2.x4-26,pistonY+rp_(r.t4)+42);
+  ax.fillText("CLUTCH "+r.t2+"T",L2.x2-30,pistonY+rp_(r.t2)+30);
+  ax.fillStyle="rgba(224,176,98,.85)";
+  ax.fillText("MOTOR",x1-18,pistonY-rp_(t1)-26);
+}
+function meters(){
+  var r=RAT[S.ratio];
+  var red=(r.t2/t1)*(r.t4/t3);
+  var out=S.rpm/red;
+  document.getElementById("inR").textContent=S.rpm.toFixed(1)+" RPM";
+  document.getElementById("outR").textContent=out.toFixed(1)+" RPM";
+  document.getElementById("tqR").textContent="×"+red.toFixed(1);
+  document.getElementById("inF").style.width=(S.rpm/120*100)+"%";
+  document.getElementById("outF").style.width=Math.min(100,out/120*100)+"%";
+  document.getElementById("tqF").style.width=(red/20*100)+"%";
+}
+var last=performance.now();
+function loop(now){
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  frame(dt,now);
+  requestAnimationFrame(loop);
+}
+document.getElementById("thr").addEventListener("input",function(){
+  S.rpm=Number(this.value);
+  document.getElementById("thrV").textContent=S.rpm;
+  meters();
+});
+document.getElementById("dirB").addEventListener("click",function(){
+  S.dir*=-1;
+  this.textContent="DIRECTION: "+(S.dir>0?"CW":"CCW");
+});
+document.querySelectorAll("[data-r]").forEach(function(b){
+  b.addEventListener("click",function(){
+    document.querySelectorAll("[data-r]").forEach(function(o){o.className="";});
+    b.className="on";
+    S.ratio=b.getAttribute("data-r");
+    layout();meters();
+  });
+});
+document.getElementById("muteB").addEventListener("click",function(){
+  S.muted=!S.muted;
+  this.textContent="BELL: "+(S.muted?"OFF":"ON");
+  if(!S.muted){ensureAudio();ping();}
+});
+document.addEventListener("pointerdown",ensureAudio);
+document.addEventListener("keydown",ensureAudio);
+layout();meters();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

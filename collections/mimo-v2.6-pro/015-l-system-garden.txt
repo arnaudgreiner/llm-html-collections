@@ -1,0 +1,19 @@
+TITLE: L-System Garden — Recursive Branching Plant on Canvas
+
+FULL PROMPT:
+Write exactly one self-contained HTML page, "L-System Garden", growing procedural plants with zero external resources. Style a night-garden ground (#0c1310 with a #16241c wash at the base), panels #121b16 with #24342b rules, a lime accent #9ee37d and a marigold #f0b429, in a light-weight sans for headings with an italic serif fragment. The header pairs a three-tone title with a meta stack showing substrate, rule depth, seed and growth state. The left stage is an 860×620 canvas with an italic plate caption top-left, a live segment/tip read-out top-right, and a 4px growth progress bar along the bottom. The right rail carries a species chooser of three buttons (Rubus arbor, Filix spiralis, Corallium noctis) each with a small descriptive line; sliders for rule depth (4–9), branch spread (8–52°) and wind; a full-width Regrow button; a 2×2 stats grid (segments, leaf tips, spread, seed); and a rule-book card explaining F, + and − in mono type.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a botanical plate shown at night — dark, quiet, luminous at the tips only. Structure colour grades from trunk brown (#6b563c) to leaf lime across depth, and marigold glows mark the leaf tips, so the eye reads the plant's hierarchy instantly without any labels.
+
+MAJOR VISUAL TECHNIQUES:
+- A seeded LCG so every regrow is reproducible from the displayed seed
+- Iterative stack-based expansion with a hard 9000-segment guard instead of unbounded recursion
+- Segments bucketed by depth so each frame issues roughly a dozen strokes rather than thousands
+- A continuous (x,y) wind displacement field evaluated at both endpoints, keeping joints attached while the plant sways
+- Radial-gradient leaf halos with a sine pulse per index
+- Growth progress by segment reveal order (depth-first), driven by one requestAnimationFrame loop
+- Soil band, ground shadow and vignette composed purely from gradients
+
+INTENDED INTERACTION MODEL:
+Choosing a species, moving the depth slider or the spread slider rebuilds the plant and replays growth from zero; the wind slider changes sway amplitude live without rebuilding. Regrow rolls a new seed and animates again. The progress bar and meta state (growing / complete) track the reveal, and the stats update the moment a stand is built. Under reduced motion the plant is drawn complete and static, with no sway.

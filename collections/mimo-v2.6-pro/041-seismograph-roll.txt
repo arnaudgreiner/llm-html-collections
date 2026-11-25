@@ -1,0 +1,17 @@
+TITLE: Seismograph Roll — Drum Recorder Trace
+
+FULL PROMPT:
+Build one self-contained HTML page, "Seismograph Roll", with no external resources. Instrument-hut palette: dark timber background, cream drum paper card with a thick steel border and deep drop shadow, monospace type; header with kicker, thin/accent title and live event/peak counters. Stage: left a 780×430 canvas drum — cream ground, scrolling vertical time rules (heavier every fifth rule), horizontal amplitude channels at ±0.5/±1.0 around a dark baseline, a red pen trace written from a rolling sample buffer, a pen carriage with a red stylus dot pinned to the right edge, left-margin amplitude labels and bottom time ticks; HUD top-left shows gain, RMS, paper speed and a QUIET/EVENT state chip that flips green-to-red. Right rig: recorder settings card (gain 0.4–3×, microseism noise 0–0.9, paper speed 0.4–3.0 sliders with readouts), a trigger card (M 3.2 local, M 5.1 regional, M 6.8 major, clear log) and an event log card listing timestamped triggers.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like a strip-chart drum in a mountain hut: paper turning under a pen that never lifts, writing the whole day whether anything happens or not.
+
+MAJOR VISUAL TECHNIQUES:
+- Rolling sample buffer drawn as a single polyline, so history slides left as new paper arrives
+- Event envelope = sin(f·age) · e^(−age/τ) plus randomised high-frequency scatter, summed per event
+- Time rules positioned from a scroll counter with a modulo so rules and heavy rules stay in phase
+- Gain/noise applied at sample time so the visual genuinely rescales rather than CSS-scaling the output
+- Pen carriage drawn as a triangle whose apex tracks the newest sample
+
+INTENDED INTERACTION MODEL:
+Slide gain, microseism and paper speed to change the recording conditions live; press a magnitude button to inject an event whose amplitude decays exponentially and whose trigger appears in the log with a timestamp and depth; the state chip flashes EVENT then returns to QUIET. Clear resets counters and log. Reduced motion draws a single drum frame with one pre-written small event and repaints it when settings change.

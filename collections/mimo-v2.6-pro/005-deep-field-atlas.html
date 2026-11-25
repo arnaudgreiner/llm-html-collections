@@ -1,0 +1,231 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>005 · Deep Field Atlas</title>
+<style>
+:root{--sky:#070d1f;--ink:#e6ecff;--mut:#7f8cb8;--gold:#ffcf6b;--line:rgba(150,175,255,.22)}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:radial-gradient(140% 120% at 20% 0%,#0b1330,#05070f 62%,#03040a);color:var(--ink);
+  min-height:100vh;overflow-x:hidden;font-family:Georgia,"Times New Roman",serif}
+#sky{position:fixed;inset:0;z-index:0}
+#net{position:fixed;inset:0;z-index:1;pointer-events:none}
+.ui{position:relative;z-index:3;max-width:1180px;margin:0 auto;padding:74px 24px 60px;
+  min-height:100vh;display:flex;flex-direction:column;justify-content:space-between}
+header.top{display:flex;justify-content:space-between;gap:20px;align-items:flex-start;flex-wrap:wrap}
+h1{margin:0;font-size:clamp(34px,5.6vw,66px);font-weight:400;letter-spacing:.02em;line-height:1.05}
+h1 em{font-style:italic;color:var(--gold)}
+.obs{font-size:11px;letter-spacing:.36em;text-transform:uppercase;color:var(--mut);
+  font-family:"Segoe UI",system-ui,sans-serif;text-align:right;line-height:2}
+.panel{background:rgba(6,10,26,.72);border:1px solid var(--line);border-radius:4px;
+  padding:20px 22px;backdrop-filter:blur(9px)}
+body.mid .ui{justify-content:center}
+.catalog{display:grid;grid-template-columns:1.25fr 1fr;gap:26px;align-items:end;margin-top:40px}
+.cat h2,.note h2{margin:0 0 14px;font-size:11px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--gold);font-family:"Segoe UI",system-ui,sans-serif;font-weight:600}
+ul.stars{list-style:none;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif}
+ul.stars li{display:flex;justify-content:space-between;gap:14px;padding:9px 8px;font-size:13.5px;
+  border-bottom:1px solid rgba(150,175,255,.12);cursor:pointer;transition:.3s;letter-spacing:.06em}
+ul.stars li:hover,ul.stars li.hot{background:rgba(255,207,107,.10);color:var(--gold);
+  padding-left:16px}
+ul.stars li span:last-child{color:var(--mut);font-variant-numeric:tabular-nums}
+ul.stars li:hover span:last-child,ul.stars li.hot span:last-child{color:var(--gold)}
+.note p{margin:0 0 12px;color:#aab6dc;font-size:15px;line-height:1.8}
+.note .quote{font-style:italic;color:var(--gold);border-left:2px solid var(--gold);padding-left:14px}
+.actions{display:flex;gap:12px;flex-wrap:wrap;margin-top:18px}
+button{font-family:"Segoe UI",system-ui,sans-serif;font-size:11.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--ink);background:transparent;border:1px solid var(--line);
+  padding:12px 20px;cursor:pointer;transition:.35s}
+button:hover{background:var(--gold);color:#12172c;border-color:var(--gold)}
+.hud{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:34px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:.28em;
+  text-transform:uppercase;color:var(--mut)}
+.starlabel{position:absolute;transform:translate(-50%,-160%);font-size:11px;letter-spacing:.3em;
+  text-transform:uppercase;color:rgba(255,207,107,.9);white-space:nowrap;pointer-events:none;
+  font-family:"Segoe UI",system-ui,sans-serif;text-shadow:0 0 12px rgba(0,0,0,.9);opacity:0;
+  transition:opacity .5s}
+.starlabel.on{opacity:1}
+.layer{position:fixed;inset:0;z-index:2;pointer-events:none}
+@media(max-width:820px){.catalog{grid-template-columns:1fr}.obs{text-align:left}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="sky" aria-hidden="true"></canvas>
+<canvas id="net" class="layer" aria-hidden="true"></canvas>
+<div class="layer" id="labels" aria-hidden="false"></div>
+
+<div class="ui">
+  <header class="top">
+    <div>
+      <div class="obs" style="text-align:left">Plate 005 · northern survey · epoch J2000</div>
+      <h1>The Deep Field<br><em>Atlas</em></h1>
+    </div>
+    <div class="obs">
+      Right ascension 17h 42m<br>
+      Declination −28° 55′<br>
+      <span id="mag">limiting mag 6.4</span><br>
+      <span id="count">0 stars plotted</span>
+    </div>
+  </header>
+
+  <div class="catalog">
+    <section class="panel cat">
+      <h2>Named bodies</h2>
+      <ul class="stars" id="list">
+        <li data-i="0"><span>Vespera</span><span>+4.12</span></li>
+        <li data-i="1"><span>Corvid Major</span><span>+1.87</span></li>
+        <li data-i="2"><span>Halcyon Deep</span><span>+5.30</span></li>
+        <li data-i="3"><span>Meridian Ash</span><span>+2.66</span></li>
+        <li data-i="4"><span>Solace Minor</span><span>+3.94</span></li>
+        <li data-i="5"><span>Thule Rim</span><span>+0.55</span></li>
+        <li data-i="6"><span>Orrery Gate</span><span>+4.81</span></li>
+      </ul>
+      <div class="actions">
+        <button id="regen">Redraw the sky</button>
+        <button id="const">Toggle asterisms</button>
+      </div>
+    </section>
+
+    <section class="panel note">
+      <h2>Observer's note</h2>
+      <p class="quote">“Every line on this plate was drawn by the eye that moved across it.”</p>
+      <p>The atlas is not a map of the sky — it is a record of attention. Sweep the pointer across the
+      field and the nearest stars draw filaments toward one another, forming temporary asterisms that
+      exist only while you look. Redraw the field and they scatter into a new arrangement entirely.</p>
+      <div class="hud"><span id="status">awaiting observation</span><span>no external data</span></div>
+    </section>
+  </div>
+
+  <div class="hud">
+    <span>drag across the field to sweep</span>
+    <span id="fps">—</span>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var sky=document.getElementById("sky"), sctx=sky.getContext("2d");
+  var net=document.getElementById("net"), nctx=net.getContext("2d");
+  var labelLayer=document.getElementById("labels");
+  var W=0,H=0,stars=[],named=[],showConst=true;
+  var mx=-999,my=-999;
+
+  var NAMES=["Vespera","Corvid Major","Halcyon Deep","Meridian Ash","Solace Minor","Thule Rim","Orrery Gate"];
+
+  function rand(a,b){return a+Math.random()*(b-a);}
+  function build(){
+    W=sky.width=net.width=innerWidth;
+    H=sky.height=net.height=innerHeight;
+    labelLayer.innerHTML="";
+    stars=[]; named=[];
+    var n=Math.round(W*H/5200);
+    for(var i=0;i<n;i++){
+      stars.push({x:Math.random()*W,y:Math.random()*H,r:rand(.4,1.7),
+        tw:Math.random()*Math.PI*2,sp:rand(.4,1.8),b:rand(.3,1)});
+    }
+    for(var k=0;k<NAMES.length;k++){
+      var s={x:rand(W*.12,W*.88),y:rand(H*.16,H*.8),r:rand(2.6,4.4),tw:Math.random()*6,sp:rand(.5,1.1),b:1,named:true};
+      stars.push(s); named.push(s);
+      var el=document.createElement("div");
+      el.className="starlabel"; el.textContent=NAMES[k];
+      el.dataset.k=k; labelLayer.appendChild(el);
+    }
+    document.getElementById("count").textContent=stars.length+" stars plotted";
+    var lm=(5.4+Math.random()*2).toFixed(1);
+    document.getElementById("mag").textContent="limiting mag "+lm;
+    document.getElementById("status").textContent="field captured · "+new Date().toISOString().slice(11,19);
+  }
+  build();
+  addEventListener("resize",build);
+
+  document.addEventListener("pointermove",function(e){ mx=e.clientX; my=e.clientY; },{passive:true});
+  document.addEventListener("pointerleave",function(){ mx=-999;my=-999; });
+
+  var t=0, last=performance.now(), frames=0, fpsEl=document.getElementById("fps");
+  function loop(now){
+    t+=.016; frames++;
+    if(now-last>1000){ fpsEl.textContent=Math.round(frames*1000/(now-last))+" fps"; frames=0; last=now; }
+
+    sctx.clearRect(0,0,W,H);
+    for(var i=0;i<stars.length;i++){
+      var s=stars[i];
+      var tw=reduce?1:(.6+.4*Math.sin(t*s.sp+s.tw));
+      var glow=s.b*tw;
+      if(s.named){
+        var g=sctx.createRadialGradient(s.x,s.y,0,s.x,s.y,22);
+        g.addColorStop(0,"rgba(255,225,160,"+(.85*glow)+")");
+        g.addColorStop(.35,"rgba(255,190,90,"+(.30*glow)+")");
+        g.addColorStop(1,"rgba(255,180,80,0)");
+        sctx.fillStyle=g; sctx.beginPath(); sctx.arc(s.x,s.y,22,0,6.284); sctx.fill();
+        sctx.fillStyle="rgba(255,245,225,"+tw+")";
+        sctx.beginPath(); sctx.arc(s.x,s.y,s.r+1.4,0,6.284); sctx.fill();
+        /* four-point diffraction spikes */
+        sctx.strokeStyle="rgba(255,220,160,"+(.5*tw)+")"; sctx.lineWidth=1;
+        sctx.beginPath();
+        sctx.moveTo(s.x-16,s.y); sctx.lineTo(s.x+16,s.y);
+        sctx.moveTo(s.x,s.y-16); sctx.lineTo(s.x,s.y+16); sctx.stroke();
+      }else{
+        sctx.fillStyle="rgba(220,232,255,"+(.35+.65*glow)*.95+")";
+        sctx.beginPath(); sctx.arc(s.x,s.y,s.r,0,6.284); sctx.fill();
+      }
+    }
+    /* anchors for named labels */
+    for(var q=0;q<named.length;q++){
+      var el=labelLayer.children[q], s2=named[q];
+      if(!el) continue;
+      el.style.left=s2.x+"px"; el.style.top=s2.y+"px";
+      var d=Math.hypot(mx-s2.x,my-s2.y);
+      el.classList.toggle("on", showConst && (d<230));
+    }
+
+    nctx.clearRect(0,0,W,H);
+    if(showConst && mx>-500){
+      nctx.lineWidth=1;
+      for(var a=0;a<stars.length;a++){
+        var s3=stars[a], da=Math.hypot(mx-s3.x,my-s3.y);
+        if(da>230) continue;
+        for(var b=a+1;b<stars.length;b++){
+          var s4=stars[b], db=Math.hypot(mx-s4.x,my-s4.y);
+          if(db>230) continue;
+          var dd=Math.hypot(s3.x-s4.x,s3.y-s4.y);
+          if(dd>150) continue;
+          var alpha=(1-Math.max(da,db)/230)*(1-dd/150);
+          nctx.strokeStyle="rgba(255,207,107,"+(alpha*.75).toFixed(3)+")";
+          nctx.beginPath(); nctx.moveTo(s3.x,s3.y); nctx.lineTo(s4.x,s4.y); nctx.stroke();
+          nctx.fillStyle="rgba(255,207,107,"+(alpha*.5).toFixed(3)+")";
+          nctx.beginPath(); nctx.arc((s3.x+s4.x)/2,(s3.y+s4.y)/2,1.6,0,6.284); nctx.fill();
+        }
+      }
+      /* pointer halo */
+      nctx.strokeStyle="rgba(255,207,107,.35)";
+      nctx.beginPath(); nctx.arc(mx,my,230,0,6.284); nctx.stroke();
+    }
+    requestAnimationFrame(loop);
+  }
+  requestAnimationFrame(loop);
+
+  /* catalog hover highlights the matching star in the field */
+  document.querySelectorAll("#list li").forEach(function(li){
+    li.addEventListener("mouseenter",function(){
+      document.querySelectorAll("#list li").forEach(function(o){o.classList.remove("hot");});
+      li.classList.add("hot");
+      var s=named[+li.dataset.i];
+      if(s){ mx=s.x; my=s.y; }
+    });
+  });
+
+  document.getElementById("regen").addEventListener("click",build);
+  document.getElementById("const").addEventListener("click",function(){
+    showConst=!showConst;
+    this.textContent=showConst?"Toggle asterisms":"Show asterisms";
+    if(!showConst) nctx.clearRect(0,0,W,H);
+  });
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,266 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Kintsugi Bench — Mending With Gold</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#17140f;color:#cec3b0;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:15px;letter-spacing:.3em;color:#e6b95c;text-transform:uppercase}
+h1 i{font-style:normal;color:#7fb5a6}
+#bench{background:#1f1a13;border:1px solid #3a3226;border-radius:14px;padding:16px}
+canvas{display:block;border-radius:8px;box-shadow:0 12px 40px rgba(0,0,0,.55);cursor:grab;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#241f16;border:1px solid #493d2a;color:#d9cdb8;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e6b95c;color:#fff6e2}
+button.on{background:#e6b95c;border-color:#e6b95c;color:#241a02;font-weight:700}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#8d8271}
+.stat b{color:#e6b95c}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#6d6355;text-align:center;max-width:740px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Kintsugi Bench <i>M89</i> · mending with gold</h1>
+<div id="bench"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bGhost" class="on">◌ GHOST SEAT</button>
+  <button id="bScatter">⤳ RE-SCATTER</button>
+  <button id="bNew">❖ NEW BOWL</button>
+  <span class="stat">seams mended <b id="mP">0/16</b> · <b id="mT">carry each shard to its own outline</b></span>
+</div>
+<div class="hint">drag a shard onto the faint outline of where it broke from · when two neighbours both come home their shared crack is lacquered and gilded · the bowl only sings when the last piece sits</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520,CX=W/2,RIMY=80,FOOTY=430;
+var ROWS=4,shards=[],byId=[],ghostOn=true,dragging=null,offx=0,offy=0;
+var done=false,doneT=0;
+function hw(y){ // bowl half-width by height (rim wide, foot narrow)
+  var t=(y-RIMY)/(FOOTY-RIMY);
+  return 250*(1-0.60*Math.pow(t,1.25));
+}
+function build(){
+  shards=[];byId=[];done=false;
+  var params=[];
+  for(var r=0;r<=ROWS;r++){
+    var row=[];
+    for(var c=0;c<=4;c++){
+      var base=-1+2*c/4;
+      var j=(r===0||r===ROWS||c===0||c===4)?0:(Math.random()-0.5)*0.34;
+      row.push(Math.max(-1,Math.min(1,base+j)));
+    }
+    params.push(row);
+  }
+  for(var r2=0;r2<ROWS;r2++){
+    var y0=RIMY+r2*((FOOTY-RIMY)/ROWS);
+    var y1=RIMY+(r2+1)*((FOOTY-RIMY)/ROWS);
+    for(var c2=0;c2<4;c2++){
+      var L0=params[r2][c2],R0=params[r2][c2+1];
+      var L1=params[r2+1][c2],R1=params[r2+1][c2+1];
+      // polygon: curved top & bottom (3 samples), jagged straight sides
+      var poly=[];
+      for(var s=0;s<=3;s++){
+        var f=s/3;
+        poly.push([CX+(L0+(R0-L0)*f)*hw(y0),y0]);
+      }
+      for(var s2=3;s2>=0;s2--){
+        var f2=s2/3;
+        poly.push([CX+(L1+(R1-L1)*f2)*hw(y1),y1]);
+      }
+      // edges as point pairs with neighbour ids
+      var top=[],bot=[];
+      for(var s3=0;s3<=3;s3++){
+        var ff=s3/3;
+        top.push([CX+(L0+(R0-L0)*ff)*hw(y0),y0]);
+        bot.push([CX+(L1+(R1-L1)*ff)*hw(y1),y1]);
+      }
+      var edges=[
+        {pts:top,nb:r2>0?(r2-1)*4+c2:-1},                 // up
+        {pts:bot.slice().reverse(),nb:r2<ROWS-1?(r2+1)*4+c2:-1}, // down
+        {pts:[[CX+L0*hw(y0),y0],[CX+L1*hw(y1),y1]],nb:c2>0?r2*4+c2-1:-1},   // left
+        {pts:[[CX+R1*hw(y1),y1],[CX+R0*hw(y0),y0]],nb:c2<3?r2*4+c2+1:-1}    // right
+      ];
+      var h=cen(poly);
+      var sh={poly:poly,home:h,pos:h.slice(),edges:edges,placed:false};
+      shards.push(sh);byId.push(sh); // byId keeps build order = neighbour ids
+    }
+  }
+  scatter();
+  upd();
+}
+function cen(p){
+  var x=0,y=0;
+  for(var i=0;i<p.length;i++){x+=p[i][0];y+=p[i][1];}
+  return [x/p.length,y/p.length];
+}
+function scatter(){
+  for(var i=0;i<shards.length;i++){
+    var s=shards[i];
+    if(s.placed)continue;
+    s.pos=[40+Math.random()*(W-80),40+Math.random()*(H-80)];
+  }
+}
+function upd(){
+  var n=0;
+  for(var i=0;i<shards.length;i++)if(shards[i].placed)n++;
+  document.getElementById("mP").textContent=n+"/"+shards.length;
+  if(n===shards.length&&!done){
+    done=true;doneT=performance.now();
+    document.getElementById("mT").textContent="whole again — every seam in gold";
+  }else if(!done){
+    document.getElementById("mT").textContent="carry each shard to its own outline";
+  }
+}
+document.getElementById("bGhost").addEventListener("click",function(){
+  ghostOn=!ghostOn;this.className=ghostOn?"on":"";
+});
+document.getElementById("bScatter").addEventListener("click",scatter);
+document.getElementById("bNew").addEventListener("click",build);
+function inPoly(px,py,p){
+  var inside=false;
+  for(var i=0,j=p.length-1;i<p.length;j=i++){
+    var xi=p[i][0],yi=p[i][1],xj=p[j][0],yj=p[j][1];
+    if((yi>py)!==(yj>py)&&px<(xj-xi)*(py-yi)/(yj-yi)+xi)inside=!inside;
+  }
+  return inside;
+}
+function pick(px,py){
+  for(var i=shards.length-1;i>=0;i--){
+    var s=shards[i];
+    if(s.placed)continue;
+    var rp=s.poly.map(function(q){return [q[0]-s.home[0]+s.pos[0],q[1]-s.home[1]+s.pos[1]];});
+    if(inPoly(px,py,rp))return s;
+  }
+  return null;
+}
+function ppos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointerdown",function(e){
+  var p=ppos(e);
+  var s=pick(p[0],p[1]);
+  if(!s)return;
+  dragging=s;cv.setPointerCapture(e.pointerId);
+  offx=s.pos[0]-p[0];offy=s.pos[1]-p[1];
+  // topmost while dragging
+  var ix=shards.indexOf(s);
+  shards.splice(ix,1);shards.push(s);
+  cv.style.cursor="grabbing";
+});
+cv.addEventListener("pointermove",function(e){
+  if(!dragging)return;
+  var p=ppos(e);
+  dragging.pos=[p[0]+offx,p[1]+offy];
+  var d=Math.hypot(dragging.pos[0]-dragging.home[0],dragging.pos[1]-dragging.home[1]);
+  if(d<30){
+    dragging.pos=dragging.home.slice();
+    dragging.placed=true;
+    dragging=null;
+    cv.style.cursor="grab";
+    upd();
+  }
+});
+cv.addEventListener("pointerup",function(){dragging=null;cv.style.cursor="grab";});
+cv.addEventListener("pointercancel",function(){dragging=null;cv.style.cursor="grab";});
+function drawShell(alpha){
+  // faint outline of the whole bowl
+  ax.save();
+  ax.globalAlpha=alpha;
+  ax.strokeStyle="#6b5f45";ax.lineWidth=2;ax.setLineDash([7,7]);
+  ax.beginPath();
+  ax.moveTo(CX-hw(RIMY),RIMY);
+  for(var y=RIMY;y<=FOOTY;y+=8)ax.lineTo(CX-hw(y),y);
+  ax.lineTo(CX-hw(FOOTY),FOOTY+18);
+  ax.lineTo(CX+hw(FOOTY),FOOTY+18);
+  for(var y2=FOOTY;y2>=RIMY;y2-=8)ax.lineTo(CX+hw(y2),y2);
+  ax.closePath();ax.stroke();
+  ax.setLineDash([]);
+  ax.restore();
+}
+function drawShard(s){
+  var dx=s.pos[0]-s.home[0],dy=s.pos[1]-s.home[1];
+  ax.save();
+  ax.translate(dx,dy);
+  // drop shadow
+  ax.save();
+  ax.translate(4,6);
+  ax.fillStyle="rgba(0,0,0,.4)";
+  ax.beginPath();
+  for(var i=0;i<s.poly.length;i++){
+    var p=s.poly[i];
+    if(i===0)ax.moveTo(p[0],p[1]);else ax.lineTo(p[0],p[1]);
+  }
+  ax.closePath();ax.fill();
+  ax.restore();
+  // body glaze
+  ax.beginPath();
+  for(var j=0;j<s.poly.length;j++){
+    var q=s.poly[j];
+    if(j===0)ax.moveTo(q[0],q[1]);else ax.lineTo(q[0],q[1]);
+  }
+  ax.closePath();
+  var g=ax.createLinearGradient(0,RIMY,0,FOOTY);
+  g.addColorStop(0,"#8fa8a0");g.addColorStop(0.55,"#6d8b83");g.addColorStop(1,"#45605a");
+  ax.fillStyle=g;ax.fill();
+  ax.strokeStyle="#17140f";ax.lineWidth=2.5;ax.stroke();
+  // gold seams against placed neighbours
+  for(var k=0;k<s.edges.length;k++){
+    var e=s.edges[k];
+    if(e.nb<0)continue;
+    var nb=byId[e.nb];
+    if(!s.placed||!nb||!nb.placed)continue;
+    var gl=ax.createLinearGradient(e.pts[0][0],e.pts[0][1],e.pts[e.pts.length-1][0],e.pts[e.pts.length-1][1]);
+    gl.addColorStop(0,"#b8862f");gl.addColorStop(0.5,"#ffe9a3");gl.addColorStop(1,"#c99a3d");
+    ax.strokeStyle=gl;ax.lineWidth=4;
+    ax.shadowColor="#ffdf8a";ax.shadowBlur=14;
+    ax.beginPath();
+    ax.moveTo(e.pts[0][0],e.pts[0][1]);
+    for(var t=1;t<e.pts.length;t++)ax.lineTo(e.pts[t][0],e.pts[t][1]);
+    ax.stroke();
+    ax.shadowBlur=0;
+    ax.lineWidth=2.5;ax.strokeStyle="#17140f";
+    ax.beginPath();
+    ax.moveTo(e.pts[0][0],e.pts[0][1]);
+    for(var t2=1;t2<e.pts.length;t2++)ax.lineTo(e.pts[t2][0],e.pts[t2][1]);
+    ax.stroke();
+  }
+  ax.restore();
+}
+function render(now){
+  ax.fillStyle="#151209";ax.fillRect(0,0,W,H);
+  // workbench grain
+  ax.strokeStyle="rgba(255,255,255,.025)";ax.lineWidth=1;
+  for(var y=0;y<H;y+=13){
+    ax.beginPath();ax.moveTo(0,y);ax.lineTo(W,y+6);ax.stroke();
+  }
+  if(ghostOn)drawShell(done?0.5:0.35);
+  for(var i=0;i<shards.length;i++)drawShard(shards[i]);
+  // completeness halo
+  if(done){
+    var pulse=0.5+0.5*Math.sin((now-doneT)/380);
+    ax.save();
+    ax.globalAlpha=0.25+0.35*pulse;
+    var g=ax.createRadialGradient(CX,260,40,CX,260,330);
+    g.addColorStop(0,"rgba(255,220,130,.7)");g.addColorStop(1,"rgba(255,220,130,0)");
+    ax.fillStyle=g;ax.fillRect(0,0,W,H);
+    ax.restore();
+    ax.fillStyle="#ffe9b0";
+    ax.font="16px Georgia,serif";
+    ax.textAlign="center";
+    ax.fillText("the bowl is whole",CX,FOOTY+70);
+    ax.textAlign="left";
+  }
+}
+build();
+function loop(now){
+  render(now);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

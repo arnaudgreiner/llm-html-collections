@@ -1,0 +1,18 @@
+TITLE: Receipt Tape — Torn Thermal Receipt with Live Totals
+
+FULL PROMPT:
+Create one fully self-contained HTML page, "Receipt Tape", with no external resources. A wood-counter backdrop (repeating diagonal grain over a dark brown gradient) holds a centred 400px thermal receipt on paper white with a drop shadow. The receipt's top and bottom edges are true zigzag tears made from two absolutely positioned spans whose clip-path polygons are spelled out by hand — 40 teeth each. Receipt content: centred store header, address, dashed rules, a timestamp stamp generated live from Date, JS-built line items (name · dotted leader · qty × · amount), subtotal, tax, an oversized total, card line, a procedurally generated barcode of 58 bars with random widths and 25% faded bars, and a thank-you message. Rows feed in with a staggered animation-delay. A right-hand rig panel in translucent paper-tinted style carries explanatory copy, four buttons (Print new receipt, Tax 8.75% on, Apply $5 coupon, Tear off) and four stat tiles (lines, units, prints, total). Uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+The page should look like a torn thermal slip lying on a shop counter — the paper crisp and slightly crooked under a hard shadow, the wood underneath warm and dark, the till panel sitting beside it like a card the shop keeps for staff.
+
+MAJOR VISUAL TECHNIQUES:
+- Hand-written 40-tooth clip-path polygons for torn paper edges
+- Flexbox line items with a dotted-leader filler (flex:1 + translateY baseline trick)
+- Staggered keyframe "feed" animation applied through animation-delay per row
+- Procedural barcode bars with random width/opacity
+- Tear-off gesture: transform + opacity out, reposition, print, transform back in
+- Money maths kept in one render pass with coupon, discount and tax precedence
+
+INTENDED INTERACTION MODEL:
+Click any receipt line to toggle a 15% discount (red negative reprint). Tax button switches 8.75% on and off, the coupon button subtracts $5 from the taxable base (clamped at zero), Print new receipt rolls a fresh random basket from 20 stock lines with the feed animation and a new timestamp, and Tear off flicks the current slip upward out of frame before a new one prints from below. Reduced-motion skips both gestures and the feed animation; totals, barcode and stats always update.

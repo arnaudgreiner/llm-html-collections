@@ -1,0 +1,19 @@
+TITLE: Liquid Chrome — Gooey Metal Fluid Study
+
+FULL PROMPT:
+Produce a single self-contained HTML page named "Liquid Chrome", a fluid-metal specimen with all CSS, JavaScript and markup inline and no external assets whatsoever. Set the page on a dark graphite radial ground (#14161d into #0a0b10) with a faint horizontal CRT hatch. Five absolutely-positioned circular "metal" bodies use a multi-stop white-to-gunmetal radial gradient to fake a polished sphere; they live inside a fixed layer carrying an inline SVG Gaussian-blur plus feColorMatrix "gooey" filter so that when bodies overlap they fuse into one liquid silhouette. Above them, centre a colossal two-line headline rendered purely as a nine-stop vertical chrome gradient clipped to the text with a drop shadow, giving a reflected-horizon look. Under the headline, place a frosted control panel with three range sliders (gooeyness, viscosity, reach) wired to live outputs and directly to the filter's alpha matrix, then a four-tile explanatory grid.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read as a laboratory viewport into a crucible of mercury — cold, heavy and hypnotic — with typography that looks milled from solid metal. Composition is strictly centred and vertical: kicker, giant chrome wordmark, short lede, control rack, then a four-column notes grid. The metal bodies drift behind and through the UI at a lower layer, never obscuring the text. Colour is almost absent except for a cyan-to-magenta accent line on the controls, which keeps the monochrome metal believable.
+
+MAJOR VISUAL TECHNIQUES:
+- Inline SVG feGaussianBlur + feColorMatrix goo filter merging separate DOM circles
+- Radial-gradient sphere shading with an offset specular highlight
+- Multi-stop linear-gradient clipped to text for a chrome headline with drop shadow
+- Critically-damped spring physics per body with per-body staggered offsets
+- Lissajous ambient drift so motion continues when the pointer is idle
+- Live-bound range inputs that rewrite the SVG matrix and physics constants
+- Backdrop-filter control rack and a repeating hatch overlay
+
+INTENDED INTERACTION MODEL:
+Moving the pointer attracts all five bodies toward staggered positions around it, so they catch up at different speeds and visually fuse. Moving the sliders changes the filter hardness (gooeyness), the spring damping (viscosity) and the spread of the offsets (reach), with the numeric value shown beside each. When the pointer stops entering, the bodies resume their ambient orbits. Under prefers-reduced-motion the bodies snap directly to their targets instead of animating, and the layout collapses gracefully on narrow screens.

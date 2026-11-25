@@ -1,0 +1,17 @@
+TITLE: Wet Wash — Watercolor Bleed
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Wet Wash: Watercolor Bleed". Simulate two separate fields on a 184×112 cell grid (5px cells over a 920×560 sheet): water and pigment, plus a fixed deposit field and a paper-fiber noise field. Each frame water diffuses down its own 4-neighbour gradient, pigment rides along in proportion to local concentration, evaporation thins the sheet, and pigment bakes out of thin water against thick neighbours — producing genuine rim darkening (the watercolor edge) plus fiber granulation. Pointer-drag paints interpolated brush stamps; a tilt button advects the whole wash one way for a few seconds; salt scatters backruns; dry accelerates evaporation; fresh sheet clears. Six pigment swatches, water-load and brush-size sliders, live stats for wet percentage, baked pigment and stroke count. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+Cold-press paper on a dark table, colour that moves because physics moves it. The craft is separating water from pigment so the famous edge emerges from deposition rather than being drawn.
+
+MAJOR VISUAL TECHNIQUES:
+- Dual-field advection (water potential carrying suspended pigment)
+- Rim deposition from local water-thickness gradients — emergent edge darkening
+- Fiber-noise granulation baked into dry pigment
+- ImageData compositing: paper tone × exponential pigment absorption × edge gain
+- Procedural salt backruns and directional tilt advection
+
+INTENDED INTERACTION MODEL:
+Paint strokes, tilt the sheet to run the wash, salt a wet passage, dry the painting or start fresh — then watch where the colour stops and why.

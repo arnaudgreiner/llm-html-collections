@@ -1,0 +1,19 @@
+TITLE: Brutalist Manifesto — Raw Editorial Manifesto Sheet
+
+FULL PROMPT:
+Create a single self-contained HTML page called "Brutalist Manifesto" — a design-manifesto broadsheet in the brutalist tradition, with every style and script inline and no external assets. Work on an off-white paper ground (#f4f1e6) with pure black ink, signal red (#ff2d16), ultramarine (#1a3cff) and hazard yellow (#ffe500), and never use tints, opacity fades or gradients for colour. Open with a black inverted ticker marquee of manifesto slogans, then a masthead where a colossal two-line wordmark (one line black, one line red with a black stroke) sits beside a monospace document metadata block. Below, run a true 12-column grid whose cells are separated by 3px black rules and filled with flat primary colour blocks containing numbered principles, plus a mid-page inverted marquee and a full-width red call-out bar. Every corner is square; every hover is an instant invert with a hard offset shadow.
+
+INTENDED DESIGN DESCRIPTION:
+The page should look like a manifesto photocopied, cut up and pasted back down slightly wrong — loud, confident and deliberately uncomfortable. Layout is a stacked broadsheet: ticker, masthead, second ticker, an asymmetric 12-column cell grid mixing 3/4/6/8/12 spans, and a footer with a chunky press-able button. Typography is heavy grotesk set tight with negative tracking against Courier for meta text, and rotated sticker badges break the grid on purpose. The energy comes from flat colour collisions and hard rules rather than any softness.
+
+MAJOR VISUAL TECHNIQUES:
+- Two counter-running CSS marquee tracks (one inverted black, one hazard yellow) built from duplicated inline content
+- A genuine 12-column CSS grid with variable column spans and 3px black dividers
+- Instant invert hovers with hard 8px offset shadows and no easing curves on colour
+- Oversized ghost index numerals positioned absolutely inside each cell
+- Rotated sticker badges and a red stroked display line
+- A crosshair custom cursor using mix-blend-mode:difference
+- Diagonal hatch overlay via a repeating-linear-gradient for photocopy texture
+
+INTENDED INTERACTION MODEL:
+A custom crosshair follows the pointer everywhere and inverts against whatever it crosses. Hovering any grid cell flips its colours instantly and offsets it with a hard shadow. Clicking a cell — or the "Shuffle layout" button in the footer — fully reshuffles the grid: cells reorder, reassign random column spans and random primary fills, then stagger-animate in. The document revision stamp fills with today's date on load. All marquee and transition motion stops under prefers-reduced-motion, and spans collapse to full-width on narrow screens.

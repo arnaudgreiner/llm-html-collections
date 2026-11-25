@@ -1,0 +1,18 @@
+TITLE: Ink Mixer — Process-Colour Halftone Bench
+
+FULL PROMPT:
+Build one fully self-contained HTML page, "Ink Mixer", with no external resources. A warm paper background with a soft radial light, header with kicker, thin/accent title and a mode tag reporting total ink. Two-column stage: left a square preview plate (radius 16, deep soft shadow) containing a white wash layer carrying the mixed colour and four stacked dot-screen layers — cyan, magenta, yellow, key — each a 14px radial-gradient halftone with mix-blend-mode: multiply, whose opacity maps to ink percentage and whose background-position maps to coverage, so the CMYK overprint rosette builds up as dials move; a hex label top-right with multiply blend, a caption bottom-left. Right column: an ink-dials card (four sliders with coloured dots, a 58px bevelled chip, HEX, RGB, total-ink coverage, three buttons: copy hex / random mix / clear), a spot library grid of 12 preset chips (Harbour Blue, Signal Red, Field Green, Ochre, Plum Night, Sea Foam, Ember, Slate Ink, Citrus, Bone Paper, Petrol, Rosewater) each rendering its own swatch from the mix function, and a monospace mix log showing the last seven mixes with timestamps. Footer credits the technique.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read as a printer's colour bench: cream stock under good light, four translucent screens overlapping the way real process inks do, and a tidy preset library a colourist could pick from.
+
+MAJOR VISUAL TECHNIQUES:
+- Subtractive CMYK mixing with channel cross-talk plus an ink-density boost
+- Four multiply-blended radial-gradient halftone layers as a live rosette preview
+- Dot coverage driven by both opacity and background-position, so screens shift as inks rise
+- Pointer parallax on the two non-key layers, giving the rosette a rosette-style angle drift
+- Preset chips painted by the same mix function used for the live readouts
+- Timestamped mix log capped at seven entries, clipboard write with graceful fallback
+
+INTENDED INTERACTION MODEL:
+Slide any of the four inks and the plate, hex, rgb, coverage and mode tag update together; click a spot-library chip to load a formula (sliders snap, chip highlights, entry logged); random mix rolls all four; clear returns to bare paper; copy hex writes to the clipboard or falls back to showing the value on the button. Moving the pointer across the plate nudges the magenta and yellow screen offsets for a live rosette wobble (disabled under reduced motion). Nothing animates on its own — every pixel responds to input.

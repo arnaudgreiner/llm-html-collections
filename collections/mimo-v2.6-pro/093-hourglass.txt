@@ -1,0 +1,17 @@
+TITLE: Hourglass — Thirty Quiet Seconds
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Hourglass: Thirty Quiet Seconds". Simulate an hourglass: profile half-widths hwTop(y)=10+80(1−t)^0.75 (rim→neck) and hwBot(y)=10+80t^0.75 (neck→base) over y 70–450 with neck at 260. Top sand drains at rate dt·speed/DUR (DUR=30 s, speed ×1/×2/×4); surface level = NECK−(NECK−TOPY)·rem^0.72. Drained area deposits into three center columns of a 45-column pile (COLW=4), then relaxes eight passes toward an angle of repose (slope cap 4.6) and clamps to a glass-cap hmaxAt(X) computed by scanning the bottom profile, spilling overflow to neighbours. A decorative grain thread falls from neck to pile crest. Turning the glass (click or button) rotates π over 900 ms; at the midpoint the pile's total area becomes the new top-sand rem and the pile clears. Drawn: plinths, posts, glass outlines, gradient sand, big countdown numeral, stats (remaining s, turns, sand home %). Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark shelf holding a working hourglass — the pleasure is granular honesty: sand threads down, piles up, and obeys repose and glass limits rather than a fake progress bar.
+
+MAJOR VISUAL TECHNIQUES:
+- Profile-driven bulb geometry with area-weighted surface level
+- Cellular pile with repose relaxation and container clamping
+- Half-turn rotation swap transferring pile area to top sand
+- Decorative falling-grain thread with impact dust
+- Speed-scaled countdown telemetry
+
+INTENDED INTERACTION MODEL:
+Watch, pause, speed ×2/×4, or click the glass to turn it; REFILL restores a full top bowl without rotating.

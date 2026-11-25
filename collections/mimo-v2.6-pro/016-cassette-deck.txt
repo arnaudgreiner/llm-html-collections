@@ -1,0 +1,19 @@
+TITLE: Cassette Deck — Skeuomorphic Tape Transport with Live VU Meters
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Cassette Deck", with no external resources of any kind. Render a wood-dark room background (repeating vertical striping over #17120e) holding a brushed-metal deck: a 90°-striped metal gradient with four screw spots (radial gradient discs with a slot), a dark brand bar reading "Aurora TD-770", and a deeply inset tape window containing two 118px reel discs built from conic and repeating-conic gradients, a tape line across the top and a slightly rotated cream handwritten label. Below, two inset LCD panels: a four-digit mono tape counter with a glowing PLAY/PAUSE/STOP state line, and a two-channel VU strip of 16 LED segments each (green / amber / red). Six mechanical transport buttons (prev, play, pause, stop, fwd, eject) sit on key caps with a 5px bottom lip that depresses when pressed and light a red lamp when active. A lower panel pairs a Side A / Side B programme card listing four tracks with durations against a set-up card of four custom toggles plus a service line. Finish with a thin uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+The deck should read as heavy 1980s consumer hardware photographed on a shelf: warm metal, cold inset windows, screws at the corners, and light only where a machine would actually emit it — the LCD, the lamps, and the LEDs. Everything obeys a physical metaphor, so buttons move down rather than glow outward.
+
+MAJOR VISUAL TECHNIQUES:
+- Brushed metal from two stacked gradients (1px repeating stripes over a vertical light ramp)
+- Reels from conic-gradient spokes with a separate repeating-conic hub and a ring shadow
+- animation-play-state for transport control so reels pause rather than restart
+- A glass sheen sweeping the tape window with a rotated linear gradient
+- LED banks built in JS with a decaying peak-hold alongside a smoothed level
+- Rotated cream label that cross-fades on eject
+- Mechanical button lip via box-shadow offsets collapsing on :active
+
+INTENDED INTERACTION MODEL:
+Play starts the reels, advances the clock and drives the VU meters; pause freezes them and lights its own lamp; stop resets the counter. Prev/fwd jump tracks (spinning the reels briefly while they do); eject flips to the other side with a label cross-fade. Clicking any track selects it and resets position; the tabs switch sides; the toggles flip independently, and the metal-tape toggle retypes the label. Everything runs from one 250ms interval so state can never race.

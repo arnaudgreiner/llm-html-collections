@@ -1,0 +1,17 @@
+TITLE: Neon Alley — Pocket Pinball
+
+FULL PROMPT:
+Create a self-contained interactive page titled "Neon Alley: Pocket Pinball". Build a right-lane plunger table on a 760×580 canvas: segment-collider geometry (top wall, launch slant, lane divider, outer walls, bottom drain diagonals, two energizing slingshots, decorative arcs), circular posts (e=0.75) and three bumpers (e=1.45, pay 150/150/200 with a decaying flash uniform driving ring scale and alpha). Ball integrates gravity 340 px/s² in 4 substeps with per-substep circle/segment/flipper resolution, tangential friction on walls, 1500 px/s clamp. Flippers are pivoted segments: rest 0.45/2.69 rad, lift −0.38/3.52 rad, 16 rad/s slew; collision adds the contact point's surface velocity (ω×r) and an extra kick while actively flipping. Plunger: hold SPACE (or the LAUNCH button) to charge power over 1.1s, release to fire vy=−(430+640·power). Three balls, drain below y=572 respawns to the lane, zero balls ends the game (Enter restarts). HUD: score, balls, best score persisted to guarded localStorage; neon glow strokes (shadowBlur) for walls, gradient metal flippers, 14-dot ball trail. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A compact neon table seen from above: cyan rails, hot-pink bumpers that flare when hit, steel flippers you actually have to time, and one honest silver ball with a comet tail.
+
+MAJOR VISUAL TECHNIQUES:
+- Segment-based collision with closest-point push-out and restitution boost on slings
+- Flipper surface-velocity impulses so a live flip genuinely launches the ball
+- shadowBlur neon rails with score-triggered color pulses
+- Ball motion trail built from position history
+- Radial-gradient bumpers with flash-driven overshoot rings
+
+INTENDED INTERACTION MODEL:
+Hold to charge, release to launch; flip with arrow keys (or Z/M/A/D); keep the ball alive across three tries; Enter or NEW GAME restarts.

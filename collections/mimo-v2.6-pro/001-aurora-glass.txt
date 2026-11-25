@@ -1,0 +1,19 @@
+TITLE: Aurora Glass — Luminous Translucent Design System
+
+FULL PROMPT:
+Design a premium, award-showcase landing page called "Aurora Glass". Build it as a single self-contained HTML file with all CSS and JavaScript inline and no external dependencies of any kind. The scene is near-black space (deep midnight #05060f) illuminated by four enormous blurred aurora light bodies in mint, violet, rose and sky blue that drift on independent, non-repeating curves with screen blend mode, overlaid with fine film grain and a radial vignette. In front of this light sits real glassmorphism: a floating pill navigation bar, frosted panels using backdrop-filter blur plus saturation, 1px translucent borders and inset top highlights so the glass reads as thick and bevelled. Set a huge headline mixing an ultra-heavy grotesk with an ultra-light italic, the word "light" filled by a mint-to-violet gradient clipped to the text. Add a hero glass card containing four animated count-up statistics, then a three-panel specimen grid with oversized ghost numerals and gradient chips. Everything reveals on scroll with staggered translate-and-fade.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like standing behind a sheet of hand-polished glass at night while coloured searchlights move somewhere beyond it — expensive, calm and weightless. The composition is a centred editorial column: navigation pill, eyebrow badge, giant two-line headline, lede paragraph, two pill buttons, a wide frosted stat card, and a three-card grid, all layered above a living aurora field. Depth comes from stacked blur, saturation and inset light rather than drop shadows alone, and the accent colours are used sparingly so the glass and the typography remain the luxury signals.
+
+MAJOR VISUAL TECHNIQUES:
+- Four radial-gradient light blobs animated on offset keyframe drifts with mix-blend-mode:screen and a 70px blur
+- Glassmorphism panels using backdrop-filter blur + saturate, translucent borders, inset white highlight, and a sweeping specular overlay
+- Procedural film grain from a repeating-conic-gradient at 3px, plus a radial vignette
+- Gradient-clipped display typography contrasting weight 800 with weight 200 italic
+- IntersectionObserver staggered reveal animations and JS count-up easing on statistics
+- Perspective 3D tilt on the hero card driven by pointer position
+- CSS ripple microinteraction on buttons and a conic-gradient logo mark
+
+INTENDED INTERACTION MODEL:
+The pointer moves the aurora field in parallax opposite to the cursor; hovering the hero card tilts it in 3D around its centre; scrolling into view triggers staggered card reveals and eased count-up numbers; clicking any button emits an expanding ripple from the exact click point; nav links light up on hover. All motion respects prefers-reduced-motion, and the layout collapses to a two-column stat grid on narrow screens.

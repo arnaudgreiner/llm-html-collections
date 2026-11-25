@@ -1,0 +1,425 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>047 · Constellation Compass</title>
+<style>
+:root{--bg:#05070f;--panel:#0b0f1c;--line:#1b2340;--ink:#dfe7ff;--mute:#7e8bb8;
+  --star:#ffffff;--cy:#6ee7ff;--dim:#9fb4ff}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(900px 560px at 32% 24%,#0d1330 0%,transparent 70%),
+  var(--bg);color:var(--ink);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:40px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 30px 12px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:25px;font-weight:300}
+h1 b{font-weight:700;color:var(--cy)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:var(--cy);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:26px;padding:20px 30px 0;
+  align-items:start}
+@media(max-width:960px){.stage{grid-template-columns:1fr}}
+
+.instrument{position:relative;background:#040610;border:1px solid var(--line);
+  border-radius:20px;padding:10px;box-shadow:0 24px 60px rgba(0,0,0,.6)}
+.instrument svg{display:block;width:100%;height:auto;cursor:grab;touch-action:none}
+.instrument svg.grabbing{cursor:grabbing}
+
+.chip{position:absolute;display:flex;flex-direction:column;gap:2px;
+  background:rgba(8,12,26,.86);border:1px solid var(--line);border-radius:9px;
+  padding:7px 11px;pointer-events:none;backdrop-filter:none}
+.chip span{font-size:8.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.chip b{font-size:15px;font-family:"Courier New",monospace;color:var(--cy)}
+#chipA{left:26px;top:26px}
+#chipB{right:26px;top:26px}
+#chipC{left:50%;transform:translateX(-50%);bottom:26px;text-align:center;align-items:center}
+
+.rail{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.catalogue{max-height:236px;overflow-y:auto;display:flex;flex-direction:column;gap:7px}
+.star{display:flex;justify-content:space-between;align-items:center;gap:9px;
+  font:inherit;font-size:12.5px;text-align:left;padding:9px 11px;border-radius:9px;
+  border:1px solid var(--line);background:#080c1a;color:var(--ink);cursor:pointer;transition:.14s}
+.star:hover{transform:translateX(3px);border-color:var(--cy)}
+.star.on{border-color:var(--cy);box-shadow:inset 0 0 0 1px var(--cy)}
+.star em{font-style:normal;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.star.on em{color:var(--cy)}
+.spec{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;
+  border-bottom:1px dotted var(--line)}
+.spec:last-child{border-bottom:none}
+.spec b{font-family:"Courier New",monospace;color:var(--cy)}
+.btns{display:flex;gap:9px}
+.b{flex:1;font:inherit;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  padding:11px 6px;border-radius:9px;border:1px solid var(--line);background:#0a1024;
+  color:var(--ink);cursor:pointer;transition:.14s}
+.b:hover{transform:translateY(-2px);border-color:var(--cy);color:var(--cy)}
+.b.on{background:var(--cy);border-color:var(--cy);color:#04060f}
+.hint{font-size:11.5px;line-height:1.75;color:var(--mute);margin:11px 0 0}
+.hint b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">celestial instrument · drag to swing the rose</span>
+  <h1>Constellation <b>Compass</b></h1>
+  <span class="meta">azimuth <b id="azOut">000.0°</b> · elevation <b id="elOut">+00.0°</b></span>
+</header>
+
+<div class="stage">
+  <div class="instrument">
+    <div class="chip" id="chipA"><span>bearing</span><b id="bearOut">N 0°</b></div>
+    <div class="chip" id="chipB"><span>selected</span><b id="selOut">Polaris</b></div>
+    <div class="chip" id="chipC"><span>sky time</span><b id="skyOut">21:00 · midwinter</b></div>
+    <svg id="rose" viewBox="0 0 700 700" role="img"
+         aria-label="Rotating compass rose over a star field, with constellations drawn between stars">
+      <defs>
+        <radialGradient id="skyG" cx="0.5" cy="0.42" r="0.62">
+          <stop offset="0" stop-color="#16224d"/>
+          <stop offset="1" stop-color="#05070f"/>
+        </radialGradient>
+        <linearGradient id="gndG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#0b1024"/>
+          <stop offset="1" stop-color="#040610"/>
+        </linearGradient>
+      </defs>
+
+      <circle cx="350" cy="350" r="330" fill="url(#skyG)"/>
+      <g id="skyStars"></g>
+
+      <!-- horizon / hills inside the dial -->
+      <path id="gnd" fill="url(#gndG)"
+        d="M20 520 C120 470 190 512 260 496 C340 478 380 448 470 470 C540 487 590 462 680 476 L680 680 L20 680 Z"/>
+
+      <g id="lines" stroke="rgba(110,231,255,.5)" stroke-width="1.2" fill="none"></g>
+      <g id="points"></g>
+
+      <!-- rotating rose -->
+      <g id="roseG">
+        <circle cx="350" cy="350" r="286" fill="none" stroke="#1b2340" stroke-width="2"/>
+        <circle cx="350" cy="350" r="266" fill="none" stroke="#12182e" stroke-width="1"/>
+        <g id="ticks"></g>
+        <g id="cardinals" font-family="Segoe UI,sans-serif" font-size="20"
+           fill="#9fb4ff" text-anchor="middle" letter-spacing="3">
+          <text x="350" y="86">N</text>
+          <text x="628" y="357">E</text>
+          <text x="350" y="626">S</text>
+          <text x="72" y="357">W</text>
+        </g>
+        <g id="needle">
+          <path d="M350 96 L368 350 L350 604 L332 350 Z" fill="rgba(110,231,255,.10)"/>
+          <path d="M350 96 L368 350 L350 350 Z" fill="#6ee7ff"/>
+          <path d="M350 96 L332 350 L350 350 Z" fill="#2b7fa0"/>
+        </g>
+        <path d="M350 336 L358 350 L350 364 L342 350 Z" fill="#ffffff"/>
+      </g>
+      <circle cx="350" cy="350" r="286" fill="none" stroke="#6ee7ff" stroke-width="1.5"
+              opacity=".45"/>
+      <text x="350" y="678" font-family="Segoe UI,sans-serif" font-size="10"
+            fill="#5b668f" text-anchor="middle" letter-spacing="6">H O R I Z O N   R I N G</text>
+    </svg>
+  </div>
+
+  <aside class="rail">
+    <section class="card">
+      <h2>Catalogue</h2>
+      <div class="catalogue" id="catalogue"></div>
+      <p class="hint">Click a row to pin that star: the needle swings to its bearing and the constellation brightens.</p>
+    </section>
+
+    <section class="card">
+      <h2>Selected object</h2>
+      <div class="spec"><span>designation</span><b id="sName">Polaris</b></div>
+      <div class="spec"><span>constellation</span><b id="sCon">Ursa Minor</b></div>
+      <div class="spec"><span>magnitude</span><b id="sMag">+1.98</b></div>
+      <div class="spec"><span>distance</span><b id="sDist">433 ly</b></div>
+      <div class="spec"><span>az / el</span><b id="sBear">N / +41°</b></div>
+    </section>
+
+    <section class="card">
+      <h2>Instrument</h2>
+      <div class="btns">
+        <button class="b" id="spin" type="button">auto drift</button>
+        <button class="b" id="reset" type="button">re-aim north</button>
+      </div>
+      <div class="btns" style="margin-top:9px">
+        <button class="b" id="linesB" type="button">hide lines</button>
+        <button class="b" id="rand" type="button">random hour</button>
+      </div>
+      <p class="hint">Drag the dial itself to swing the sky; arrow keys nudge it five degrees at a time.</p>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:18px 30px 0;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)">
+  <span>seeded star field · polyline figures · pointer-drag bearing</span><span>047 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var SVGNS=(function(){var d=document.createElement("div");d.innerHTML="<svg></svg>";return d.firstChild.namespaceURI;})();
+  function el(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  /* deterministic PRNG */
+  var seed=20260922;
+  function rnd(){ seed=(seed*1664525+1013904223)%4294967296; return seed/4294967296; }
+
+  var CX=350, CY=350, R=286;
+  var rotation=0;          /* degrees, rose rotation (also sky drift) */
+  var autoDrift=false;
+  var showLines=true;
+
+  var STARS=[
+    {n:"Polaris",   c:"Ursa Minor",  mag:"+1.98", dist:"433 ly",  x:350, y:150, r:4.4},
+    {n:"Dubhe",     c:"Ursa Major",  mag:"+1.79", dist:"123 ly",  x:250, y:210, r:3.8},
+    {n:"Merak",     c:"Ursa Major",  mag:"+2.37", dist:"79 ly",   x:262, y:292, r:3.4},
+    {n:"Phecda",    c:"Ursa Major",  mag:"+2.44", dist:"84 ly",   x:330, y:318, r:3.2},
+    {n:"Megrez",    c:"Ursa Major",  mag:"+3.32", dist:"81 ly",   x:372, y:272, r:2.6},
+    {n:"Alioth",    c:"Ursa Major",  mag:"+1.77", dist:"81 ly",   x:432, y:286, r:3.8},
+    {n:"Mizar",     c:"Ursa Major",  mag:"+2.23", dist:"83 ly",   x:492, y:262, r:3.4},
+    {n:"Alkaid",    c:"Ursa Major",  mag:"+1.86", dist:"104 ly",  x:552, y:290, r:3.8},
+    {n:"Vega",      c:"Lyra",        mag:"+0.03", dist:"25 ly",   x:172, y:196, r:5.4},
+    {n:"Deneb",     c:"Cygnus",      mag:"+1.25", dist:"2615 ly", x:470, y:132, r:4.6},
+    {n:"Altair",    c:"Aquila",      mag:"+0.76", dist:"17 ly",   x:520, y:452, r:4.6},
+    {n:"Capella",   c:"Auriga",      mag:"+0.08", dist:"43 ly",   x:246, y:128, r:4.8},
+    {n:"Betelgeuse",c:"Orion",       mag:"+0.50", dist:"640 ly",  x:132, y:392, r:4.6},
+    {n:"Rigel",     c:"Orion",       mag:"+0.13", dist:"860 ly",  x:196, y:486, r:4.4},
+    {n:"Bellatrix", c:"Orion",       mag:"+1.64", dist:"250 ly",  x:268, y:398, r:3.4},
+    {n:"Saiph",     c:"Orion",       mag:"+2.09", dist:"650 ly",  x:336, y:466, r:3.2},
+    {n:"Aldebaran", c:"Taurus",      mag:"+0.87", dist:"65 ly",   x:610, y:374, r:4.2},
+    {n:"Castor",    c:"Gemini",      mag:"+1.58", dist:"51 ly",   x:404, y:172, r:3.6},
+    {n:"Pollux",    c:"Gemini",      mag:"+1.14", dist:"34 ly",   x:444, y:214, r:4.0},
+    {n:"Regulus",   c:"Leo",         mag:"+1.35", dist:"79 ly",   x:566, y:450, r:4.0}
+  ];
+  /* figure index lists (into STARS) */
+  var FIGS=[
+    {name:"Ursa Major", idx:[1,2,3,4,5,6,7,1]},
+    {name:"Ursa Minor", idx:[0,1]},
+    {name:"Orion",      idx:[12,14,15,13,12,10]},
+    {name:"The Chord",  idx:[8,9,10]}
+  ];
+  var selected=0, selectedFig=0;
+
+  /* ---- background star field ---- */
+  var skyStars=G("skyStars");
+  (function(){
+    for(var i=0;i<260;i++){
+      var a=rnd()*Math.PI*2, rr=Math.sqrt(rnd())*(R-6);
+      var x=CX+Math.cos(a)*rr, y=CY+Math.sin(a)*rr;
+      var s=el("circle",{cx:x.toFixed(1),cy:y.toFixed(1),
+        r:(0.6+rnd()*1.5).toFixed(2),
+        fill:"rgba(255,255,255,"+(0.25+rnd()*0.7).toFixed(2)+")"});
+      skyStars.appendChild(s);
+    }
+  })();
+
+  /* ---- ticks ---- */
+  (function(){
+    var g=G("ticks");
+    for(var d=0; d<360; d+=5){
+      var major=(d%45===0), mid=(d%15===0);
+      var r1=R-6, r2=R-(major?26:mid?16:11);
+      var rad=(d-90)*Math.PI/180;
+      g.appendChild(el("line",{
+        x1:(CX+Math.cos(rad)*r1).toFixed(1), y1:(CY+Math.sin(rad)*r1).toFixed(1),
+        x2:(CX+Math.cos(rad)*r2).toFixed(1), y2:(CY+Math.sin(rad)*r2).toFixed(1),
+        stroke:major?"#6ee7ff":mid?"#3d4f8a":"#1f2a4d",
+        "stroke-width":major?2:1}));
+    }
+    g.appendChild(el("text",{x:CX,y:CY-R+58,"text-anchor":"middle",
+      "font-family":"Segoe UI,sans-serif","font-size":"10",fill:"#6ee7ff",
+      "letter-spacing":"4"}));
+    g.lastChild.textContent="000";
+  })();
+
+  /* ---- catalogue + points ---- */
+  var catG=G("catalogue"), pointsG=G("points");
+  STARS.forEach(function(s,i){
+    var b=document.createElement("button");
+    b.type="button"; b.className="star"+(i===0?" on":"");
+    b.innerHTML=s.n+"<em>"+s.c+"</em>";
+    b.addEventListener("click",function(){ select(i); });
+    catG.appendChild(b);
+
+    var g=el("g",{class:"pt","data-i":i});
+    var halo=el("circle",{cx:s.x,cy:s.y,r:s.r*3.2,fill:"rgba(158,190,255,.18)"});
+    var core=el("circle",{cx:s.x,cy:s.y,r:s.r,fill:"#ffffff"});
+    var ring=el("circle",{cx:s.x,cy:s.y,r:s.r+7,fill:"none",
+      stroke:"#6ee7ff","stroke-width":"1.4",opacity:"0"});
+    var lbl=el("text",{x:s.x+s.r+12,y:s.y+4,
+      "font-family":"Segoe UI,sans-serif","font-size":"11.5",fill:"#9fb4ff",
+      "letter-spacing":"1.5",opacity:"0"});
+    lbl.textContent=s.n;
+    g.appendChild(halo); g.appendChild(core); g.appendChild(ring); g.appendChild(lbl);
+    g.style.cursor="pointer";
+    g.addEventListener("click",function(ev){ ev.stopPropagation(); select(i); });
+    pointsG.appendChild(g);
+    s.el=g; s.ring=ring; s.lbl=lbl;
+  });
+
+  /* ---- constellation polylines ---- */
+  var linesG=G("lines");
+  var polylines=[];
+  FIGS.forEach(function(f){
+    var pts=f.idx.map(function(k){ return STARS[k].x+","+STARS[k].y; }).join(" ");
+    var p=el("polyline",{points:pts,opacity:"0.35"});
+    linesG.appendChild(p);
+    polylines.push(p);
+    /* labels at first point */
+    var t=el("text",{x:STARS[f.idx[0]].x,y:STARS[f.idx[0]].y-14,
+      "font-family":"Segoe UI,sans-serif","font-size":"9",fill:"rgba(159,180,255,.65)",
+      "letter-spacing":"3","text-anchor":"middle"});
+    t.textContent=f.name.toUpperCase();
+    linesG.appendChild(t);
+    f.label=t;
+  });
+
+  function bearingOf(s){
+    var dx=s.x-CX, dy=s.y-CY;
+    var ang=Math.atan2(dx,-dy)*180/Math.PI; /* 0 = up */
+    return (ang+360)%360;
+  }
+  function elevOf(s){
+    var d=Math.hypot(s.x-CX,s.y-CY);
+    return Math.round(90-(d/R)*90);
+  }
+
+  var targetRot=0;
+  function select(i){
+    selected=i;
+    var s=STARS[i];
+    STARS.forEach(function(o){ o.ring.setAttribute("opacity","0"); o.lbl.setAttribute("opacity","0"); });
+    s.ring.setAttribute("opacity","1");
+    s.lbl.setAttribute("opacity","1");
+    Array.prototype.forEach.call(catG.children,function(c,k){
+      c.classList.toggle("on", k===i);
+    });
+    var fig=-1;
+    FIGS.forEach(function(f,k){ if(f.idx.indexOf(i)>=0) fig=k; });
+    selectedFig=fig;
+    polylines.forEach(function(p,k){
+      p.setAttribute("opacity", k===fig?"0.95":"0.25");
+      p.setAttribute("stroke", k===fig?"rgba(110,231,255,.95)":"rgba(110,231,255,.45)");
+    });
+    FIGS.forEach(function(f,k){ f.label.setAttribute("fill", k===fig?"#6ee7ff":"rgba(159,180,255,.65)"); });
+
+    var az=bearingOf(s);
+    targetRot=az;
+    /* shortest path */
+    while(targetRot-rotation>180) targetRot-=360;
+    while(targetRot-rotation<-180) targetRot+=360;
+
+    G("selOut").textContent=s.n;
+    G("sName").textContent=s.n;
+    G("sCon").textContent=s.c;
+    G("sMag").textContent=s.mag;
+    G("sDist").textContent=s.dist;
+    G("sBear").textContent=compass(az)+" / +"+elevOf(s)+"°";
+    G("elOut").textContent="+"+String(elevOf(s)).padStart(2,"0")+".0°";
+    render();
+  }
+
+  function compass(az){
+    var dirs=["N","NNE","NE","ENE","E","ESE","SE","SSE","S","SSW","SW","WSW","W","WNW","NW","NNW"];
+    var i=Math.round(az/22.5)%16;
+    return dirs[i]+" "+Math.round(az)+"°";
+  }
+
+  function render(){
+    var g=G("roseG");
+    g.setAttribute("transform","rotate("+rotation.toFixed(2)+","+CX+","+CY+")");
+    var norm=((rotation%360)+360)%360;
+    G("azOut").textContent=norm.toFixed(1).padStart(5,"0")+"°";
+    G("bearOut").textContent=compass(norm);
+  }
+
+  /* ---- drag ---- */
+  var svg=G("rose"), dragging=false, lastAng=0;
+  function angleFrom(ev){
+    var rect=svg.getBoundingClientRect();
+    var vx=(ev.clientX-rect.left)/rect.width*700;
+    var vy=(ev.clientY-rect.top)/rect.height*700;
+    return Math.atan2(vy-CY,vx-CX)*180/Math.PI;
+  }
+  svg.addEventListener("pointerdown",function(ev){
+    dragging=true; lastAng=angleFrom(ev); autoDrift=false; syncSpin();
+    svg.classList.add("grabbing");
+    svg.setPointerCapture(ev.pointerId);
+  });
+  svg.addEventListener("pointermove",function(ev){
+    if(!dragging) return;
+    var a=angleFrom(ev);
+    var d=a-lastAng;
+    if(d>180) d-=360; if(d<-180) d+=360;
+    rotation+=d; lastAng=a; targetRot=rotation;
+    render();
+  });
+  function stop(ev){
+    if(!dragging) return;
+    dragging=false;
+    svg.classList.remove("grabbing");
+    try{ svg.releasePointerCapture(ev.pointerId); }catch(e){}
+  }
+  svg.addEventListener("pointerup",stop);
+  svg.addEventListener("pointercancel",stop);
+
+  /* ---- animation loop ---- */
+  function step(){
+    if(!dragging && Math.abs(targetRot-rotation)>0.4){
+      rotation+=(targetRot-rotation)*0.12;
+      render();
+    }else if(autoDrift && !dragging){
+      rotation-=0.06;
+      targetRot=rotation;
+      render();
+    }
+    requestAnimationFrame(step);
+  }
+
+  /* ---- controls ---- */
+  function syncSpin(){ G("spin").classList.toggle("on",autoDrift); }
+  G("spin").addEventListener("click",function(){
+    autoDrift=!autoDrift; syncSpin();
+    if(autoDrift) targetRot=rotation;
+  });
+  G("reset").addEventListener("click",function(){
+    autoDrift=false; syncSpin();
+    targetRot=0;
+    G("skyOut").textContent="21:00 · midwinter";
+    if(reduce){ rotation=0; render(); }
+  });
+  G("linesB").addEventListener("click",function(){
+    showLines=!showLines;
+    linesG.setAttribute("opacity", showLines?"1":"0");
+    this.textContent=showLines?"hide lines":"show lines";
+  });
+  G("rand").addEventListener("click",function(){
+    var h=String(Math.floor(Math.random()*24)).padStart(2,"0");
+    var seasons=["midwinter","spring","high summer","autumn"];
+    G("skyOut").textContent=h+":00 · "+seasons[Math.floor(Math.random()*4)];
+    rotation=-Math.floor(Math.random()*360);
+    targetRot=rotation;
+    render();
+  });
+  window.addEventListener("keydown",function(e){
+    if(e.key==="ArrowLeft"){ rotation-=5; targetRot=rotation; render(); e.preventDefault(); }
+    if(e.key==="ArrowRight"){ rotation+=5; targetRot=rotation; render(); e.preventDefault(); }
+  });
+
+  render();
+  select(0);
+  if(!reduce) requestAnimationFrame(step);
+})();
+</script>
+</body>
+</html>

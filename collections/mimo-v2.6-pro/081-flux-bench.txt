@@ -1,0 +1,17 @@
+TITLE: Flux Bench — Iron Filings Field
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Flux Bench: Iron Filings Field". Render a 930×540 dark steel plate covered with a jittered grid of compass-needle grains (13px lattice, ~1500 filings). Each filing's angle eases toward atan2 of the local magnetic field B, computed as a superposition of sources: a dipole pair (default), a single monopole, a current-carrying wire (field circles the conductor), or a quadrupole. Sources render as glowing draggable N/S discs; strength and density are sliders. Overlay modes: analytic field lines traced by RK-free unit steps from the positive pole, and a coarse flux-heatmap of |B|. A shake button randomises filing angles so they visibly realign; live stats show grain count, mean |B| and pole count. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A physics demonstrator photographed from above: cold grain on blackened steel, red and blue sources as the only colour. The craft is that thousands of independent needles agree — the pattern nobody draws is made entirely of local decisions.
+
+MAJOR VISUAL TECHNIQUES:
+- Superposed vector field (inverse-square sources plus curl field for wire mode)
+- Per-cell orientation easing with shortest-arc wraparound
+- Analytic streamline tracing seeded radially around the source
+- Coarse |B| heatmap pass under the grain layer
+- Drag-POINTER source manipulation with glow shadows
+
+INTENDED INTERACTION MODEL:
+Drag poles across the plate, swap source geometry, dial strength, thin or thicken the grain lattice, toggle field lines or heat, and shake the plate to watch every filing negotiate its way back into agreement with the field.

@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Sundial Gnomon</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#f2ede1;color:#3b3529;font-family:Georgia,"Times New Roman",serif;
+  display:flex;flex-direction:column;align-items:center;padding:30px 16px;gap:18px;
+  background-image:radial-gradient(circle at 50% 0,rgba(255,244,214,.9),transparent 55%)}
+h1{font-size:27px;letter-spacing:.06em}
+#sub{font:11px ui-monospace,monospace;letter-spacing:.3em;text-transform:uppercase;color:#9b8f77;margin-top:-10px}
+#stage{display:flex;gap:26px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+.panel{background:#fbf7ec;border:1px solid #d8cdb4;border-radius:12px;padding:16px;box-shadow:0 12px 30px rgba(90,75,40,.14)}
+svg{display:block}
+#plate{width:430px;height:430px}
+#elev{width:360px;height:170px}
+.row{display:flex;align-items:center;gap:10px;font:11px ui-monospace,monospace;margin:11px 0;color:#6f6553}
+.row label{width:88px;letter-spacing:.12em}
+input[type=range]{flex:1;accent-color:#c9962f}
+.row span{width:62px;text-align:right;color:#3b3529}
+button{background:#3b3529;border:none;color:#f6efdd;font:11px ui-monospace,monospace;letter-spacing:.14em;padding:8px 15px;border-radius:7px;cursor:pointer}
+button:hover{background:#57503f}
+#read{margin-top:6px;font:11px ui-monospace,monospace;line-height:1.9;color:#7a705c}
+#read b{color:#c9962f;font-weight:600}
+#dateV{color:#c9962f}
+</style>
+</head>
+<body>
+<h1>Sundial Gnomon</h1>
+<div id="sub">horizontal dial · shadow reckoned from the hour angle</div>
+<div id="stage">
+  <div class="panel">
+    <svg id="plate" viewBox="0 0 430 430">
+      <circle cx="215" cy="215" r="205" fill="#efe7d3" stroke="#b9a984" stroke-width="3"/>
+      <circle cx="215" cy="215" r="176" fill="none" stroke="#d3c6a6" stroke-width="1"/>
+      <circle cx="215" cy="215" r="120" fill="none" stroke="#e0d5b8" stroke-width="1"/>
+      <g id="hourlines" stroke="#8a7c5d" stroke-width="1.6"></g>
+      <g id="numerals" fill="#5f563f" font-family="Georgia,serif" font-size="15" text-anchor="middle"></g>
+      <line id="noonline" x1="215" y1="215" x2="215" y2="30" stroke="#c9962f" stroke-width="2"/>
+      <g id="shadowg">
+        <line id="shadow" x1="215" y1="215" x2="215" y2="70" stroke="#33302a" stroke-width="7" stroke-linecap="round" opacity=".82"/>
+        <circle id="shadowTip" cx="215" cy="70" r="5" fill="#33302a" opacity=".82"/>
+      </g>
+      <g id="gnomon">
+        <polygon id="gnop" points="215,215 215,150 196,215" fill="#8c6b3d" stroke="#5e4726" stroke-width="1.5"/>
+        <ellipse cx="215" cy="215" rx="13" ry="6" fill="#5e4726"/>
+      </g>
+      <text x="215" y="395" text-anchor="middle" font-family="ui-monospace,monospace" font-size="11" fill="#9b8f77" letter-spacing="4">HORIZON PLATE</text>
+    </svg>
+  </div>
+  <div class="panel">
+    <svg id="elev" viewBox="0 0 360 170">
+      <rect x="10" y="130" width="340" height="8" fill="#cbbb95"/>
+      <polygon id="gnomonSide" points="150,130 150,58 128,130" fill="#8c6b3d" stroke="#5e4726" stroke-width="1.5"/>
+      <line id="sideShadow" x1="150" y1="130" x2="250" y2="130" stroke="#33302a" stroke-width="6" stroke-linecap="round" opacity=".8"/>
+      <circle id="sun" cx="260" cy="50" r="14" fill="#f2b632" opacity=".95"/>
+      <circle id="sunGlow" cx="260" cy="50" r="26" fill="#f2b632" opacity=".22"/>
+      <line id="ray" x1="260" y1="50" x2="150" y2="58" stroke="#e2a72c" stroke-width="1.4" stroke-dasharray="5 4"/>
+      <text x="18" y="24" font-family="ui-monospace,monospace" font-size="10" fill="#9b8f77" letter-spacing="2">ELEVATION — SHADOW LENGTH IN GNOMON HEIGHTS</text>
+    </svg>
+    <div class="row"><label>TIME</label><input id="time" type="range" min="0" max="1439" value="620"><span id="timeV">10:20</span></div>
+    <div class="row"><label>LATITUDE</label><input id="lat" type="range" min="15" max="68" value="51"><span id="latV">51°N</span></div>
+    <div class="row"><label>DATE</label><input id="date" type="range" min="1" max="365" value="172"><span id="dateV">21 Jun</span></div>
+    <div class="row"><button id="run">pause sun</button></div>
+    <div id="read">sun altitude <b id="rAlt">—</b><br>shadow length <b id="rLen">—</b><br>declination <b id="rDec">—</b><br>dial correction <b id="rCorr">—</b></div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var PI=Math.PI;
+var timeS=document.getElementById("time"),latS=document.getElementById("lat"),dateS=document.getElementById("date");
+var running=true;
+var hourlines=document.getElementById("hourlines"),numerals=document.getElementById("numerals");
+var shadow=document.getElementById("shadow"),tip=document.getElementById("shadowTip");
+var gnoP=document.getElementById("gnomon");
+var monthNames=["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+var monthEnds=[31,59,90,120,151,181,212,243,273,304,334,365];
+function dayLabel(d){
+  var m=0;while(m<11&&d>monthEnds[m])m++;
+  var start=m===0?0:monthEnds[m-1];
+  return (d-start)+" "+monthNames[m];
+}
+function decl(day){return 23.44*PI/180*Math.sin(2*PI*(284+day)/365);}
+function drawHourLines(){
+  var phi=(+latS.value)*PI/180;
+  var out="",nums="";
+  for(var h=6;h<=18;h++){
+    var H=(h-12)*15*PI/180;
+    var th=Math.atan(Math.sin(H)*Math.tan(phi));
+    var dx=Math.sin(th)*176,dy=Math.cos(th)*176;
+    out+='<line x1="215" y1="215" x2="'+(215+dx).toFixed(1)+'" y2="'+(215-dy).toFixed(1)+'"/>';
+    var lx=215+dx*1.12,ly=215-dy*1.12;
+    var label=h<=12?h:(h-12);
+    if(h===12)label="XII";
+    else label=["","I","II","III","IIII","V","VI","VII","VIII","IX","X","XI","XII"][h>12?h-12:h]||label;
+    nums+='<text x="'+lx.toFixed(1)+'" y="'+(ly+5).toFixed(1)+'">'+label+"</text>";
+  }
+  hourlines.innerHTML=out;numerals.innerHTML=nums;
+  var h12=(12-12)*15*PI/180;
+  var th12=Math.atan(Math.sin(h12)*Math.tan(phi));
+  document.getElementById("noonline").setAttribute("x2",(215+Math.sin(th12)*176).toFixed(1));
+}
+function render(){
+  var mins=+timeS.value,phi=(+latS.value)*PI/180,day=+dateS.value;
+  var dec=decl(day);
+  var H=(mins/60-12)*15*PI/180;
+  var sinAlt=Math.sin(phi)*Math.sin(dec)+Math.cos(phi)*Math.cos(dec)*Math.cos(H);
+  sinAlt=Math.max(-1,Math.min(1,sinAlt));
+  var alt=Math.asin(sinAlt);
+  var cosA=(Math.sin(dec)-Math.sin(alt)*Math.sin(phi))/(Math.cos(alt)*Math.cos(phi)||1e-6);
+  cosA=Math.max(-1,Math.min(1,cosA));
+  var az=Math.acos(cosA); // 0 = north, measure from north clockwise: afternoon -> west
+  if(Math.sin(H)>0)az=2*PI-az;
+  var hh=Math.floor(mins/60),mm=mins%60;
+  document.getElementById("timeV").textContent=(hh<10?"0":"")+hh+":"+(mm<10?"0":"")+mm;
+  document.getElementById("latV").textContent=latS.value+"°N";
+  document.getElementById("dateV").textContent=dayLabel(day);
+  // gnomon triangle: style follows latitude
+  var gh=90-((+latS.value)-15)*0.9;
+  gnoP.setAttribute("points","215,215 215,"+(215-gh).toFixed(1)+","+(215-gh*0.28).toFixed(1)+",215");
+  document.getElementById("gnomonSide").setAttribute("points","150,130 150,"+(130-gh).toFixed(1)+","+(150-gh*0.3).toFixed(1)+",130");
+  // shadow direction: opposite of sun azimuth measured from north (up on plate), clockwise
+  var dir=az+PI;
+  var len=(alt>0.03)?Math.min(1.9,1/Math.tan(alt)):1.9;
+  var R=Math.min(1, len/ (1/Math.tan(Math.max(0.03,0.28))) ) ; // scaled visually
+  var scale=176/1.4;
+  var rr=Math.min(200,len*scale);
+  var sx=215+Math.sin(dir)*rr, sy=215-Math.cos(dir)*rr;
+  shadow.setAttribute("x2",sx.toFixed(1));shadow.setAttribute("y2",sy.toFixed(1));
+  tip.setAttribute("cx",sx.toFixed(1));tip.setAttribute("cy",sy.toFixed(1));
+  // elevation view
+  var sunAzRel=az; // place sun to the right when south
+  var shLenPx=Math.min(200,len*70);
+  var sunX=150+Math.sin(az+ (PI/2))*100;
+  var sunY=130-(Math.sin(alt)*100+16);
+  var sx2=Math.max(16,Math.min(344,sunX)),sy2=Math.max(20,Math.min(120,sunY));
+  document.getElementById("sun").setAttribute("cx",sx2);document.getElementById("sun").setAttribute("cy",sy2);
+  document.getElementById("sunGlow").setAttribute("cx",sx2);document.getElementById("sunGlow").setAttribute("cy",sy2);
+  document.getElementById("ray").setAttribute("x2",sx2);document.getElementById("ray").setAttribute("y2",sy2);
+  var dirX=(Math.sin(az)>=0)?1:-1;
+  document.getElementById("sideShadow").setAttribute("x2",(150+dirX*shLenPx).toFixed(1));
+  document.getElementById("rAlt").textContent=(alt*180/PI).toFixed(1)+"°";
+  document.getElementById("rLen").textContent=(alt>0.03?len.toFixed(2):"∞")+" × gnomon";
+  document.getElementById("rDec").textContent=(dec*180/PI).toFixed(1)+"°";
+  document.getElementById("rCorr").textContent="sin H · tan φ ≈ "+(Math.sin(H)*Math.tan(phi)).toFixed(3);
+}
+function animateHourLines(){drawHourLines();}
+latS.addEventListener("input",function(){drawHourLines();render();});
+timeS.addEventListener("input",render);
+dateS.addEventListener("input",render);
+document.getElementById("run").addEventListener("click",function(){
+  running=!running;this.textContent=running?"pause sun":"resume sun";
+});
+var last=0;
+function loop(now){
+  var dt=last?(now-last)/1000:0;last=now;
+  if(running){
+    timeS.value=((+timeS.value)+dt*14)%1440;
+    render();
+  }
+  requestAnimationFrame(loop);
+}
+drawHourLines();render();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

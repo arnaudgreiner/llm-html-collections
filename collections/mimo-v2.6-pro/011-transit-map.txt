@@ -1,0 +1,19 @@
+TITLE: Transit Map — Four-Line Schematic Network Diagram
+
+FULL PROMPT:
+Create one fully self-contained HTML page, "Transit Map", a schematic transit network diagram with no external resources. Use a deep navy ground (#0b1220) with two soft radial washes, panels in #111a2e with #1d2942 rules, and four line colours: red #ff5b5b, yellow #ffd166, cyan #4cc9f0, green #7bf1a8. The centrepiece is an inline SVG with viewBox 0 0 1000 700 drawn entirely with orthogonal and 45° polylines: each line is a dark 19px "under" casing plus a 13px coloured route stroke with round caps and joins. Stations are generated in JS from an array of thirty coordinates with name, served lines, label side, zone and note; interchanges get a large white core inside an open ring, ordinary stops a small stroked dot, and labels use paint-order stroke halos in the map background colour. Above the map, a control strip: All lines plus one chip per line with a colour dot, a Trains toggle and a hint; to the right, a station record panel with line badges, a counts table and a bulletins list with good/minor/closed status pills. Finish with a thin letterspaced footer and a live HH:MM:SS clock in the header.
+
+INTENDED DESIGN DESCRIPTION:
+The page should look like a photograph of a network diagram mounted in a control room — dark, calm and luminous, with the four saturated lines doing all the shouting against near-black. Labels are small and confident, interchanges are visually heavier than stops, and every panel is separated by a hairline rather than a card shadow.
+
+MAJOR VISUAL TECHNIQUES:
+- Two-stroke route rendering (casing plus colour) for map-like separation at crossings
+- Programmatic SVG station construction with createElementNS and transforms
+- Label placement by side token (up/down/left/right) with text-anchor selection
+- paint-order:stroke label halos so text stays legible over any line colour
+- Trains animated along their own path with getPointAtLength / getPointAtLength offsets per line
+- Line isolation by toggling .dim on route groups and station groups independently
+- Live clock via setInterval and a random-walk counts row
+
+INTENDED INTERACTION MODEL:
+Clicking a line chip isolates that route (others fade to 16% and stations not on it dim, while the chosen route thickens); All lines restores everything. Hovering or clicking any station dot writes its name, zone, line badges and note into the record panel and marks it active. The Trains toggle starts or stops four pairs of coloured trains that run each route at different speeds and wrap around. The clock ticks every second; reduced-motion users start with trains parked and transitions disabled.

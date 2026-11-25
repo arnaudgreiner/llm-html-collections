@@ -1,0 +1,17 @@
+TITLE: Newton's Cradle — Conservation, Repeated
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Newton's Cradle: Conservation, Repeated". Simulate five equal bobs (R=34, string L=270, pivots spaced 2R along a beam at y=70) as pendulums: per-frame θ̈=−(g/L)sinθ with damping 0.9993, then six collision passes — when gap bx(j+1)−bx(j)<2R−0.02 and the bobs are approaching, exchange velocities exactly (equal-mass elastic rule, converting v↔θ̇ through L·cosθ, skipping a held bob) and positionally separate by half the overlap using cos-clamped θ corrections. Strikes counter increments on impacts above threshold. Drag any bob (atan2 pointer angle clamped ±1.35 rad) with release velocity from pointer delta; buttons PULL LEFT, LIFT ONE/TWO/THREE (raise rightmost n at 1.05 rad), STOP ALL. Draw: dark bench with beam and posts, twin strings per bob, radial metallic gradients with specular arcs, floor shadows, hover/hold rings, live strikes/energy/held-ball telemetry. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark bench with five mirror-polished bobs — motion is invisible until momentum makes it travel: the middle three stay still while the ends trade swings.
+
+MAJOR VISUAL TECHNIQUES:
+- Multi-pass pairwise elastic resolution so chains propagate in one frame
+- Positional overlap separation keeping the cradle geometrically honest
+- Pointer-drag with velocity hand-off on release
+- Radial-gradient chrome bobs with specular highlight arcs
+- Strikes + energy telemetry from state, not decoration
+
+INTENDED INTERACTION MODEL:
+Pull one bob or lift two/three on the right, release, and count strikes; drag any bob for custom swings; STOP ALL resets the frame.

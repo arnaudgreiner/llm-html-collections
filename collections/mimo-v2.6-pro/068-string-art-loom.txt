@@ -1,0 +1,18 @@
+TITLE: String Art Loom — Chords of a Word
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "String Art Loom — Chords of a Word". Render a circular string-art loom on a canvas: 80–240 pins evenly spaced on a ring around a dark board, and a greedy chord solver that rasterizes a typed word into a 120×120 coverage grid, then repeatedly picks the pin-to-pin chord crossing the most still-uncovered letter pixels, strikes those pixels out, and continues from the landing pin — weaving the word out of straight lines alone. The weave animates progressively inside requestAnimationFrame (≈26 chords per frame) with live WOVEN and PROGRESS readouts, stopping early when no chord still covers two pixels or when the LINES budget (400–3600) runs out. Pins and LINES sliders reconfigure the loom live, four thread swatches plus a custom color picker recolor the thread and re-render stored chords, CLEAR wipes the board, and a MODE toggle switches to DRAW where pointer-down on a pin previews a rubber-band line and release snaps to the nearest pin to lay a permanent chord. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a craft bench: a deep navy board under a soft radial spotlight, a ring of small amber nails where every tenth nail is larger, and thread laid at low alpha so overlaps build photographic density out of pure straight lines. The craft is the solver — an honest coverage-greedy algorithm whose convergence (chords drying up before the budget) is part of the aesthetic, reported honestly in the status line.
+
+MAJOR VISUAL TECHNIQUES:
+- Offscreen canvas text rasterization into a Uint8Array coverage grid, with font auto-shrinking and text trimming until it fits inside the ring
+- Greedy chord search: sample every candidate chord through the grid at ~1.3 samples per cell, score uncovered hits, zero hits on commit
+- Progressive rAF weaving so the picture draws itself chord by chord while keeping the main thread responsive
+- Pins stored as index pairs, so any resize or slider change re-derives geometry and redraws the whole loom losslessly
+- Radial vignette board, every-tenth-pin emphasis, and per-chord alpha stacking for woven density
+- Pointer-capture drag with nearest-pin snapping and a live rubber-band preview on an overlay canvas
+
+INTENDED INTERACTION MODEL:
+Type a word, tune pins and line budget, pick a thread color, press WEAVE and watch the loom solve itself; switch to DRAW to hand-lay chords pin to pin; CLEAR resets the board. Sliders re-pin the artwork instantly, so experimentation is safe.

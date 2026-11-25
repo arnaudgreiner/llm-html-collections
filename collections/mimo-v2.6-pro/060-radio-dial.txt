@@ -1,0 +1,18 @@
+TITLE: Radio Dial
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Radio Dial". Build a wooden tabletop receiver: a dark walnut cabinet with grain striping, brass "HALICRAFTERS / MODEL S-38" plate, a cream backlit dial window (SVG ticks every 0.25 MHz from 88–108, station callsigns in red along the top) with a draggable red needle, a green phosphor oscilloscope panel, a cream VU meter with a swinging needle, a rotary volume knob, six station preset buttons and a power toggle. Six fictional stations (KMOON 88.3 dream pop, WVRT 91.7 late jazz, OBSIDIAN 94.5 post-punk, KQRT 97.2 public radio, SOLAR FM 101.1 disco, NIGHT OWL 105.9 ambient) each carry their own waveform signature (sine, warm harmonic, saw, gated speech, square, slow drift) rendered on canvas at 60fps. Signal strength is a Gaussian in frequency distance: above 0.45 the scope locks to that station's waveform and the status line names it, below that it degrades into snow and the VU needle falls back. Volume scales scope amplitude; power off dims the whole dial and flattens the trace. No external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a 1950s receiver photographed in a dim room: walnut grain, cream celluloid dial, oxblood needle, phosphor-green monitor. The pleasure is the hunt — sweeping the needle across the band and watching snow resolve into a clean waveform, the VU needle kicking up, the preset button lighting as it locks. Every station having its own waveform signature makes each one recognizable by eye, not just by label.
+
+MAJOR VISUAL TECHNIQUES:
+- SVG dial plate with interpolated quarter-MHz ticks and station marks, CSS-positioned needle
+- Gaussian signal model driving waveform selection, VU needle and status line
+- Canvas oscilloscope at rAF: grid, phosphor trace, per-station waveform functions
+- CSS-drawn walnut grain, celluloid glass highlight, dimming filter for power-off state
+- Pointer-drag needle + dial-face click-to-tune + preset jump buttons
+- Rotary knob driven by vertical pointer drag with 0–100 volume scaling trace gain
+
+INTENDED INTERACTION MODEL:
+Drag the red needle anywhere across the dial (or click a spot on the dial face, or hit a preset button to jump straight to a station) and watch the scope: static between stations, a clean signature waveform when locked, with the VU needle and status line responding to signal strength. Turn the volume knob up and down with a vertical drag to change trace gain, and hit POWER to black out the dial and flatten the scope before waking it again.

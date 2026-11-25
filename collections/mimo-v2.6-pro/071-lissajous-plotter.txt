@@ -1,0 +1,18 @@
+TITLE: Lissajous Plotter Model 71 — XY Phosphor Scope
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Lissajous Plotter Model 71". Render a classic XY oscilloscope on a 940×440 canvas: a persistent offscreen trace layer that phosphor-decays each frame (translucent fade fill), drawing x = A·sin(a·t + δ), y = A·sin(b·t) segment by segment with a green gradient beam, while the visible frame composites a 10×8 graticule, dashed centre axes, edge labels, and a magenta head dot with dashed cursor crosshairs plus live beam X/Y numeric readouts. Controls: FREQ-X and FREQ-Y integer sliders (1–12), SWEEP (trace speed), PERSISTENCE (decay rate), figure presets (CIRCLE, FIG-8, WEAVE, MESH) that snap frequencies and phase, and a DOT MODE that plots discrete sample points instead of a line. A physical-looking PHASE SHIFTER knob (ticked disc, glowing needle, pointer drag) rotates δ 0–360° while a readout names the current figure state (LINE / CIRCLE / FIGURE-8 / LOOP / MESH) and the reduced tangency ratio (via gcd). Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a laboratory instrument: near-black case, phosphor-green graticule, magenta beam accent, engraved micro-caps labels and a machined phase knob. Its craft is persistence — the trace lives on a separate decaying canvas so figures burn in and melt away exactly like long-persistence phosphor, while the HUD canvas stays crisp above it.
+
+MAJOR VISUAL TECHNIQUES:
+- Two-canvas scope: offscreen accumulation layer faded per frame for phosphor decay, live HUD layer for reticle and cursor
+- Parametric Lissajous integration with adaptive substeps so fast sweeps stay smooth
+- Gradient stroke per beam segment to fake beam intensity falloff
+- gcd-reduced tangency ratio and heuristic figure naming
+- Conic-gradient tick ring + transform-origin needle knob driven by atan2 pointer dragging
+- Dashed cursor crosshairs, edge-ticked graticule, blinking BEAM LIVE indicator
+
+INTENDED INTERACTION MODEL:
+Slide frequencies and sweep, drag the phase knob to morph the figure, snap presets, toggle dot mode, raise persistence to burn the lattice in, and watch live beam coordinates in the readout tiles.

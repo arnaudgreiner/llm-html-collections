@@ -1,0 +1,336 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>021 · Signal Bloom</title>
+<style>
+:root{--bg:#07070c;--txt:#efeaff;--mute:#8b84a8;--line:#1d1a2b;
+  --vio:#a78bfa;--pink:#ff7ad9;--mint:#7df5c8}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--txt);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  background:#07070c;overflow-x:hidden}
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+.ui{position:fixed;inset:0;z-index:2;pointer-events:none;display:flex;
+  flex-direction:column;justify-content:space-between;padding:30px 26px 26px}
+.ui>*{pointer-events:auto}
+header{display:flex;justify-content:space-between;align-items:flex-start;gap:20px;flex-wrap:wrap}
+.kicker{font-size:10px;letter-spacing:.5em;text-transform:uppercase;color:var(--mute)}
+h1{margin:10px 0 0;font-size:clamp(30px,6vw,62px);font-weight:100;letter-spacing:.16em;
+  text-transform:uppercase}
+h1 span{display:inline-block;transition:.3s}
+h1 span:nth-child(3n){color:var(--pink)}
+h1 span:nth-child(3n+2){color:var(--vio)}
+.chip{border:1px solid var(--line);border-radius:22px;padding:9px 16px;font-size:10px;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--mute);background:rgba(10,9,18,.6)}
+.chip b{color:var(--mint);font-variant-numeric:tabular-nums}
+
+.deck{display:flex;gap:18px;align-items:flex-end;justify-content:space-between;flex-wrap:wrap}
+.panel{background:rgba(10,9,18,.72);backdrop-filter:blur(8px);border:1px solid var(--line);
+  border-radius:16px;padding:16px 18px;max-width:min(420px,92vw)}
+.panel h2{margin:0 0 12px;font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;
+  color:var(--mute)}
+.sl{display:grid;grid-template-columns:74px 1fr 46px;gap:10px;align-items:center;
+  font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin:9px 0}
+.sl b{color:var(--txt);text-align:right;font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--vio)}
+.btns{display:flex;gap:9px;flex-wrap:wrap;margin-top:13px}
+button{font-family:inherit;cursor:pointer;transition:.2s}
+.pill{padding:10px 16px;border:1.4px solid var(--line);background:transparent;color:var(--mute);
+  border-radius:22px;font-size:10px;font-weight:700;letter-spacing:.2em;text-transform:uppercase}
+.pill:hover{border-color:var(--vio);color:var(--vio);transform:translateY(-2px)}
+.pill.on{border-color:var(--mint);color:var(--mint);background:rgba(125,245,200,.1)}
+.keys{display:flex;gap:12px;flex-wrap:wrap;justify-content:flex-end}
+.key{display:flex;align-items:center;gap:9px;font-size:9.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--mute)}
+.key i{display:grid;place-items:center;min-width:30px;height:30px;padding:0 8px;
+  border:1px solid var(--line);border-radius:8px;background:rgba(10,9,18,.7);
+  font-style:normal;font-size:12px;font-weight:800;color:var(--txt);
+  box-shadow:0 3px 0 #12101d}
+.key.hot i{border-color:var(--pink);color:var(--pink);box-shadow:0 3px 0 #3a1030}
+.legend{display:flex;gap:14px;flex-wrap:wrap;font-size:9.5px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--mute)}
+.legend span{display:flex;align-items:center;gap:7px}
+.legend i{width:9px;height:9px;border-radius:50%}
+.foot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;font-size:9.5px;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<canvas id="cv" aria-label="Reactive signal bloom field"></canvas>
+
+<div class="ui">
+  <header>
+    <div>
+      <span class="kicker">Folio 021 · harmonic field</span>
+      <h1 id="title">signal bloom</h1>
+    </div>
+    <div class="chip">nodes <b id="nCount">0</b> · notes <b id="nNotes">0</b> · bpm <b id="nBpm">96</b></div>
+  </header>
+
+  <div class="deck">
+    <section class="panel">
+      <h2>Modulation</h2>
+      <label class="sl">Petal length
+        <input type="range" id="sLen" min="30" max="100" value="64"><b id="vLen">64</b></label>
+      <label class="sl">Symmetry
+        <input type="range" id="sSym" min="3" max="16" value="7"><b id="vSym">7</b></label>
+      <label class="sl">Drift
+        <input type="range" id="sDrift" min="0" max="100" value="38"><b id="vDrift">38</b></label>
+      <label class="sl">Density
+        <input type="range" id="sDen" min="6" max="40" value="18"><b id="vDen">18</b></label>
+      <div class="btns">
+        <button class="pill" id="bSeed" type="button">Reseed</button>
+        <button class="pill" id="bSound" type="button">Sound off</button>
+        <button class="pill on" id="bTrace" type="button">Trails on</button>
+      </div>
+    </section>
+
+    <div>
+      <div class="legend" style="justify-content:flex-end;margin-bottom:14px">
+        <span><i style="background:var(--pink)"></i>bloom node</span>
+        <span><i style="background:var(--vio)"></i>carrier</span>
+        <span><i style="background:var(--mint)"></i>your pulse</span>
+      </div>
+      <div class="keys">
+        <span class="key"><i>1</i>pink</span>
+        <span class="key"><i>2</i>violet</span>
+        <span class="key"><i>3</i>mint</span>
+        <span class="key hot"><i>␣</i>burst</span>
+        <span class="key"><i>C</i>clear</span>
+      </div>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>click the field to plant a bloom · keys 1-3 choose its family</span>
+    <span>021 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+  var W=0,H=0,dpr=Math.min(window.devicePixelRatio||1,2);
+
+  var params={len:64, sym:7, drift:38, den:18};
+  var nodes=[], ripples=[], trail=true, family=1;
+  var FAM=[{c:"#ff7ad9",name:"pink"},{c:"#a78bfa",name:"violet"},{c:"#7df5c8",name:"mint"}];
+  var beats=0, audio=null;
+
+  var el=function(id){ return document.getElementById(id); };
+
+  /* split the title into spans so it can pulse per-letter */
+  (function splitTitle(){
+    var t=el("title"), s=t.textContent;
+    t.textContent="";
+    for(var i=0;i<s.length;i++){
+      var sp=document.createElement("span");
+      sp.textContent = s[i]===" " ? "\u00A0" : s[i];
+      t.appendChild(sp);
+    }
+  })();
+
+  function resize(){
+    W=window.innerWidth; H=window.innerHeight;
+    cv.width=Math.floor(W*dpr); cv.height=Math.floor(H*dpr);
+    cv.style.width=W+"px"; cv.style.height=H+"px";
+    ctx.setTransform(dpr,0,0,dpr,0,0);
+    if(!nodes.length) seed();
+  }
+
+  function seed(){
+    nodes=[];
+    for(var i=0;i<params.den;i++){
+      nodes.push({
+        x:Math.random()*W, y:Math.random()*H,
+        a:Math.random()*Math.PI*2,
+        spd:(Math.random()*0.6+0.2)*(Math.random()<0.5?-1:1),
+        fam:Math.floor(Math.random()*3),
+        ph:Math.random()*Math.PI*2,
+        r:Math.random()*10+4
+      });
+    }
+    el("nCount").textContent=nodes.length;
+  }
+
+  function petal(cx,cy,ang,len,spread,phase){
+    /* one flower petal as a quadratic pair */
+    var w=Math.sin(phase)*spread;
+    ctx.beginPath();
+    ctx.moveTo(cx,cy);
+    ctx.quadraticCurveTo(
+      cx+Math.cos(ang-w)*len*0.6, cy+Math.sin(ang-w)*len*0.6,
+      cx+Math.cos(ang)*len, cy+Math.sin(ang)*len);
+    ctx.quadraticCurveTo(
+      cx+Math.cos(ang+w)*len*0.6, cy+Math.sin(ang+w)*len*0.6,
+      cx, cy);
+    ctx.stroke();
+  }
+
+  function draw(t){
+    if(trail){
+      ctx.fillStyle="rgba(7,7,12,0.16)";
+      ctx.fillRect(0,0,W,H);
+    }else{
+      ctx.fillStyle="#07070c";
+      ctx.fillRect(0,0,W,H);
+    }
+
+    var sym=params.sym, len=params.len, drift=params.drift/100;
+
+    nodes.forEach(function(n,i){
+      n.a+=n.spd*0.01*(1+drift*3);
+      n.ph+=0.03;
+      var px=n.x, py=n.y;
+      n.x+=Math.cos(n.a)*drift*2.2;
+      n.y+=Math.sin(n.a)*drift*2.2;
+      if(n.x<-40)n.x=W+40; if(n.x>W+40)n.x=-40;
+      if(n.y<-40)n.y=H+40; if(n.y>H+40)n.y=-40;
+
+      var col=FAM[n.fam].c;
+      var pulse=reduce?0.6:(0.6+0.4*Math.sin(n.ph));
+      var r=(len*(0.5+n.r/16))*pulse;
+
+      ctx.strokeStyle=col;
+      ctx.globalAlpha=0.75;
+      ctx.lineWidth=1.2;
+      for(var k=0;k<sym;k++){
+        var ang=n.a+k*(Math.PI*2/sym)+i*0.13;
+        petal(px,py,ang,r,r*0.34,n.ph);
+      }
+      ctx.globalAlpha=1;
+
+      /* core */
+      ctx.fillStyle=col;
+      ctx.beginPath(); ctx.arc(px,py,2.4,0,Math.PI*2); ctx.fill();
+
+      /* carrier link to nearest node */
+      if(i%3===0){
+        var o=nodes[(i+1)%nodes.length];
+        ctx.strokeStyle="rgba(167,139,250,.16)";
+        ctx.lineWidth=1;
+        ctx.beginPath(); ctx.moveTo(px,py); ctx.lineTo(o.x,o.y); ctx.stroke();
+      }
+    });
+
+    /* ripples from clicks and bursts */
+    for(var i=ripples.length-1;i>=0;i--){
+      var rp=ripples[i];
+      rp.r+=4.5; rp.life-=0.02;
+      if(rp.life<=0){ ripples.splice(i,1); continue; }
+      ctx.strokeStyle=rp.c;
+      ctx.globalAlpha=rp.life;
+      ctx.lineWidth=2;
+      ctx.beginPath(); ctx.arc(rp.x,rp.y,rp.r,0,Math.PI*2); ctx.stroke();
+      ctx.globalAlpha=1;
+    }
+
+    /* grid of hairlines for depth */
+    ctx.strokeStyle="rgba(29,26,43,.55)"; ctx.lineWidth=1;
+    for(var gx=0; gx<W; gx+=120){
+      ctx.beginPath(); ctx.moveTo(gx,0); ctx.lineTo(gx,H); ctx.stroke();
+    }
+    for(var gy=0; gy<H; gy+=120){
+      ctx.beginPath(); ctx.moveTo(0,gy); ctx.lineTo(W,gy); ctx.stroke();
+    }
+  }
+
+  var last=0;
+  function loop(t){
+    if(!reduce || !last){ draw(t); last=t; }
+    requestAnimationFrame(loop);
+  }
+
+  function plant(x,y,fam){
+    nodes.push({x:x, y:y, a:Math.random()*6.28, spd:0.4*(Math.random()<0.5?-1:1),
+      fam:fam, ph:Math.random()*6.28, r:Math.random()*10+5});
+    if(nodes.length>90) nodes.shift();
+    el("nCount").textContent=nodes.length;
+    ripples.push({x:x,y:y,r:8,life:1,c:FAM[fam].c});
+    blip(220+fam*140, 0.18);
+    el("nNotes").textContent=++beats;
+  }
+
+  function burst(){
+    ripples.push({x:W/2,y:H/2,r:20,life:1,c:"#7df5c8"});
+    nodes.forEach(function(n){
+      ripples.push({x:n.x,y:n.y,r:4,life:0.8,c:FAM[n.fam].c});
+    });
+    blip(110,0.5);
+    el("nNotes").textContent=++beats;
+    var spans=el("title").children;
+    for(var i=0;i<spans.length;i++){
+      (function(sp,i){
+        setTimeout(function(){
+          sp.style.transform="translateY(-8px)";
+          setTimeout(function(){ sp.style.transform=""; },180);
+        }, i*30);
+      })(spans[i],i);
+    }
+  }
+
+  function blip(freq,dur){
+    if(!soundOn) return;
+    try{
+      if(!audio) audio=new (window.AudioContext||window.webkitAudioContext)();
+      var o=audio.createOscillator(), g=audio.createGain();
+      o.type="triangle"; o.frequency.value=freq;
+      g.gain.setValueAtTime(0.0001,audio.currentTime);
+      g.gain.exponentialRampToValueAtTime(0.16,audio.currentTime+0.02);
+      g.gain.exponentialRampToValueAtTime(0.0001,audio.currentTime+dur);
+      o.connect(g); g.connect(audio.destination);
+      o.start(); o.stop(audio.currentTime+dur+0.05);
+    }catch(e){ /* audio unavailable — visuals only */ }
+  }
+
+  var soundOn=false;
+
+  cv.addEventListener("click",function(e){
+    plant(e.clientX, e.clientY, family);
+  });
+  window.addEventListener("keydown",function(e){
+    var k=e.key.toLowerCase();
+    if(k==="1"||k==="2"||k==="3"){ family=+k-1; }
+    if(e.code==="Space"){ burst(); e.preventDefault(); }
+    if(k==="c"){ nodes=[]; seed(); }
+  });
+
+  function bind(id,vid,key,fmt){
+    el(id).addEventListener("input",function(){
+      params[key]=+this.value;
+      el(vid).textContent=fmt?fmt(this.value):this.value;
+      if(key==="den") seed();
+    });
+  }
+  bind("sLen","vLen","len");
+  bind("sSym","vSym","sym");
+  bind("sDrift","vDrift","drift");
+  bind("sDen","vDen","den");
+
+  el("bSeed").addEventListener("click",function(){ seed(); });
+  el("bTrace").addEventListener("click",function(){
+    trail=!trail;
+    this.classList.toggle("on",trail);
+    this.textContent=trail?"Trails on":"Trails off";
+  });
+  el("bSound").addEventListener("click",function(){
+    soundOn=!soundOn;
+    this.classList.toggle("on",soundOn);
+    this.textContent=soundOn?"Sound on":"Sound off";
+    if(soundOn) blip(440,0.14);
+  });
+
+  window.addEventListener("resize",resize);
+  resize();
+  requestAnimationFrame(loop);
+  el("nBpm").textContent="96";
+  el("nNotes").textContent="0";
+})();
+</script>
+</body>
+</html>

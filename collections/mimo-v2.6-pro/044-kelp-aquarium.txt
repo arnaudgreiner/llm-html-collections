@@ -1,0 +1,17 @@
+TITLE: Kelp Aquarium — Torchlit Temperate Tank
+
+FULL PROMPT:
+Create a single self-contained HTML page, "Kelp Aquarium", with no external resources. Deep-shelf palette: near-black blue background with a teal glow, a tank panel with an 8px frame, inner shadow and a fixed diagonal glass sheen; aqua, gold and coral accents; header with kicker, thin/accent title and specimen/fed counters. Stage: left a 780×470 canvas — god rays drawn as lightening-composite wedges, a sine-curved sandy floor with ellipsoid stones, 11 kelp strands each drawn as a stroke plus a lighter inner stroke whose lateral offset grows with current and per-strand phase, elliptical blades attached along the stem, sinking food pellets, nine agent fish (wrasse/goby/sandeel with distinct size, colour and speed), rising bubbles, drifting motes and a torch glow that follows the pointer; HUD top-left and a hint bottom-right. Right rig: tank controls (temperature 8–22°C, torch 0–100%, current 0–1 sliders, feed and tap-glass buttons), a readings card (fish, food, bubbles risen, mean speed) and a stock list.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like leaning against the front glass of a public aquarium after closing: dark room, one held torch, and everything green moving in a current you can feel.
+
+MAJOR VISUAL TECHNIQUES:
+- Kelp as repeated stroke passes (thick dark base, thin light core) with sway amplitude ∝ current × segment fraction
+- Agent steering: wander noise + hunger seek (nearest food within 60px) + torch repulsion inside 130px, all clamped to a per-species max speed
+- Torch as a lighter-composite radial gradient whose radius and alpha are data-bound to a slider
+- Light shafts via createLinearGradient wedges composited additively
+- Speed scaling from temperature so the slider changes behaviour, not just a label
+
+INTENDED INTERACTION MODEL:
+Move the pointer over the tank to carry the torch — fish scatter out of its cone; temperature changes how fast they swim; current bends the kelp and drifts the motes; FEED drops up to six pellets (counter decrements) and hungry fish within range turn for them; TAP GLASS startles the whole stock. All readouts update four times a second. Reduced motion draws a still frame and repaints it whenever a control or the pointer changes.

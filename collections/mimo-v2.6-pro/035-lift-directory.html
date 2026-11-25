@@ -1,0 +1,298 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>035 · Lift Directory</title>
+<style>
+:root{--bg:#14181a;--panel:#1b2124;--line:#2e3739;--ink:#e7e2d5;--mute:#8d948f;
+  --brass:#d7a94a;--lamp:#ffe6b0}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(900px 500px at 20% 0%,#1d2529,transparent),
+  var(--bg);color:var(--ink);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:40px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:22px 30px 14px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.42em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:27px;font-weight:300;letter-spacing:-.01em}
+h1 b{font-weight:700;color:var(--brass)}
+.status{margin-left:auto;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.status b{color:var(--brass);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:320px minmax(0,1fr);gap:26px;padding:22px 30px 0}
+@media(max-width:900px){.stage{grid-template-columns:1fr}}
+
+/* left column */
+.rig{display:flex;flex-direction:column;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.dir{list-style:none;margin:0;padding:0;max-height:300px;overflow:auto}
+.dir li{display:flex;align-items:center;gap:10px;padding:8px 9px;border-radius:8px;cursor:pointer;
+  transition:.15s;border:1px solid transparent}
+.dir li:hover{background:rgba(215,169,74,.09);border-color:rgba(215,169,74,.3)}
+.dir li.cur{background:rgba(215,169,74,.16);border-color:var(--brass)}
+.dir .fl{font-size:12px;font-weight:700;width:30px;color:var(--brass);font-variant-numeric:tabular-nums}
+.dir .tn{font-size:12.5px;flex:1;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.dir .tag{font-size:8.5px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.tenant h3{margin:4px 0 2px;font-size:19px;font-weight:500;font-family:Georgia,'Times New Roman',serif}
+.tenant .cat{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--brass)}
+.tenant p{font-size:12.5px;line-height:1.7;color:#b9bcb4;margin:10px 0 0}
+.tenant .hours{margin-top:10px;font-size:11px;letter-spacing:.12em;color:var(--mute)}
+.btns{display:flex;gap:9px;margin-top:13px}
+.btn{flex:1;font:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  padding:10px 6px;border-radius:8px;border:1px solid var(--line);background:#232b2e;color:var(--ink);
+  cursor:pointer;transition:.16s}
+.btn:hover{border-color:var(--brass);color:var(--brass);transform:translateY(-2px)}
+.btn.brass{background:var(--brass);border-color:var(--brass);color:#14181a}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.meta div{background:#232b2e;border:1px solid var(--line);border-radius:9px;padding:8px 9px}
+.meta span{display:block;font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.meta b{font-size:15px;font-variant-numeric:tabular-nums;color:var(--brass)}
+
+/* tower */
+.tower{background:var(--panel);border:1px solid var(--line);border-radius:16px;padding:16px;
+  display:grid;grid-template-columns:58px minmax(0,1fr);gap:12px}
+.shaft{position:relative;background:#0f1315;border:1px solid var(--line);border-radius:8px;
+  overflow:hidden}
+.shaft .rail{position:absolute;left:50%;top:0;bottom:0;width:1px;background:#252d30}
+.car{position:absolute;left:5px;right:5px;height:var(--fh,44px);border-radius:5px;
+  background:linear-gradient(180deg,#3a3f33,#20241c);border:1px solid var(--brass);
+  display:flex;align-items:center;justify-content:center;overflow:hidden;
+  transition:transform .5s cubic-bezier(.5,.05,.35,1)}
+.car .doorL,.car .doorR{position:absolute;top:0;bottom:0;width:50%;background:
+  linear-gradient(180deg,#6b5a33,#42371f);transition:transform .45s cubic-bezier(.4,.1,.3,1)}
+.car .doorL{left:0;border-right:1px solid #241f12}
+.car .doorR{right:0;border-left:1px solid #241f12}
+.car.open .doorL{transform:translateX(-92%)}
+.car.open .doorR{transform:translateX(92%)}
+.car .glow{position:absolute;inset:2px 6px;border-radius:3px;background:radial-gradient(circle at 50% 30%,var(--lamp),transparent 70%);opacity:0;transition:opacity .4s}
+.car.moving .glow{opacity:.9}
+.floors{display:flex;flex-direction:column;gap:8px}
+.floor{--fh:44px;position:relative;height:var(--fh);border:1px solid var(--line);border-radius:8px;
+  background:linear-gradient(180deg,#1e2528,#191f21);display:flex;align-items:center;gap:12px;
+  padding:0 14px 0 46px;cursor:pointer;transition:.18s;overflow:hidden}
+.floor:hover{border-color:rgba(215,169,74,.55);transform:translateX(4px)}
+.floor.cur{border-color:var(--brass);background:linear-gradient(180deg,#262c24,#1c211b)}
+.floor .no{position:absolute;left:12px;font-size:11px;font-weight:700;color:var(--brass);
+  font-variant-numeric:tabular-nums}
+.floor .nm{font-size:13px;letter-spacing:.02em}
+.floor .win{position:absolute;right:14px;display:flex;gap:5px}
+.floor .win i{width:15px;height:9px;background:#ffe6b0;opacity:.7;border-radius:2px;
+  box-shadow:0 0 7px rgba(255,230,176,.6)}
+.floor.dim .win i{opacity:.16;box-shadow:none}
+.floor .liftHere .no{color:var(--brass)}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:20px 30px 0;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.log{font-family:Consolas,monospace;font-size:11px;line-height:1.8;color:#9aa19a;list-style:none;
+  margin:0;padding:0;max-height:96px;overflow:auto}
+.log li{border-bottom:1px dotted var(--line)}
+.log b{color:var(--brass);font-weight:400}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">Marlowe House · lobby panel</span>
+  <h1>Lift <b>Directory</b></h1>
+  <span class="status" id="status">car idle at <b>G</b></span>
+</header>
+
+<div class="stage">
+  <aside class="rig">
+    <section class="card">
+      <h2>Directory</h2>
+      <ul class="dir" id="dir"></ul>
+    </section>
+
+    <section class="card tenant">
+      <h2>Tenant</h2>
+      <div class="cat" id="tCat">lobby</div>
+      <h3 id="tName">Marlowe House</h3>
+      <p id="tDesc">Twelve storeys of quiet industry above Quarry Road. Select a floor and the
+        car will take you there.</p>
+      <div class="hours" id="tHours">Attended 07:00–21:00</div>
+      <div class="btns">
+        <button class="btn brass" id="go" type="button">Send lift</button>
+        <button class="btn" id="home" type="button">To lobby</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Trip log</h2>
+      <div class="meta">
+        <div><span>trips</span><b id="mTrips">0</b></div>
+        <div><span>top floor</span><b id="mTop">G</b></div>
+        <div><span>door cycles</span><b id="mDoors">0</b></div>
+        <div><span>last run</span><b id="mRun">—</b></div>
+      </div>
+      <ul class="log" id="log" style="margin-top:11px"></ul>
+    </section>
+  </aside>
+
+  <main class="tower">
+    <div class="shaft" id="shaft">
+      <div class="rail"></div>
+      <div class="car" id="car"><div class="glow"></div><div class="doorL"></div><div class="doorR"></div></div>
+    </div>
+    <div class="floors" id="floors"></div>
+  </main>
+</div>
+
+<footer class="foot"><span>single car · sequential service · doors open on arrival</span><span>035 / 100</span></footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var FLOORS=[
+    {id:"G", nm:"Marlowe House · Reception", cat:"lobby", hours:"Attended 07:00–21:00",
+     desc:"A limestone desk, two ferns, and a lift that has served this address since 1974.",
+     dim:false},
+    {id:"1", nm:"Quarry Road Bikes", cat:"workshop", hours:"Mon–Sat 08:00–18:30",
+     desc:"Wheel truing over oilcloth. Frame repairs by Thursday, always.", dim:false},
+    {id:"2", nm:"Eastgate Physio", cat:"clinic", hours:"Mon–Fri 07:30–19:00",
+     desc:"Three tables, a wall of resistance bands, and an appointment book kept in pencil.", dim:false},
+    {id:"3", nm:"Hollis & Fenn", cat:"solicitors", hours:"Mon–Fri 09:00–17:30",
+     desc:"Conveyancing, wills, and the sort of correspondence that arrives in thick envelopes.", dim:false},
+    {id:"4", nm:"Atrium Studios", cat:"design", hours:"Studio hours, irregular",
+     desc:"Eleven desks under north light; the smell of turpentine on Fridays.", dim:false},
+    {id:"5", nm:"Nightjar Records", cat:"music", hours:"By appointment",
+     desc:"A cutting lathe, 40,000 sleeves, and a listening booth with one armchair.", dim:true},
+    {id:"6", nm:"Meridian Analytics", cat:"software", hours:"24-hour fob access",
+     desc:"Dashboards about other people's dashboards. The kitchen is very clean.", dim:false},
+    {id:"7", nm:"Sundial Wellness", cat:"studio", hours:"Classes 06:30–21:00",
+     desc:"Reformer beds, cork floors, and a rule about phones in the changing room.", dim:false},
+    {id:"8", nm:"The Bindery", cat:"bookbinding", hours:"Tue–Sat 10:00–17:00",
+     desc:"Foil stamps, linen thread, and notebooks sewn to order at the long table.", dim:false},
+    {id:"9", nm:"Coldharbour Legal", cat:"chambers", hours:"Mon–Fri 09:00–18:00",
+     desc:"Twelve barristers, one very old coffee machine, and windows on three sides.", dim:false},
+    {id:"10", nm:"Fenn Observatory Club", cat:"society", hours:"Meetings: second Tuesday",
+     desc:"Charts, a brass telescope hauled up once a year, and minutes kept since 1952.", dim:true},
+    {id:"11", nm:"Skygarden Terraces", cat:"roof", hours:"Residents only",
+     desc:"Herbs, two pear trees and a view that makes the stairs worth considering.", dim:true}
+  ];
+  var G=function(id){return document.getElementById(id);};
+  var car=G("car"), shaft=G("shaft"), current=0, moving=false, trips=0, doors=0, topReached=0;
+  var fh=44;
+
+  function buildFloors(){
+    var host=G("floors"), dirHost=G("dir");
+    FLOORS.forEach(function(f,i){
+      var el=document.createElement("div");
+      el.className="floor"+(f.dim?" dim":"");
+      el.dataset.i=i;
+      el.innerHTML='<span class="no">'+f.id+'</span><span class="nm">'+f.nm+'</span>'+
+        '<span class="win"><i></i><i></i><i></i></span>';
+      el.addEventListener("click",function(){ select(i); });
+      host.appendChild(el);
+
+      var li=document.createElement("li");
+      li.innerHTML='<span class="fl">'+f.id+'</span><span class="tn">'+f.nm+'</span>'+
+        '<span class="tag">'+f.cat+'</span>';
+      li.addEventListener("click",function(){ select(i); });
+      dirHost.appendChild(li);
+    });
+  }
+
+  function measure(){
+    var first=document.querySelector(".floor");
+    if(!first) return;
+    fh=first.getBoundingClientRect().height;
+    car.style.setProperty("--fh",fh+"px");
+    position(false);
+  }
+
+  function position(animate){
+    var cells=G("floors").children;
+    var top=0;
+    if(current<cells.length && cells[current].offsetParent!==null){
+      /* both cells and the shaft resolve against body, so a simple delta
+         puts the car exactly on the destination row */
+      top=cells[current].offsetTop-shaft.offsetTop;
+      if(top<0) top=0;
+    }
+    if(!animate) car.style.transition="none";
+    car.style.transform="translateY("+top+"px)";
+    if(!animate) requestAnimationFrame(function(){ car.style.transition=""; });
+  }
+
+  function paint(){
+    [].forEach.call(G("floors").children,function(el,i){
+      el.classList.toggle("cur",i===current);
+      el.classList.toggle("dim",FLOORS[i].dim && i!==current);
+    });
+    [].forEach.call(G("dir").children,function(el,i){
+      el.classList.toggle("cur",i===current);
+    });
+    var f=FLOORS[current];
+    G("tCat").textContent=f.cat;
+    G("tName").textContent=f.nm;
+    G("tDesc").textContent=f.desc;
+    G("tHours").textContent=f.hours;
+    G("mTrips").textContent=trips;
+    G("mDoors").textContent=doors;
+    G("mTop").textContent=FLOORS[topReached].id;
+  }
+
+  function logLine(from,to,secs){
+    var el=G("log");
+    var li=document.createElement("li");
+    var t=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    li.innerHTML=p(t.getHours())+":"+p(t.getMinutes())+":"+p(t.getSeconds())+
+      " &nbsp; <b>"+from+" → "+to+"</b> · "+secs+" s";
+    el.insertBefore(li,el.firstChild);
+    while(el.children.length>6) el.removeChild(el.lastChild);
+  }
+
+  function call(target){
+    if(moving || target===current){ if(target===current) openDoors(); return; }
+    var from=current;
+    var dist=Math.abs(target-current);
+    var dur=reduce?60:Math.max(340,dist*330);
+    moving=true;
+    G("status").innerHTML="car "+(target>current?"ascending":"descending")+" to <b>"+FLOORS[target].id+"</b>";
+    car.classList.add("moving");
+    car.classList.remove("open");
+    current=target;
+    paint(); position(true);
+    setTimeout(function(){
+      car.classList.remove("moving");
+      moving=false;
+      trips++;
+      if(target>topReached) topReached=target;
+      var secs=(dur/1000).toFixed(1);
+      G("mRun").textContent=secs+" s";
+      logLine(FLOORS[from].id,FLOORS[target].id,secs);
+      G("status").innerHTML="car arrived at <b>"+FLOORS[target].id+"</b>";
+      openDoors();
+      paint();
+    },dur+40);
+  }
+
+  var doorTimer=null;
+  function openDoors(){
+    if(doorTimer) clearTimeout(doorTimer);
+    car.classList.add("open");
+    doors++;
+    G("mDoors").textContent=doors;
+    doorTimer=setTimeout(function(){ car.classList.remove("open"); },1700);
+  }
+
+  function select(i){
+    call(i);
+  }
+
+  G("go").addEventListener("click",function(){ call(current); });
+  G("home").addEventListener("click",function(){ call(0); });
+
+  buildFloors();
+  paint();
+  requestAnimationFrame(function(){ measure(); paint(); });
+  window.addEventListener("resize",function(){ position(false); });
+  setTimeout(function(){ measure(); openDoors(); },400);
+})();
+</script>
+</body>
+</html>

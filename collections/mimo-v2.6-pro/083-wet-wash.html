@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Wet Wash — Watercolor Bleed</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#161413;color:#b7b0a8;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#c97f6a;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fa9c9}
+#rig{background:#1e1b19;border:1px solid #2e2a26;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:6px;box-shadow:0 6px 26px rgba(0,0,0,.55);cursor:crosshair;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:920px}
+.sw{width:24px;height:24px;border-radius:50%;border:2px solid #2e2a26;cursor:pointer;padding:0;transition:.12s}
+.sw:hover{transform:scale(1.14)}
+.sw.on{border-color:#fff6ec;transform:scale(1.14)}
+button{background:#1e1b19;border:1px solid #37322d;color:#bdb5ac;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#c97f6a;color:#ffeee7}
+button.on{background:#c97f6a;border-color:#c97f6a;color:#2a100a;font-weight:700}
+label{font-size:9.5px;letter-spacing:.14em;color:#6f6862;display:flex;gap:7px;align-items:center}
+input[type=range]{width:100px;accent-color:#c97f6a}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#6f6862}
+.stat b{color:#c97f6a}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#4d4741;text-align:center;max-width:910px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Wet Wash <i>M83</i> · watercolor bleed</h1>
+<div id="rig"><canvas id="cv" width="920" height="560"></canvas></div>
+<div class="bar">
+  <div id="swatches"></div>
+  <label>water <input type="range" id="water" min="10" max="100" value="70"></label>
+  <label>brush <input type="range" id="brush" min="1" max="7" value="3"></label>
+  <button id="bTilt">⤵ TILT PAPER</button>
+  <button id="bSalt">∴ SALT</button>
+  <button id="bDry">☀ DRY</button>
+  <button id="bSheet">▤ FRESH SHEET</button>
+  <span class="stat">wet <b id="mW">0%</b> · pigment <b id="mP">0</b> · strokes <b id="mS">0</b></span>
+</div>
+<div class="hint">pigment and water are separate fields: water flows down its own gradient, pigment rides along and bakes into the drying rim — that rim IS the watercolor edge · paint with the mouse, tilt the sheet to run it, throw salt into a wet wash to force backruns</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=920,H=560,C=5;
+var GW=W/C,GH=H/C;                 // 184 x 112
+var wtr=new Float32Array(GW*GH);
+var pig=new Float32Array(GW*GH);    // pigment amount
+var dry=new Float32Array(GW*GH);    // deposited (fixed) pigment
+var fib=new Float32Array(GW*GH);    // paper fiber
+var tilt=[0,0];
+var hueIdx=0,water=0.70,brush=3,strokes=0,saltT=0,dryBoost=0;
+var PAL=[
+  {n:"VERMIL",c:[200,70,50]},
+  {n:"INDIGO",c:[44,70,140]},
+  {n:"SAPGRN",c:[64,120,72]},
+  {n:"OCHRE",c:[196,150,64]},
+  {n:"QUINAC",c:[150,54,110]},
+  {n:"PAYNE",c:[70,86,104]}
+];
+function ix(x,y){return y*GW+x;}
+for(var i=0;i<fib.length;i++){
+  fib[i]=Math.random();
+}
+var img=ax.createImageData(GW,GH);
+var dat=img.data;
+function paint(px,py,amt){
+  var r=Number(document.getElementById("brush").value);
+  var cx=Math.floor(px/C),cy=Math.floor(py/C);
+  for(var dy=-r*2;dy<=r*2;dy++)for(var dx=-r*2;dx<=r*2;dx++){
+    var d2=dx*dx+dy*dy;
+    if(d2>r*r*4)continue;
+    var nx=cx+dx,ny=cy+dy;
+    if(nx<1||ny<1||nx>=GW-1||ny>=GH-1)continue;
+    var fall=Math.exp(-d2/(r*r))*amt;
+    var i2=ix(nx,ny);
+    wtr[i2]=Math.min(1.6,wtr[i2]+fall*water*0.9);
+    pig[i2]=Math.min(2.4,pig[i2]+fall*0.7);
+  }
+}
+var painting=false,lastP=null;
+function ppos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointerdown",function(e){
+  painting=true;cv.setPointerCapture(e.pointerId);
+  lastP=ppos(e);strokes++;
+});
+cv.addEventListener("pointermove",function(e){
+  if(!painting)return;
+  var p=ppos(e);
+  if(lastP){
+    var d=Math.hypot(p[0]-lastP[0],p[1]-lastP[1]);
+    var steps=Math.max(1,Math.floor(d/4));
+    for(var s=1;s<=steps;s++){
+      paint(lastP[0]+(p[0]-lastP[0])*s/steps,lastP[1]+(p[1]-lastP[1])*s/steps,1);
+    }
+  }else paint(p[0],p[1],1);
+  lastP=p;
+});
+cv.addEventListener("pointerup",function(){painting=false;lastP=null;});
+cv.addEventListener("pointercancel",function(){painting=false;lastP=null;});
+// palette
+var swWrap=document.getElementById("swatches");
+PAL.forEach(function(pal,i){
+  var b=document.createElement("button");
+  b.className="sw"+(i===0?" on":"");
+  b.style.background="rgb("+pal.c.join(",")+")";
+  b.title=pal.n;
+  b.addEventListener("click",function(){
+    hueIdx=i;
+    [].forEach.call(swWrap.children,function(el,ci){el.className="sw"+(ci===i?" on":"");});
+  });
+  swWrap.appendChild(b);
+});
+document.getElementById("water").addEventListener("input",function(){water=Number(this.value)/100;});
+document.getElementById("bTilt").addEventListener("click",function(){
+  var a=Math.random()*6.2832;
+  tilt=[Math.cos(a)*0.05,Math.sin(a)*0.05];
+  var self=this;self.classList.add("on");
+  setTimeout(function(){self.classList.remove("on");tilt=[0,0];},1400);
+});
+document.getElementById("bSalt").addEventListener("click",function(){
+  saltT=70;
+});
+document.getElementById("bDry").addEventListener("click",function(){
+  dryBoost=60;
+});
+document.getElementById("bSheet").addEventListener("click",function(){
+  wtr.fill(0);pig.fill(0);dry.fill(0);strokes=0;
+});
+function step(){
+  var w2=new Float32Array(wtr.length), p2=new Float32Array(pig.length);
+  var evap=0.010+(dryBoost>0?0.045:0);
+  if(dryBoost>0)dryBoost--;
+  if(saltT>0){
+    saltT--;
+    for(var s=0;s<26;s++){
+      var rx=2+Math.floor(Math.random()*(GW-4)),ry=2+Math.floor(Math.random()*(GH-4));
+      // salt sucks water then blasts a backrun
+      for(var dy=-3;dy<=3;dy++)for(var dx=-3;dx<=3;dx++){
+        var ii=ix(rx+dx,ry+dy);
+        wtr[ii]=Math.max(0,wtr[ii]-0.22);
+      }
+      for(var dy2=-6;dy2<=6;dy2++)for(var dx2=-6;dx2<=6;dx2++){
+        var d2=dx2*dx2+dy2*dy2;
+        if(d2>36||d2<4)continue;
+        var i3=ix(rx+dx2,ry+dy2);
+        wtr[i3]=Math.min(1.6,wtr[i3]+0.10);
+        pig[i3]=Math.min(2.4,pig[i3]+0.05);
+      }
+    }
+  }
+  for(var y=1;y<GH-1;y++){
+    for(var x=1;x<GW-1;x++){
+      var i0=ix(x,y);
+      var wl=wtr[i0];
+      if(wl<=0.001){w2[i0]=wl*0.985;p2[i0]=pig[i0];continue;}
+      var acc=0,pacc=0;
+      // 4-neighbour flow toward lower water
+      var nb=[[1,0],[-1,0],[0,1],[0,-1]];
+      for(var n=0;n<4;n++){
+        var nx=x+nb[n][0],ny=y+nb[n][1];
+        var ni=ix(nx,ny);
+        var d=wl-wtr[ni];
+        if(d>0){
+          var f=Math.min(wl*0.25,d*0.32);
+          var carry=f*(pig[i0]/Math.max(0.05,wl))*0.85;
+          acc+=f;pacc+=carry;
+          w2[ni]+=f;p2[ni]+=carry;
+        }
+      }
+      // tilt advection
+      if(tilt[0]||tilt[1]){
+        var tnx=x+Math.sign(tilt[0]),tny=y+Math.sign(tilt[1]);
+        if(tnx>0&&tny>0&&tnx<GW-1&&tny<GH-1){
+          var ti=ix(tnx,tny);
+          var move=wl*0.06;
+          w2[ti]+=move;p2[ti]+=(pig[i0]/Math.max(0.05,wl))*move*0.9;
+          acc+=move;pacc+=(pig[i0]/Math.max(0.05,wl))*move*0.9;
+        }
+      }
+      var wn=wl-acc;
+      var pn=pig[i0]-pacc;
+      // edge deposition: pigment bakes where water is thin vs neighbours (rim darkening)
+      var rim=0;
+      rim+=Math.max(0,wtr[ix(x+1,y)]-wl);
+      rim+=Math.max(0,wtr[ix(x-1,y)]-wl);
+      rim+=Math.max(0,wtr[ix(x,y+1)]-wl);
+      rim+=Math.max(0,wtr[ix(x,y-1)]-wl);
+      var bake=Math.min(pn,pn*(0.04+rim*0.55)+pn*0.015*(1-fib[i0]));
+      pn-=bake;wn-=bake*0.4;
+      dry[i0]+=bake;
+      w2[i0]=Math.max(0,wn-evap*wn);
+      p2[i0]=Math.max(0,pn);
+    }
+  }
+  wtr=w2;pig=p2;
+}
+function render(){
+  var pal=PAL[hueIdx].c;
+  var totalP=0,wetCount=0;
+  for(var y=0;y<GH;y++){
+    for(var x=0;x<GW;x++){
+      var i0=ix(x,y);
+      var o=i0*4;
+      var fx=101+fib[i0]*16;
+      var pigTot=pig[i0]+dry[i0];
+      totalP+=dry[i0];
+      if(wtr[i0]>0.04)wetCount++;
+      if(pigTot<0.004){
+        dat[o]=fx;dat[o+1]=fx-3;dat[o+2]=fx-8;dat[o+3]=255;
+        continue;
+      }
+      // edge darkening from deposit gradient
+      var gx=0,gy=0;
+      if(x>0&&x<GW-1)gx=dry[i0+1]-dry[i0-1];
+      if(y>0&&y<GH-1)gy=dry[i0+GW]-dry[i0-GW];
+      var grad=Math.min(1,Math.hypot(gx,gy)*1.6);
+      // granulation
+      var gran=0.86+fib[i0]*0.28;
+      var a=1-Math.exp(-2.6*pigTot*gran);
+      a=Math.min(1,a*(1+grad*0.55));
+      var wsheen=wtr[i0]*0.10;             // wet gloss
+      dat[o]=Math.round(fx*(1-a)+Math.min(255,pal[0]*(1.12+grad*0.5))*a*gran+wsheen*60);
+      dat[o+1]=Math.round((fx-3)*(1-a)+Math.min(255,pal[1]*(1.12+grad*0.5))*a*gran+wsheen*60);
+      dat[o+2]=Math.round((fx-8)*(1-a)+Math.min(255,pal[2]*(1.12+grad*0.5))*a*gran+wsheen*60);
+      dat[o+3]=255;
+    }
+  }
+  ax.putImageData(img,0,0);
+  // deckle edge
+  ax.strokeStyle="rgba(60,52,46,.5)";ax.lineWidth=2;
+  ax.strokeRect(1,1,W-2,H-2);
+  return [totalP,wetCount];
+}
+var mt=0;
+function loop(now){
+  step();
+  step();
+  var st=render();
+  if(now-mt>400){
+    mt=now;
+    document.getElementById("mW").textContent=Math.round(st[1]/(GW*GH)*100)+"%";
+    document.getElementById("mP").textContent=Math.round(st[0]);
+    document.getElementById("mS").textContent=strokes;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

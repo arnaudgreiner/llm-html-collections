@@ -1,0 +1,234 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>010 · Isometric Island</title>
+<style>
+:root{--sky1:#8fd7f2;--sky2:#e9f7ff;--ink:#123044;--sea:#3fa9c9}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--ink);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 62%,#fff9ec 100%);overflow-x:hidden}
+body.night{--sky1:#060d26;--sky2:#152a52;--ink:#dce9ff}
+.stars{position:fixed;inset:0;pointer-events:none;opacity:0;transition:opacity .8s;
+  background-image:
+    radial-gradient(2px 2px at 12% 18%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 78% 12%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 34% 30%,#cfe4ff,transparent),
+    radial-gradient(2px 2px at 62% 24%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 88% 40%,#cfe4ff,transparent),
+    radial-gradient(1.5px 1.5px at 22% 46%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 48% 9%,#fff,transparent),
+    radial-gradient(1.5px 1.5px at 92% 62%,#fff,transparent)}
+body.night .stars{opacity:1}
+.wrap{max-width:1180px;margin:0 auto;padding:26px 24px 54px;position:relative;z-index:3}
+.top{display:flex;justify-content:space-between;gap:20px;flex-wrap:wrap;align-items:flex-end;
+  border-bottom:2px solid var(--ink);padding-bottom:14px}
+.top h1{margin:0;font-size:clamp(30px,5vw,58px);line-height:.94;letter-spacing:-.03em;font-weight:800}
+.top h1 small{display:block;font-size:11px;letter-spacing:.4em;font-weight:600;opacity:.7;
+  margin-bottom:8px;text-transform:uppercase}
+.tools{display:flex;gap:9px;flex-wrap:wrap}
+button{font:inherit;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:10px 15px;cursor:pointer;border:2px solid var(--ink);background:transparent;color:var(--ink);
+  transition:.22s}
+button:hover{background:var(--ink);color:#f6fbff;transform:translateY(-2px)}
+button.on{background:#f4b942;border-color:var(--ink);color:#20160a}
+.board{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;margin-top:24px}
+.stage{position:relative;min-height:560px;display:flex;align-items:center;justify-content:center;
+  border:2px solid var(--ink);background:
+    radial-gradient(120% 90% at 50% 15%,rgba(255,255,255,.65),rgba(255,255,255,0) 60%),
+    linear-gradient(100deg,rgba(63,169,201,.14),rgba(63,169,201,.05));
+  overflow:hidden;perspective:1500px}
+body.night .stage{background:radial-gradient(120% 90% at 50% 15%,rgba(90,130,220,.22),transparent 65%),
+  linear-gradient(100deg,rgba(10,20,60,.5),rgba(10,20,60,.3))}
+.veil{position:absolute;inset:0;background:rgba(8,14,44,.46);opacity:0;transition:opacity .8s;
+  pointer-events:none;z-index:5}
+body.night .veil{opacity:1}
+.sun{position:absolute;right:8%;top:9%;width:74px;height:74px;border-radius:50%;
+  background:radial-gradient(circle at 36% 34%,#fff6d0,#ffc93c 60%,#f79b2c);
+  box-shadow:0 0 46px rgba(255,201,60,.75);transition:.8s;z-index:1}
+body.night .sun{background:radial-gradient(circle at 36% 34%,#fbfdff,#cfe0f5 62%,#9fb6d6);
+  box-shadow:0 0 40px rgba(190,215,255,.55);transform:translate(-320px,-10px)}
+.world{position:relative;width:560px;height:560px;transform-style:preserve-3d;
+  transform:rotateX(58deg) rotateZ(-45deg);z-index:2}
+.box{position:absolute;transform-style:preserve-3d;transition:transform .35s cubic-bezier(.2,.9,.2,1)}
+.box .f{position:absolute;backface-visibility:hidden}
+.box .top{left:0;top:0;width:100%;height:100%;transform:translateZ(var(--h))}
+.box .south{left:0;top:100%;width:100%;height:var(--h);transform-origin:top center;
+  transform:rotateX(90deg)}
+.box .west{right:100%;top:0;width:var(--h);height:100%;transform-origin:right center;
+  transform:rotateY(90deg)}
+.box.pick:hover{cursor:pointer;transform:translate3d(var(--x),var(--y),calc(var(--z) + 16px))}
+.info{border:2px solid var(--ink);padding:18px 18px 20px;background:rgba(255,255,255,.72);
+  display:flex;flex-direction:column;gap:14px}
+body.night .info{background:rgba(10,20,50,.72);color:#e7f0ff}
+.info h2{margin:0;font-size:10.5px;letter-spacing:.36em;text-transform:uppercase;opacity:.65}
+#name{font-size:26px;font-weight:800;letter-spacing:-.02em;margin:0;line-height:1.1}
+#about{margin:0;font-size:13.5px;line-height:1.7;opacity:.85}
+.chips{display:flex;gap:7px;flex-wrap:wrap}
+.chip{font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;padding:5px 9px;
+  border:1.5px solid currentColor}
+.legend{margin-top:2px;border-top:1.5px dashed currentColor;padding-top:12px;font-size:12px;
+  line-height:1.9;opacity:.85}
+.legend i{display:inline-block;width:13px;height:13px;margin-right:8px;vertical-align:-2px;
+  border:1px solid rgba(0,0,0,.35)}
+.hint{font-size:11px;letter-spacing:.18em;text-transform:uppercase;opacity:.6}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:18px;
+  font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;opacity:.7}
+@media(max-width:940px){.board{grid-template-columns:1fr}.stage{min-height:460px}
+  .world{transform:scale(.72) rotateX(58deg) rotateZ(-45deg)}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stars" aria-hidden="true"></div>
+
+<div class="wrap">
+  <header class="top">
+    <h1><small>Vol. 010 · archipelago survey</small>Signal<br>Island</h1>
+    <div class="tools">
+      <button id="bNight">Night</button>
+      <button id="bSpin" class="on">Orbit</button>
+      <button id="bGhost">Wireframe</button>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="stage" id="stage">
+      <div class="sun" aria-hidden="true"></div>
+      <div class="world" id="world" role="img" aria-label="Isometric island model"></div>
+      <div class="veil" aria-hidden="true"></div>
+    </div>
+
+    <aside class="info">
+      <div>
+        <h2>Selected structure</h2>
+        <p id="name">The whole island</p>
+        <p id="about">Fourteen stacked volumes on a single water plane: sand shelf, grass terrace, a
+          lighthouse, a boathouse, three pines and a dock. Hover any block to read it.</p>
+      </div>
+      <div class="chips" id="chips"><span class="chip">drag your pointer across the model</span></div>
+      <div class="legend">
+        <div><i style="background:#3fa9c9"></i>Water plane</div>
+        <div><i style="background:#e8d39a"></i>Sand shelf</div>
+        <div><i style="background:#79b858"></i>Grass terrace</div>
+        <div><i style="background:#f2efe6"></i>Built form</div>
+        <div><i style="background:#3f8b52"></i>Vegetation</div>
+      </div>
+      <p class="hint" id="hint">Coordinates 40 px per unit · viewBox 14 × 14</p>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Isometric island · extruded boxes, no images</span>
+    <span>010 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var world=document.getElementById("world");
+  var U=40; /* px per grid unit */
+
+  /* x, y, w, d, footprint elevation, height, base colour, label, about, tags */
+  var BLOCKS=[
+    [0,0,14,14,0,6,"#3fa9c9","Water plane","A single slab of water six units deep holding the whole model. Its south face reads as the sea wall.","water"],
+    [3,3,8,8,6,4,"#e8d39a","Sand shelf","Eight by eight of packed sand laid directly on the water — the island's foundation and its beach.","sand"],
+    [4,4,6,6,10,5,"#79b858","Grass terrace","Six by six of turf raised one full unit above the sand so the buildings sit above any spring tide.","ground"],
+    [5.2,5.2,2,2,15,14,"#f2efe6","Lighthouse","Fourteen units of whitewashed shaft. The gallery sits at the very top of the model's vertical axis.","built · landmark"],
+    [5.2,5.2,2,2,29,3,"#d4533f","Lantern room","A red cap three units tall, capping the lighthouse at an altitude of thirty-two.","built"],
+    [8,5.6,3,3,15,7,"#cfc9ba","Boathouse","Three by three with a seven-unit wall — the largest enclosed volume on the terrace.","built"],
+    [8,5.6,3,3,22,3,"#d4533f","Boathouse roof","A shallow red roof drawn as its own slab so the shadow line under the eave stays hard.","built"],
+    [9.4,9.2,1.6,1.6,15,6,"#3f8b52","Pine · north","One of three conifers placed to break the silhouette behind the terrace.","vegetation"],
+    [4.2,9.4,1.6,1.6,15,5,"#4a9c5e","Pine · west","A younger, lighter conifer on the windward corner.","vegetation"],
+    [9.6,4.2,1.4,1.4,15,4,"#3f8b52","Pine · east","The smallest of the three, tucked behind the boathouse.","vegetation"],
+    [5.4,11,1.2,4,6,3,"#a9793f","Dock","Four units of timber reaching out over the water from the sand shelf.","built"],
+    [10.6,4.4,1.6,1.6,10,3,"#b9b4a8","Signal rock","Bare stone left at the shelf edge; the survey marker is drilled into its top face.","natural"],
+    [7.6,12.2,3,1.4,6,2,"#f2efe6","Skiff","A two-unit hull moored off the dock, drawn as a plain white bar at this scale.","watercraft"],
+    [11,8.6,2,2,6,5,"#f4b942","Storehouse","A yellow supply hut standing alone on the sand, well clear of the terrace.","built"]
+  ];
+
+  function shade(hex,amt){
+    var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    r=Math.round(r*(1-amt)); g=Math.round(g*(1-amt)); b=Math.round(b*(1-amt));
+    return "rgb("+r+","+g+","+b+")";
+  }
+
+  BLOCKS.forEach(function(B,i){
+    var x=B[0]*U, y=B[1]*U, w=B[2]*U, d=B[3]*U, z=B[4]*U, h=B[5]*U, col=B[6];
+    var el=document.createElement("div");
+    el.className="box pick";
+    el.style.cssText="left:"+x+"px;top:"+y+"px;width:"+w+"px;height:"+d+"px;--h:"+h+"px;"+
+      "--x:"+x+"px;--y:"+y+"px;--z:"+z+"px;transform:translate3d(0,0,"+z+"px)";
+    el.innerHTML='<span class="f top" style="background:'+col+'"></span>'+
+                 '<span class="f south" style="background:'+shade(col,.30)+'"></span>'+
+                 '<span class="f west" style="background:'+shade(col,.48)+'"></span>';
+    el.addEventListener("pointerenter",function(){ select(i); });
+    world.appendChild(el);
+  });
+
+  var nameEl=document.getElementById("name"), aboutEl=document.getElementById("about"),
+      chips=document.getElementById("chips"), hint=document.getElementById("hint");
+  function select(i){
+    var B=BLOCKS[i];
+    nameEl.textContent=B[7];
+    aboutEl.textContent=B[8];
+    chips.innerHTML="";
+    String(B[9]).split(" · ").forEach(function(t){
+      var s=document.createElement("span"); s.className="chip"; s.textContent=t; chips.appendChild(s);
+    });
+    var c=document.createElement("span"); c.className="chip";
+    c.textContent=B[2]+"×"+B[3]+" units";
+    chips.appendChild(c);
+    hint.textContent="Elevation "+B[4]+" → "+(B[4]+B[5])+" · block "+String(i+1).padStart(2,"0")+
+      "/"+BLOCKS.length;
+  }
+
+  /* night */
+  document.getElementById("bNight").addEventListener("click",function(){
+    document.body.classList.toggle("night");
+    this.classList.toggle("on",document.body.classList.contains("night"));
+    this.textContent=document.body.classList.contains("night")?"Day":"Night";
+  });
+
+  /* orbit */
+  var spinning=!reduce, ang=-45, worldEl=world;
+  document.getElementById("bSpin").addEventListener("click",function(){
+    spinning=!spinning;
+    this.classList.toggle("on",spinning);
+    if(reduce) this.classList.remove("on");
+  });
+  if(reduce) document.getElementById("bSpin").classList.remove("on");
+
+  /* wireframe */
+  var wire=false;
+  document.getElementById("bGhost").addEventListener("click",function(){
+    wire=!wire;
+    this.classList.toggle("on",wire);
+    Array.prototype.forEach.call(world.children,function(b){
+      var faces=b.querySelectorAll(".f");
+      faces[0].style.background=wire?"transparent":BLOCKS[[].indexOf.call(world.children,b)][6];
+      faces[1].style.opacity=wire?"0.15":"";
+      faces[2].style.opacity=wire?"0.15":"";
+      b.style.border=wire?"1px solid rgba(18,48,68,.7)":"";
+    });
+  });
+
+  var pointerHold=false;
+  world.addEventListener("pointerenter",function(){ pointerHold=true; });
+  world.addEventListener("pointerleave",function(){ pointerHold=false; });
+
+  function frame(){
+    if(spinning && !pointerHold){ ang-=0.06; }
+    worldEl.style.transform="rotateX(58deg) rotateZ("+ang.toFixed(3)+"deg)";
+    requestAnimationFrame(frame);
+  }
+  if(reduce){ worldEl.style.transform="rotateX(58deg) rotateZ(-45deg)"; }
+  else requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

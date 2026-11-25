@@ -1,0 +1,18 @@
+TITLE: Hedge Maze Lab — Generated Hedge Plan with Animated Solver
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Hedge Maze Lab", with no external resources. Linen body with a warm radial wash; serif type for prose, system sans for every control and label. Header with kicker, "Hedge Maze" roman + "Lab" italic green title, a deck, and a right-aligned seed readout in hex. A control bar (paper pill) with three size chips (15/15, 25/25, 35/35; active chip solid hedge green), a "braid" range slider 0–45 with a live % readout, then Cut a new maze (amber accent), Solve (hedge green) and Clear trail outline buttons, separated by hairline dividers. Layout splits into a .plate card holding a 720×720 <canvas> plus keyboard hints (<kbd>R/S/C</kbd>) and a live status line, and a right sidebar of three cards: Cut statistics (cells, wall runs, loops braided, solution steps, cells searched), Plan key (colour swatches with labels), and Method (prose describing the algorithm). Canvas rendering: paper fill, faint cell grid, cells reached by the search washed in sand, hedge walls drawn twice — a wide translucent green pass then a narrow solid pass, each offset by a deterministic per-wall wobble from a hash so the plan looks hand-inked — amber entrance tick and slate exit tick, and a thick amber solution polyline with a white dashed overlay animating along it. Two-part uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+A landscape gardener's engraved plan of a clipped hedge maze: warm paper, ink-green walls, amber surveyor's route.
+
+MAJOR VISUAL TECHNIQUES:
+- Recursive-backtracker maze generation on an iterative stack with explicit wall knocking (neighbour flags n/e/s/w)
+- Braid pass that reopens a target percentage of interior walls to create loops
+- mulberry32 seeded PRNG; the seed is printed in the header so a cut is reproducible
+- Hand-drawn wall look: two stacked strokes (34% alpha 0.36w + solid 0.16w) offset by a hash-derived wobble
+- BFS flood with a prev[] chain; visited cells reveal progressively at cells-per-frame via requestAnimationFrame, then the route draws
+- Click-to-solve converts a pointer cell into a BFS source; keyboard shortcuts map to the three actions
+
+INTENDED INTERACTION MODEL:
+Pick a size or move the braid slider to recut instantly; press Solve to flood the maze from the entrance, watch the search wash across the plan, then the amber shortest route and its animated dashes; Clear trail removes both. Clicking any cell solves from there (a route is always found in a braided maze), and R / S / C work anywhere outside a form control. Statistics update per cut, and reduced-motion users get the finished search and route in one frame with no dash animation.

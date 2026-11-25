@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Domino Line — Wave & Gaps</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0d0b09;color:#cfc4b2;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:24px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#ffb85c;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fd0ff}
+#stage{background:#14110d;border:1px solid #2a2419;border-radius:13px;padding:14px;box-shadow:0 14px 44px rgba(0,0,0,.65)}
+canvas{display:block;border-radius:8px;cursor:pointer;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#1b1710;border:1px solid #453b28;color:#d8ccb6;font:inherit;font-size:9.5px;padding:8px 14px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#ffb85c;color:#ffe9c9}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#877c68}
+.stat b{color:#ffb85c}
+.stat b.blu{color:#8fd0ff}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#5f574a;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Domino Line <i>M99</i> · wave &amp; gaps</h1>
+<div id="stage"><canvas id="cv" width="760" height="430"></canvas></div>
+<div class="bar">
+  <button id="bL">▶ WAVE FROM LEFT</button>
+  <button id="bR">WAVE FROM RIGHT ◀</button>
+  <button id="bRst">RESET</button>
+  <span class="stat">standing <b id="mUp">72</b> · fallen <b id="mDn">0</b> · gaps <b class="blu" id="mGp">4</b></span>
+</div>
+<div class="hint">click any domino to knock it over — the wave runs both ways from there · the blue gaps break the chain: click a gap to set a new domino in it, and if the wave is already arriving it will be struck the instant it lands · each tile falls with an eased ramp so the front accelerates like the real thing</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=430;
+var N=72,SPACING=0,DX=0;
+var GAPS={};
+var dom=[];
+var kUp=0.85,WID=15,TH=5,HH=40;
+var startTime=0,complete=false,completeAt=0;
+function f(x){return 212+92*Math.sin(x/100)+26*Math.sin(x/41+1.2);}
+function df(x){return 0.92*Math.cos(x/100)+0.634*Math.cos(x/41+1.2);}
+function build(){
+  dom=[];
+  GAPS={};
+  var x0=46,x1=714;
+  DX=(x1-x0)/(N-1);
+  for(var i=0;i<N;i++){
+    var x=x0+i*DX,y=f(x);
+    var ddx=1,ddy=df(x);
+    var L=Math.hypot(ddx,ddy);
+    var tx=ddx/L,ty=ddy/L;
+    var gap=(i%19===9);
+    if(gap)GAPS[i]=1;
+    dom.push({x:x,y:y,tx:tx,ny0:0,ty:ty,nx:-ty,ny:tx,state:gap?3:0,dir:1,ang:0,trig:0,gap:gap});
+  }
+  for(var g in GAPS){}
+  startTime=0;complete=false;
+  updateHud();
+}
+function present(){return dom.filter(function(d){return !d.gap;});}
+function updateHud(){
+  var up=0,dn=0,gp=0;
+  for(var i=0;i<dom.length;i++){
+    if(dom[i].gap)gp++;
+    else if(dom[i].state===2)dn++;
+    else up++;
+  }
+  document.getElementById("mUp").textContent=up;
+  document.getElementById("mDn").textContent=dn;
+  document.getElementById("mGp").textContent=gp;
+  if(!complete&&up===0&&gp===0&&dn>0&&startTime>0){
+    complete=true;completeAt=performance.now();
+  }
+}
+function begin(){if(!startTime)startTime=performance.now();}
+function knock(i,dir){
+  var d=dom[i];
+  if(d.gap||d.state!==0)return;
+  d.state=1;d.dir=dir;d.ang=0;d.trig=0;
+  begin();
+}
+function place(i){
+  var d=dom[i];
+  if(!d.gap)return;
+  d.gap=false;d.state=0;d.ang=0;d.trig=0;
+  // struck immediately if a fallen neighbour is aiming into it?
+  var a=dom[i-1],b=dom[i+1];
+  if(a&&a.state!==3&&!a.gap&&a.state===2&&a.dir===1){d.state=1;d.dir=1;d.trig=1;}
+  else if(b&&b.state!==3&&!b.gap&&b.state===2&&b.dir===-1){d.state=1;d.dir=-1;d.trig=1;}
+  updateHud();
+}
+function update(dt){
+  for(var i=0;i<dom.length;i++){
+    var d=dom[i];
+    if(d.gap)continue;
+    if(d.state===1){
+      var c=d.ang/90;
+      var rate=(150+270*Math.sin(c*Math.PI))*dt;
+      d.ang=Math.min(90,d.ang+rate);
+      if(d.ang>=68&&!d.trig){
+        d.trig=1;
+        var j=i+d.dir;
+        if(j>=0&&j<dom.length&&!dom[j].gap&&dom[j].state===0){
+          dom[j].state=1;dom[j].dir=d.dir;dom[j].ang=0;dom[j].trig=0;
+          begin();
+        }else if(j>=0&&j<dom.length&&dom[j].gap){
+          // wave waits at the gap; clicking the gap resumes it
+        }
+      }
+      if(d.ang>=90){d.state=2;updateHud();}
+    }
+  }
+}
+function faceColor(d){
+  if(d.state===2)return "#c9bda6";
+  if(d.state===1)return "#ffe6bd";
+  return "#ece2cc";
+}
+function drawDomino(d){
+  var t=d.tx,ty2=d.ty,nx=d.nx,ny=d.ny;
+  var dir=d.dir;
+  // direction of fall in path space
+  var ux=t*dir,uy=ty2*dir;
+  var c=Math.cos(d.ang*Math.PI/180),s=Math.sin(d.ang*Math.PI/180);
+  // pivot: front-bottom edge
+  var px=d.x-ux*(TH/2),py=d.y-uy*(TH/2);
+  // shadow silhouette along u: [-th*c, h*s]
+  var s0=-TH*c,s1=HH*s;
+  var sx0=px+ux*s0-nx*(WID/2)+5,sy0=py+uy*s0-ny*(WID/2)+7;
+  ax.fillStyle="rgba(0,0,0,.4)";
+  drawPar(px+ux*s0-nx*(WID/2)+5,py+uy*s0-ny*(WID/2)+7,
+          px+ux*s1-nx*(WID/2)+5,py+uy*s1-ny*(WID/2)+7,
+          px+ux*s1+nx*(WID/2)+5,py+uy*s1+ny*(WID/2)+7,
+          px+ux*s0+nx*(WID/2)+5,py+uy*s0+ny*(WID/2)+7);
+  if(d.gap){
+    // ghost slot marker
+    ax.strokeStyle="rgba(143,208,255,.65)";
+    ax.setLineDash([4,4]);
+    ax.lineWidth=1.5;
+    ax.strokeRect(d.x-nx*(WID/2)-4,d.y-ny*(WID/2)-4,WID+8,WID+8);
+    ax.setLineDash([]);
+    ax.fillStyle="rgba(143,208,255,.9)";
+    ax.font="13px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText("+",d.x,d.y+5);
+    ax.textAlign="left";
+    return;
+  }
+  // face: from ground at pivot up by h*c, pushed forward by h*s
+  var fx0=px-nx*(WID/2),fy0=py-ny*(WID/2);
+  var fx1=px+nx*(WID/2),fy1=py+ny*(WID/2);
+  var tx0=px+ux*(HH*s)-nx*(WID/2),ty0=py+uy*(HH*s)-ny*(WID/2)-HH*c*kUp;
+  var tx1=px+ux*(HH*s)+nx*(WID/2),ty1=py+uy*(HH*s)+ny*(WID/2)-HH*c*kUp;
+  var col=faceColor(d);
+  var g=ax.createLinearGradient(fx0,fy0,tx0,ty0);
+  if(d.state===1){
+    g.addColorStop(0,"#ffcf8a");
+    g.addColorStop(1,"#fff4de");
+  }else if(d.state===2){
+    g.addColorStop(0,"#a89c86");
+    g.addColorStop(1,"#d6cab2");
+  }else{
+    g.addColorStop(0,"#c9bda6");
+    g.addColorStop(1,"#f6efdd");
+  }
+  ax.fillStyle=g;
+  drawPar(fx0,fy0,fx1,fy1,tx1,ty1,tx0,ty0);
+  // edge
+  ax.strokeStyle=d.state===1?"rgba(255,214,140,.95)":"rgba(60,52,40,.5)";
+  ax.lineWidth=d.state===1?1.6:1;
+  ax.beginPath();
+  ax.moveTo(fx0,fy0);ax.lineTo(fx1,fy1);ax.lineTo(tx1,ty1);ax.lineTo(tx0,ty0);ax.closePath();
+  ax.stroke();
+  // side thickness sliver on the right edge
+  ax.fillStyle="rgba(40,34,26,.45)";
+  drawPar(fx1,fy1,fx1+ux*TH*0.4,fy1+uy*TH*0.4-TH*0.4*kUp,tx1+ux*TH*0.4,ty1+uy*TH*0.4-TH*0.4*kUp,tx1,ty1);
+}
+function drawPar(x0,y0,x1,y1,x2,y2,x3,y3){
+  ax.beginPath();
+  ax.moveTo(x0,y0);
+  ax.lineTo(x1,y1);
+  ax.lineTo(x2,y2);
+  ax.lineTo(x3,y3);
+  ax.closePath();
+  ax.fill();
+}
+function render(now){
+  var g=ax.createLinearGradient(0,0,0,H);
+  g.addColorStop(0,"#181410");
+  g.addColorStop(1,"#0d0b09");
+  ax.fillStyle=g;ax.fillRect(0,0,W,H);
+  // path guide
+  ax.strokeStyle="rgba(255,184,92,.14)";
+  ax.lineWidth=2;
+  ax.beginPath();
+  for(var x=40;x<=720;x+=6){
+    var y=f(x);
+    if(x===40)ax.moveTo(x,y+10);
+    else ax.lineTo(x,y+10);
+  }
+  ax.stroke();
+  // wavefront marker
+  var front=-1;
+  for(var i2=0;i2<dom.length;i2++)if(dom[i2].state===1){front=i2;break;}
+  if(front>=0){
+    var F=dom[front];
+    var fr=ax.createRadialGradient(F.x,F.y,2,F.x,F.y,34);
+    fr.addColorStop(0,"rgba(255,184,92,.5)");
+    fr.addColorStop(1,"rgba(255,184,92,0)");
+    ax.fillStyle=fr;
+    ax.beginPath();ax.arc(F.x,F.y,34,0,6.2832);ax.fill();
+  }
+  for(var d3=0;d3<dom.length;d3++)drawDomino(dom[d3]);
+  if(complete){
+    var sec=((completeAt-startTime)/1000).toFixed(1);
+    ax.fillStyle="rgba(10,8,6,.85)";
+    ax.fillRect(0,H/2-52,W,104);
+    ax.strokeStyle="#ffb85c";
+    ax.lineWidth=1.5;
+    ax.strokeRect(0.5,H/2-51.5,W-1,103);
+    ax.textAlign="center";
+    ax.fillStyle="#ffb85c";
+    ax.font="bold 19px ui-monospace,monospace";
+    ax.fillText("EVERY TILE DOWN",W/2,H/2-14);
+    ax.fillStyle="#a89c86";
+    ax.font="12px ui-monospace,monospace";
+    ax.fillText("wave time "+sec+"s — click RESET and try sealing the gaps faster",W/2,H/2+14);
+    ax.textAlign="left";
+  }
+}
+cv.addEventListener("pointerdown",function(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  var bestI=-1,bestD=1e9;
+  for(var i=0;i<dom.length;i++){
+    var d=dom[i];
+    var dd=Math.hypot(d.x-x,d.y-y);
+    if(dd<bestD){bestD=dd;bestI=i;}
+  }
+  if(bestD>46)return;
+  var d2=dom[bestI];
+  if(d2.gap){place(bestI);return;}
+  if(d2.state!==0)return;
+  // direction: towards the click along the tangent
+  var along=(x-d2.tx)+(y-d2.ty)*0;
+  var dot=(x-d2.x)*d2.tx+(y-d2.y)*d2.ty;
+  knock(bestI,dot<0?-1:1);
+});
+document.getElementById("bL").addEventListener("click",function(){
+  for(var i=0;i<dom.length;i++)if(!dom[i].gap&&dom[i].state===0){knock(i,1);break;}
+});
+document.getElementById("bR").addEventListener("click",function(){
+  for(var i=dom.length-1;i>=0;i--)if(!dom[i].gap&&dom[i].state===0){knock(i,-1);break;}
+});
+document.getElementById("bRst").addEventListener("click",build);
+var last=performance.now();
+function loop(now){
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  update(dt);
+  render(now);
+  requestAnimationFrame(loop);
+}
+build();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,371 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>028 · Mosaic Press</title>
+<style>
+:root{--bg:#101314;--panel:#171b1d;--line:#262c2f;--txt:#e8e6e1;--mute:#7e8a8f;
+  --acc:#ffb703;--acc2:#4cc9f0}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(#0d1011,#101314);color:var(--txt);
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:44px}
+.wrap{max-width:1060px;margin:0 auto;padding:26px 18px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:18px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:16px}
+.kicker{font-size:10px;letter-spacing:.46em;text-transform:uppercase;color:var(--mute)}
+h1{margin:9px 0 0;font-size:clamp(27px,4.4vw,44px);font-weight:300}
+h1 b{font-weight:800;color:var(--acc)}
+.sub{color:var(--mute);font-size:13px;max-width:46ch;line-height:1.65;margin:6px 0 0}
+
+.tools{display:flex;gap:14px;align-items:center;flex-wrap:wrap;margin:18px 0;
+  background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.swatches{display:flex;gap:7px;flex-wrap:wrap}
+.sw{width:28px;height:28px;border-radius:7px;border:2px solid transparent;cursor:pointer;
+  padding:0;transition:.15s;box-shadow:inset 0 -4px 0 rgba(0,0,0,.3)}
+.sw:hover{transform:translateY(-2px)}
+.sw.on{border-color:#fff;transform:scale(1.12)}
+.tool{background:#1f2427;border:1px solid var(--line);color:var(--mute);border-radius:9px;
+  padding:8px 13px;font:inherit;font-size:10px;letter-spacing:.2em;text-transform:uppercase;
+  cursor:pointer;transition:.15s}
+.tool:hover{color:var(--txt);border-color:#3d4649}
+.tool.on{background:var(--acc);border-color:var(--acc);color:#161300;font-weight:700}
+.sep{width:1px;align-self:stretch;background:var(--line)}
+.zoomlbl{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+
+.canvasbox{display:flex;justify-content:center;background:var(--panel);border:1px solid var(--line);
+  border-radius:16px;padding:18px;overflow:auto;
+  background-image:radial-gradient(circle at 50% 0, rgba(76,201,240,.06), transparent 60%)}
+#px{width:512px;height:512px;max-width:100%;image-rendering:pixelated;cursor:crosshair;
+  border-radius:8px;background:#0b0e0f;touch-action:none}
+.readout{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:12px;
+  font-size:9.5px;letter-spacing:.26em;text-transform:uppercase;color:var(--mute)}
+.readout b{color:var(--acc2);font-weight:700}
+
+.exportrow{display:flex;gap:10px;flex-wrap:wrap;margin-top:16px}
+.btn{background:#1f2427;border:1px solid var(--line);color:var(--txt);border-radius:11px;
+  padding:12px 18px;font:inherit;font-size:11.5px;letter-spacing:.14em;text-transform:uppercase;
+  cursor:pointer;transition:.18s}
+.btn:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-1px)}
+.btn.accent{background:var(--acc);border-color:var(--acc);color:#161300;font-weight:800}
+.btn.accent:hover{color:#161300;filter:brightness(1.06)}
+
+.presets{display:flex;gap:8px;flex-wrap:wrap;margin-top:20px}
+.preset{background:transparent;border:1px dashed #394144;color:var(--mute);border-radius:30px;
+  padding:7px 14px;font:inherit;font-size:9.5px;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;transition:.15s}
+.preset:hover{color:var(--acc);border-color:var(--acc)}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:26px;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 028 · 32 × 32 drawing plate</span>
+      <h1>Mosaic <b>Press</b></h1>
+      <p class="sub">A pixel canvas with eight inks, four tools and a grid that never
+        leaves the lattice. Draw with the mouse or a finger.</p>
+    </div>
+    <div style="text-align:right">
+      <div class="zoomlbl">colour depth</div>
+      <div style="font-size:26px;font-weight:800;color:var(--acc);font-variant-numeric:tabular-nums">8 inks</div>
+    </div>
+  </header>
+
+  <div class="tools">
+    <div class="swatches" id="swatches" role="group" aria-label="colours"></div>
+    <span class="sep"></span>
+    <button class="tool on" data-tool="draw" type="button">Draw</button>
+    <button class="tool" data-tool="erase" type="button">Erase</button>
+    <button class="tool" data-tool="fill" type="button">Fill</button>
+    <button class="tool" data-tool="picker" type="button">Pick</button>
+    <span class="sep"></span>
+    <span class="zoomlbl">grid <b id="gridState" style="color:var(--acc2)">on</b></span>
+    <button class="tool" id="gridBtn" type="button">Toggle</button>
+  </div>
+
+  <div class="canvasbox"><canvas id="px" width="512" height="512" aria-label="pixel canvas"></canvas></div>
+
+  <div class="readout">
+    <span>tool <b id="rTool">draw</b></span>
+    <span>ink <b id="rInk">amber</b></span>
+    <span>cell <b id="rCell">—</b></span>
+    <span>filled <b id="rFilled">0%</b></span>
+  </div>
+
+  <div class="exportrow">
+    <button class="btn accent" id="save" type="button">Download PNG</button>
+    <button class="btn" id="mirror" type="button">Mirror</button>
+    <button class="btn" id="clear" type="button">Clear plate</button>
+    <button class="btn" id="undo" type="button">Undo</button>
+  </div>
+
+  <div class="presets" id="presets" role="group" aria-label="starter stamps"></div>
+
+  <footer class="foot"><span>drawn on a 32-cell lattice · upscaled with pixelated smoothing</span>
+    <span>028 / 100</span></footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var N=32, PX=512, CELL=PX/N;
+  var INKS=[
+    {n:"amber",  c:"#ffb703"},
+    {n:"rose",   c:"#ef476f"},
+    {n:"cyan",   c:"#4cc9f0"},
+    {n:"jade",   c:"#06d6a0"},
+    {n:"violet", c:"#9b5de5"},
+    {n:"sand",   c:"#f4e3c1"},
+    {n:"ink",    c:"#14181a"},
+    {n:"paper",  c:"#f7f7f2"}
+  ];
+  var cv=document.getElementById("px");
+  var g=cv.getContext("2d");
+  var grid=new Array(N*N).fill(-1);   /* -1 = transparent */
+  var tool="draw", ink=0, showGrid=true, drawing=false, history=[];
+
+  /* offscreen logical buffer (1px per cell), scaled up for display */
+  var buf=document.createElement("canvas");
+  buf.width=N; buf.height=N;
+  var bg=buf.getContext("2d");
+
+  /* --- swatches --- */
+  var swWrap=document.getElementById("swatches");
+  INKS.forEach(function(k,i){
+    var b=document.createElement("button");
+    b.type="button"; b.className="sw"+(i===0?" on":"");
+    b.style.background=k.c; b.title=k.n;
+    b.setAttribute("aria-label","ink "+k.n);
+    b.addEventListener("click",function(){
+      ink=i;
+      [].slice.call(swWrap.children).forEach(function(o,j){ o.classList.toggle("on",j===i); });
+      document.getElementById("rInk").textContent=k.n;
+      if(tool==="picker"||tool==="erase"){ setTool("draw"); }
+    });
+    swWrap.appendChild(b);
+  });
+
+  function setTool(t){
+    tool=t;
+    [].slice.call(document.querySelectorAll(".tool[data-tool]")).forEach(function(b){
+      b.classList.toggle("on", b.dataset.tool===t);
+    });
+    document.getElementById("rTool").textContent=t;
+  }
+  [].slice.call(document.querySelectorAll(".tool[data-tool]")).forEach(function(b){
+    b.addEventListener("click",function(){ setTool(b.dataset.tool); });
+  });
+
+  /* --- painting --- */
+  function push(){ history.push(grid.slice()); if(history.length>40) history.shift(); }
+
+  function cellAt(e){
+    var r=cv.getBoundingClientRect();
+    var x=Math.floor((e.clientX-r.left)/r.width*N);
+    var y=Math.floor((e.clientY-r.top)/r.height*N);
+    if(x<0||y<0||x>=N||y>=N) return null;
+    return {x:x,y:y};
+  }
+
+  function flood(sx,sy,from,to){
+    if(from===to) return;
+    var stack=[[sx,sy]];
+    while(stack.length){
+      var p=stack.pop(), x=p[0], y=p[1];
+      if(x<0||y<0||x>=N||y>=N) continue;
+      var i=y*N+x;
+      if(grid[i]!==from) continue;
+      grid[i]=to;
+      stack.push([x+1,y],[x-1,y],[x,y+1],[x,y-1]);
+    }
+  }
+
+  function apply(c,first){
+    var i=c.y*N+c.x;
+    if(tool==="draw"){ grid[i]=ink; }
+    else if(tool==="erase"){ grid[i]=-1; }
+    else if(tool==="fill"){ flood(c.x,c.y,grid[i],ink); }
+    else if(tool==="picker"){
+      var v=grid[i];
+      if(v>=0){
+        ink=v;
+        [].slice.call(swWrap.children).forEach(function(o,j){ o.classList.toggle("on",j===v); });
+        document.getElementById("rInk").textContent=INKS[v].n;
+        setTool("draw");
+      }
+      return;
+    }
+    if(first) paint();
+    else paint();
+  }
+
+  cv.addEventListener("pointerdown",function(e){
+    e.preventDefault();
+    cv.setPointerCapture(e.pointerId);
+    push();
+    drawing=true;
+    var c=cellAt(e);
+    if(c) apply(c,true);
+  });
+  cv.addEventListener("pointermove",function(e){
+    var c=cellAt(e);
+    document.getElementById("rCell").textContent= c? (c.x+", "+c.y) : "—";
+    if(drawing && c && (tool==="draw"||tool==="erase")) apply(c,false);
+  });
+  window.addEventListener("pointerup",function(){
+    if(drawing){ drawing=false; paint(); }
+  });
+  cv.addEventListener("pointerleave",function(){
+    document.getElementById("rCell").textContent="—";
+  });
+
+  function paint(){
+    bg.clearRect(0,0,N,N);
+    var filled=0;
+    for(var y=0;y<N;y++){
+      for(var x=0;x<N;x++){
+        var v=grid[y*N+x];
+        if(v>=0){
+          filled++;
+          bg.fillStyle=INKS[v].c;
+          bg.fillRect(x,y,1,1);
+        }
+      }
+    }
+    g.imageSmoothingEnabled=false;
+    g.clearRect(0,0,PX,PX);
+    g.drawImage(buf,0,0,PX,PX);
+
+    if(showGrid){
+      g.strokeStyle="rgba(255,255,255,.07)";
+      g.lineWidth=1;
+      for(var k=1;k<N;k++){
+        var p=k*CELL+0.5;
+        g.beginPath(); g.moveTo(p,0); g.lineTo(p,PX); g.stroke();
+        g.beginPath(); g.moveTo(0,p); g.lineTo(PX,p); g.stroke();
+      }
+      g.strokeStyle="rgba(255,255,255,.16)";
+      for(var m=1;m<N;m+=8){
+        var q=m*CELL+0.5;
+        g.beginPath(); g.moveTo(q,0); g.lineTo(q,PX); g.stroke();
+        g.beginPath(); g.moveTo(0,q); g.lineTo(PX,q); g.stroke();
+      }
+    }
+    document.getElementById("rFilled").textContent=
+      Math.round(filled/(N*N)*100)+"%";
+  }
+
+  /* --- controls --- */
+  document.getElementById("gridBtn").addEventListener("click",function(){
+    showGrid=!showGrid;
+    document.getElementById("gridState").textContent=showGrid?"on":"off";
+    paint();
+  });
+  document.getElementById("clear").addEventListener("click",function(){
+    push(); grid=new Array(N*N).fill(-1); paint();
+  });
+  document.getElementById("undo").addEventListener("click",function(){
+    if(history.length){ grid=history.pop(); paint(); }
+  });
+  document.getElementById("mirror").addEventListener("click",function(){
+    push();
+    var out=grid.slice();
+    for(var y=0;y<N;y++) for(var x=0;x<N;x++) out[y*N+x]=grid[y*N+(N-1-x)];
+    grid=out; paint();
+  });
+  document.getElementById("save").addEventListener("click",function(){
+    /* render without grid lines into a fresh 32×32 canvas, then upscale 8× */
+    var out=document.createElement("canvas");
+    out.width=N; out.height=N;
+    var oc=out.getContext("2d");
+    for(var i=0;i<N*N;i++){
+      if(grid[i]>=0){ oc.fillStyle=INKS[grid[i]].c;
+        oc.fillRect(i%N, Math.floor(i/N), 1, 1); }
+    }
+    var big=document.createElement("canvas");
+    big.width=256; big.height=256;
+    var bc=big.getContext("2d");
+    bc.imageSmoothingEnabled=false;
+    bc.drawImage(out,0,0,256,256);
+    var a=document.createElement("a");
+    a.download="mosaic-press.png";
+    try{ a.href=big.toDataURL("image/png"); a.click(); }
+    catch(err){ alert("Export blocked by the browser."); }
+  });
+
+  /* --- starter stamps --- */
+  var STAMPS={
+    "Smiley":function(x,y){
+      var c=[[2,0],[3,0],[6,0],[7,0],[1,1],[4,1],[5,1],[8,1],
+             [0,2],[9,2],[0,3],[9,3],[0,4],[9,4],[1,5],[8,5],
+             [2,6],[7,6],[3,7],[6,7],[4,8],[5,8]];
+      c.forEach(function(p){ set(x+p[0],y+p[1],0); });
+      set(x+3,y+2,0); set(x+6,y+2,0);
+      for(var i=2;i<=7;i++) set(x+i,y+6,0);
+      for(var j=3;j<=6;j++) set(x+j,y+7,0);
+    },
+    "Heart":function(x,y){
+      var rows=["01100110","11111111","11111111","11111111","01111110","00111100","00011000","00000000"];
+      rows.forEach(function(r,dy){
+        for(var dx=0;dx<8;dx++) if(r[dx]==="1") set(x+dx,y+dy,1);
+      });
+    },
+    "Ship":function(x,y){
+      var rows=["00010000","00111000","01111100","11111110","11111111","01111110","10111101"];
+      rows.forEach(function(r,dy){
+        for(var dx=0;dx<8;dx++) if(r[dx]==="1") set(x+dx,y+dy,6);
+      });
+      for(var i=0;i<8;i++) set(x+i,y+8,2);
+      for(var j=1;j<7;j++) set(x+j,y+9,2);
+      set(x+4,y,0); set(x+4,y+1,0); set(x+5,y,0);
+    },
+    "Sun":function(x,y){
+      for(var a=0;a<16;a++){
+        var r=4.2, th=a/16*Math.PI*2;
+        set(x+Math.round(4+Math.cos(th)*r), y+Math.round(4+Math.sin(th)*r),0);
+      }
+      for(var dy=-3;dy<=3;dy++) for(var dx=-3;dx<=3;dx++){
+        if(dx*dx+dy*dy<=6) set(x+4+dx,y+4+dy,0);
+      }
+    }
+  };
+  function set(x,y,v){
+    if(x<0||y<0||x>=N||y>=N) return;
+    grid[y*N+x]=v;
+  }
+  var pw=document.getElementById("presets");
+  Object.keys(STAMPS).forEach(function(name){
+    var b=document.createElement("button");
+    b.type="button"; b.className="preset"; b.textContent="Stamp · "+name;
+    b.addEventListener("click",function(){
+      push();
+      STAMPS[name](Math.floor(Math.random()*(N-12))+2, Math.floor(Math.random()*(N-12))+2);
+      paint();
+    });
+    pw.appendChild(b);
+  });
+
+  /* opening artwork so the plate is never blank */
+  (function seed(){
+    var cx=16, cy=15;
+    for(var i=0;i<520;i++){
+      var a=Math.random()*Math.PI*2;
+      var rr=Math.pow(Math.random(),0.55)*13;
+      var x=Math.round(cx+Math.cos(a)*rr);
+      var y=Math.round(cy+Math.sin(a)*rr*0.92);
+      var band=Math.floor((rr/13)*4);
+      set(x,y,[0,1,2,5][band]);
+    }
+    for(var k=0;k<32;k++) set(k,31,6);
+  })();
+
+  paint();
+})();
+</script>
+</body>
+</html>

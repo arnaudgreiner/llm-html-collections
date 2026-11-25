@@ -1,0 +1,17 @@
+TITLE: Grand Finale — One Hundred Shells
+
+FULL PROMPT:
+Create a self-contained interactive page titled "Grand Finale: One Hundred Shells" — the closing page of a 100-page collection. Night sky on a 760×540 canvas: static twinkling star field, radial-gradient moon, procedurally generated skyline with individually flickering lit windows. Rockets launch from the bottom to any target (click supplies exact coordinates; auto mode fires every 0.8–1.7s), integrating gravity 300 px/s² while shedding three trail sparks per frame; when vertical velocity stalls they detonate into one of four shell types — peony (sqrt-distributed speed), ring (even angular distribution, fixed radius), willow (slow, heavy, 2.6s life), crackle — plus a white flash bloom. Particles use additive blending ("lighter"), per-particle drag pow(0.55,dt), gravity, size decay and alpha = life/maxLife. The GRAND FINALE button fires a 6-shell volley then spawns ~400 seeker particles born at center that spring to pixel targets sampled from an offscreen "100" text mask (getImageData sampling every 4px), lock after 0.9s, and fade. HUD counts shells, bursts and finale state; CLEAR SKY empties all arrays. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A midnight harbor finale where every click sends up a shell and the very last volley assembles four hundred sparks into the number 100 itself — a curtain call written in burning magnesium.
+
+MAJOR VISUAL TECHNIQUES:
+- Additive-blended particle rendering with alpha-from-life falloff
+- Four physically distinct burst distributions (peony/ring/willow/crackle)
+- Offscreen text-mask sampling to convert glyphs into particle targets
+- Spring-seek particles that converge on sampled positions then release
+- Trail spark emission along rocket ascent + procedural skyline with flicker
+
+INTENDED INTERACTION MODEL:
+Click the sky to launch; let auto-mode rain shells; press GRAND FINALE for the volley and the "100" spark assembly; clear the sky whenever it gets crowded.

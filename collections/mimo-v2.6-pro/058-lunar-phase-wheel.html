@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lunar Phase Wheel</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:radial-gradient(circle at 50% 30%,#152042,#0a0f22 70%);color:#d9dce8;
+  font-family:Georgia,"Times New Roman",serif;display:flex;flex-direction:column;align-items:center;gap:16px;padding:30px 16px}
+h1{font-size:26px;letter-spacing:.1em;color:#e9d9a8;font-weight:400}
+#sub{font:10px ui-monospace,monospace;letter-spacing:.36em;color:#5f6a94;margin-top:-9px;text-transform:uppercase}
+#stage{display:flex;gap:30px;flex-wrap:wrap;justify-content:center;align-items:flex-start}
+#big{width:330px;height:330px;filter:drop-shadow(0 0 34px rgba(220,225,255,.16))}
+#right{width:320px;display:flex;flex-direction:column;gap:14px}
+#read{background:rgba(255,255,255,.04);border:1px solid #2a3564;border-radius:12px;padding:16px 18px}
+#phaseName{font-size:25px;color:#e9d9a8;letter-spacing:.06em}
+#facts{font:11px ui-monospace,monospace;line-height:2;color:#8f98c4;margin-top:8px}
+#facts b{color:#e9d9a8;font-weight:600}
+.row{display:flex;align-items:center;gap:10px;font:11px ui-monospace,monospace;color:#7d87b5}
+.row label{width:74px;letter-spacing:.16em}
+input[type=range]{flex:1;accent-color:#e9d9a8}
+.row span{width:74px;text-align:right;color:#e9d9a8}
+#strip{display:flex;gap:4px;flex-wrap:wrap;justify-content:center;background:rgba(255,255,255,.04);border:1px solid #2a3564;border-radius:12px;padding:12px}
+.day{width:28px;height:28px;cursor:pointer;border-radius:50%;opacity:.75;transition:transform .15s,opacity .15s}
+.day:hover{transform:scale(1.18);opacity:1}
+.day.sel{outline:2px solid #e9d9a8;outline-offset:2px;opacity:1}
+#names{display:flex;justify-content:space-between;font:9px ui-monospace,monospace;color:#5f6a94;letter-spacing:.1em;width:100%}
+button{background:#1a2348;border:1px solid #36427c;color:#e9d9a8;font:11px ui-monospace,monospace;letter-spacing:.14em;padding:8px 16px;border-radius:7px;cursor:pointer}
+button:hover{background:#26306a}
+</style>
+</head>
+<body>
+<h1>Lunar Phase Wheel</h1>
+<div id="sub">synodic month · 29.53 days · northern hemisphere orientation</div>
+<div id="stage">
+  <svg id="big" viewBox="0 0 330 330">
+    <defs>
+      <radialGradient id="glow" cx="50%" cy="50%" r="50%">
+        <stop offset="70%" stop-color="rgba(230,235,255,0)"/><stop offset="100%" stop-color="rgba(200,210,255,.22)"/>
+      </radialGradient>
+      <clipPath id="litClip"><path id="clipPath" d=""/></clipPath>
+    </defs>
+    <circle cx="165" cy="165" r="150" fill="url(#glow)"/>
+    <circle cx="165" cy="165" r="112" fill="#0d1226" stroke="#2a3564" stroke-width="1.5"/>
+    <path id="lit" d="" fill="#f2ecd6"/>
+    <g clip-path="url(#litClip)" opacity=".5">
+      <circle cx="135" cy="130" r="16" fill="#dcd4bb"/>
+      <circle cx="196" cy="176" r="24" fill="#dcd4bb"/>
+      <circle cx="152" cy="215" r="11" fill="#dcd4bb"/>
+      <circle cx="210" cy="118" r="9" fill="#dcd4bb"/>
+      <circle cx="118" cy="182" r="7" fill="#dcd4bb"/>
+      <circle cx="175" cy="248" r="8" fill="#dcd4bb"/>
+    </g>
+    <g id="ticks" stroke="#36427c"></g>
+  </svg>
+  <div id="right">
+    <div id="read">
+      <div id="phaseName">Waxing Gibbous</div>
+      <div id="facts">illumination <b id="fIllum">—</b><br>moon age <b id="fAge">—</b><br>distance to full moon <b id="fFull">—</b><br>elongation <b id="fElong">—</b></div>
+    </div>
+    <div class="row"><label>DAY</label><input id="day" type="range" min="0" max="295" value="180"><span id="dayV">18.0 d</span></div>
+    <div class="row"><label>GOLDEN</label><input id="gold" type="range" min="0" max="100" value="70"><span id="goldV">70%</span></div>
+    <button id="play">pause month</button>
+    <button id="newM">jump to new moon</button>
+  </div>
+</div>
+<div id="strip"></div>
+<script>
+(function(){
+"use strict";
+var SYN=29.53,NAMES=["New Moon","Waxing Crescent","First Quarter","Waxing Gibbous","Full Moon","Waning Gibbous","Last Quarter","Waning Crescent"];
+var dayS=document.getElementById("day"),goldS=document.getElementById("gold");
+var playing=true,SYNday=18;
+function phasePath(cx,cy,R,p){
+  var a=2*Math.PI*Math.min(p,1-p<0?p:0); // placeholder replaced below
+  return "";
+}
+function buildPath(cx,cy,R,age){
+  var p=(age%SYN)/SYN;
+  var mirrored=p>0.5;
+  var p2=mirrored?1-p:p;
+  var c=Math.cos(2*Math.PI*p2);
+  var rx=Math.abs(c)*R;
+  var sweep=(p===0||Math.abs(c)<0.001)?1:(c>0?0:1);
+  var d="M "+cx+" "+(cy-R)+" A "+R+" "+R+" 0 0 1 "+cx+" "+(cy+R)+
+        " A "+rx.toFixed(2)+" "+R+" 0 0 "+sweep+" "+cx+" "+(cy-R)+" Z";
+  if(mirrored){
+    d="M "+(2*cx)+" 0 " ; // not used; transform applied instead
+    d="M "+cx+" "+(cy-R)+" A "+R+" "+R+" 0 0 0 "+cx+" "+(cy+R)+
+      " A "+rx.toFixed(2)+" "+R+" 0 0 "+(sweep===1?0:1)+" "+cx+" "+(cy-R)+" Z";
+  }
+  return d;
+}
+function illum(age){return (1-Math.cos(2*Math.PI*(age%SYN)/SYN))/2;}
+function nameFor(age){
+  var p=(age%SYN)/SYN;
+  var idx=Math.floor(p*8+0.5)%8;
+  return NAMES[idx];
+}
+function smallMoon(age,size){
+  var s='<svg width="'+size+'" height="'+size+'" viewBox="0 0 40 40"><circle cx="20" cy="20" r="18" fill="#0d1226" stroke="#2a3564"/>'+
+    '<path d="'+buildPath(20,20,18,age)+'" fill="#f2ecd6"/></svg>';
+  return s;
+}
+function render(){
+  var age=SYNday;
+  var p=(age%SYN)/SYN;
+  var d=buildPath(165,165,112,age);
+  document.getElementById("lit").setAttribute("d",d);
+  document.getElementById("clipPath").setAttribute("d",d);
+  document.getElementById("lit").setAttribute("opacity",(0.55+0.45*(+goldS.value)/100).toFixed(2));
+  document.getElementById("lit").setAttribute("fill",goldS.value>=50?"#f2ecd6":"#e8d9a5");
+  var il=illum(age);
+  document.getElementById("phaseName").textContent=nameFor(age);
+  document.getElementById("fIllum").textContent=(il*100).toFixed(1)+"%";
+  document.getElementById("fAge").textContent=age.toFixed(1)+" d";
+  var toFull=(SYN-((age%SYN)-SYN*0.5)+SYN)%SYN;
+  document.getElementById("fFull").textContent=(p<=0.5?toFull:toFull).toFixed(1)+" d";
+  document.getElementById("fElong").textContent=(360*p).toFixed(0)+"°";
+  document.getElementById("dayV").textContent=age.toFixed(1)+" d";
+  document.getElementById("goldV").textContent=goldS.value+"%";
+  var sel=Math.floor(p*30)%30;
+  var days=document.querySelectorAll(".day");
+  for(var i=0;i<days.length;i++)days[i].className="day"+(i===sel?" sel":"");
+}
+// tick marks around the big disc
+(function(){
+  var g=document.getElementById("ticks"),out="";
+  for(var i=0;i<30;i++){
+    var a=(i/30)*2*Math.PI;
+    var x1=165+Math.cos(a)*124,y1=165+Math.sin(a)*124;
+    var x2=165+Math.cos(a)*(i%5===0?134:129),y2=165+Math.sin(a)*(i%5===0?134:129);
+    out+='<line x1="'+x1.toFixed(1)+'" y1="'+y1.toFixed(1)+'" x2="'+x2.toFixed(1)+'" y2="'+y2.toFixed(1)+'" stroke-width="'+(i%5===0?1.6:0.9)+'"/>';
+  }
+  g.innerHTML=out;
+})();
+// day strip
+(function(){
+  var strip=document.getElementById("strip"),html="";
+  for(var i=0;i<30;i++)html+='<div class="day" data-d="'+i+'">'+smallMoon(i,28)+"</div>";
+  strip.innerHTML=html;
+  strip.addEventListener("click",function(e){
+    var el=e.target.closest?e.target.closest(".day"):null;
+    if(!el)return;
+    SYNday=+el.dataset.d;dayS.value=Math.round(SYNday*10);render();
+  });
+})();
+dayS.addEventListener("input",function(){SYNday=(+this.value)/10;render();});
+goldS.addEventListener("input",render);
+document.getElementById("play").addEventListener("click",function(){
+  playing=!playing;this.textContent=playing?"pause month":"play month";
+});
+document.getElementById("newM").addEventListener("click",function(){SYNday=0;dayS.value=0;render();});
+var last=0;
+function loop(now){
+  var dt=last?(now-last)/1000:0;last=now;
+  if(playing){SYNday=(SYNday+dt*0.35)%SYN;dayS.value=Math.round(SYNday*10);render();}
+  requestAnimationFrame(loop);
+}
+render();requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

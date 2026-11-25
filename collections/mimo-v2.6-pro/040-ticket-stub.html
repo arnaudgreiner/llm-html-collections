@@ -1,0 +1,288 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>040 · Ticket Stub</title>
+<style>
+:root{--bg:#efe7d6;--paper:#fdf8ec;--ink:#221c16;--mute:#8a7f6d;--red:#c22e28;
+  --blue:#1f4e79;--line:#d9cdb4}
+*{box-sizing:border-box}
+body{margin:0;background:
+  repeating-linear-gradient(0deg,rgba(0,0,0,.03) 0 2px,transparent 2px 5px),
+  radial-gradient(800px 500px at 30% 0%,#f6efdf,transparent),
+  var(--bg);
+  color:var(--ink);min-height:100vh;font-family:"Courier New",monospace;
+  padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:2px solid var(--ink)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:26px;font-weight:400}
+h1 b{font-weight:700;color:var(--red)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;padding:20px 28px 0}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+
+.rolls{display:flex;gap:12px;overflow-x:auto;padding-bottom:10px;scrollbar-width:thin}
+.stub{position:relative;flex:0 0 330px;background:var(--paper);border:1px solid var(--line);
+  border-radius:4px;box-shadow:4px 5px 0 rgba(34,28,22,.14);padding:16px 18px 14px;
+  transform:rotate(var(--r,-0.6deg));transition:.2s}
+.stub:hover{transform:rotate(0) translateY(-3px);box-shadow:6px 8px 0 rgba(34,28,22,.18)}
+.stub::after{content:"";position:absolute;top:-8px;bottom:-8px;left:66%;width:2px;
+  background:repeating-linear-gradient(180deg,var(--ink) 0 5px,transparent 5px 10px);opacity:.55}
+.admit{display:flex;justify-content:space-between;align-items:baseline;gap:8px;
+  border-bottom:2px solid var(--ink);padding-bottom:7px}
+.admit .big{font-size:17px;font-weight:700;letter-spacing:.12em}
+.admit .no{font-size:11px;color:var(--red);letter-spacing:.16em}
+.body{display:flex;gap:12px;padding-top:10px}
+.main{flex:1;min-width:0}
+.field{margin-bottom:7px}
+.field span{display:block;font-size:8px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.field b{font-size:13.5px;letter-spacing:.05em}
+.field b em{font-style:normal;color:var(--blue)}
+.perf{width:110px;border-left:1px dashed var(--ink);padding-left:11px;display:flex;
+  flex-direction:column;justify-content:space-between}
+.perf .seat{font-size:26px;font-weight:700;color:var(--red);letter-spacing:.06em}
+.perf .price{font-size:15px}
+.bar{height:30px;margin-top:9px;background:repeating-linear-gradient(90deg,
+  var(--ink) 0 2px,transparent 2px 4px,var(--ink) 4px 5px,transparent 5px 9px);opacity:.85}
+.stamp{position:absolute;right:14px;top:44px;transform:rotate(-14deg);
+  border:2.5px solid var(--red);color:var(--red);font-size:11px;font-weight:700;
+  letter-spacing:.2em;padding:3px 8px;border-radius:3px;opacity:.75}
+.stub.void{filter:grayscale(1);opacity:.6}
+.stub.void .stamp{opacity:1}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:15px;
+  box-shadow:3px 4px 0 rgba(34,28,22,.12)}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.frm{display:flex;flex-direction:column;gap:9px}
+.frm label{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);
+  display:flex;flex-direction:column;gap:4px}
+.frm input,.frm select{font:inherit;font-size:13px;padding:8px 9px;border:1px solid var(--line);
+  background:#fffdf6;color:var(--ink);border-radius:3px}
+.frm input:focus,.frm select:focus{outline:2px solid var(--blue);outline-offset:1px}
+.row2{display:grid;grid-template-columns:1fr 1fr;gap:9px}
+.btn{font:inherit;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:11px 8px;border:2px solid var(--ink);background:var(--red);color:#fff8ea;
+  border-radius:3px;cursor:pointer;box-shadow:3px 3px 0 var(--ink);transition:.12s}
+.btn:hover{transform:translate(-1px,-1px);box-shadow:4px 4px 0 var(--ink)}
+.btn:active{transform:translate(2px,2px);box-shadow:1px 1px 0 var(--ink)}
+.btn.ghost{background:var(--paper);color:var(--ink)}
+.counter{font-size:11.5px;line-height:1.85}
+.counter b{color:var(--red)}
+.stampbox{display:flex;align-items:center;justify-content:space-between;gap:9px;font-size:10px;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--mute)}
+.stampbox select{font:inherit;font-size:12px;padding:5px 6px;border:1px solid var(--line);
+  background:#fffdf6;border-radius:3px}
+.torn{position:relative}
+.torn.tear{animation:tear .4s steps(6) 1}
+@keyframes tear{0%{clip-path:inset(0 0 0 0)}50%{clip-path:inset(0 0 4px 0)}
+  100%{clip-path:inset(0 0 0 0)}}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:19px 28px 0;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">box office · no refunds</span>
+  <h1>Ticket <b>Stub</b></h1>
+  <span class="meta">issued <b id="issued">0</b> · void <b id="voided">0</b></span>
+</header>
+
+<div class="stage">
+  <main>
+    <div class="rolls" id="rolls"></div>
+    <div class="card" style="margin-top:6px">
+      <h2>House rules</h2>
+      <ul class="counter" style="margin:0;padding-left:18px">
+        <li>Tear a stub by its perforation to void it — the log records the clerk.</li>
+        <li>Row A is held for the house; seats cannot be reissued after 21:00.</li>
+        <li>Each new issue advances the serial number and the seat ballot.</li>
+      </ul>
+    </div>
+  </main>
+
+  <aside class="rig">
+    <section class="card">
+      <h2>Issue a ticket</h2>
+      <form class="frm" id="issueForm">
+        <label>patron name
+          <input id="fName" type="text" value="A. Traveller" maxlength="22" required>
+        </label>
+        <div class="row2">
+          <label>show
+            <select id="fShow">
+              <option>THE LONG INTERVAL</option>
+              <option>SEVEN VOICES</option>
+              <option>NIGHT WATCH</option>
+              <option>PAPER MOON</option>
+            </select>
+          </label>
+          <label>seat
+            <select id="fSeat">
+              <option>B-14</option><option>C-07</option><option>D-22</option>
+              <option>E-03</option><option>F-11</option>
+            </select>
+          </label>
+        </div>
+        <div class="row2">
+          <label>price
+            <input id="fPrice" type="number" min="0" step="0.5" value="18.5">
+          </label>
+          <label>door
+            <select id="fDoor"><option>STALLS</option><option>CIRCLE</option><option>BAR</option></select>
+          </label>
+        </div>
+        <button class="btn" type="submit">issue stub</button>
+        <button class="btn ghost" id="voidLast" type="button">tear last stub</button>
+      </form>
+    </section>
+
+    <section class="card">
+      <h2>Perforation stamp</h2>
+      <div class="stampbox">
+        <span>mark</span>
+        <select id="stampSel">
+          <option>ADMITTED</option><option>SOLD OUT</option>
+          <option>PRESS</option><option>VOID</option><option>COMP.</option>
+        </select>
+      </div>
+      <p style="font-size:11px;line-height:1.7;color:var(--mute);margin:10px 0 0">
+        Select a mark, then press it onto the newest stub from the counter.</p>
+      <button class="btn ghost" id="stampBtn" type="button" style="margin-top:10px;width:100%">press stamp</button>
+    </section>
+
+    <section class="card">
+      <h2>Roll counter</h2>
+      <div class="counter" id="counter">
+        <div>stubs issued: <b id="cIssued">0</b></div>
+        <div>stubs torn: <b id="cVoid">0</b></div>
+        <div>take: <b id="cTake">£0.00</b></div>
+        <div>current serial: <b id="cSerial">—</b></div>
+      </div>
+    </section>
+  </aside>
+</div>
+
+<footer class="foot"><span>letterpress layout · perforated column · stamped serials</span><span>040 / 100</span></footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var rolls=G("rolls");
+  var serial=48210;
+  var issued=0, voided=0, take=0;
+  var stamps={};   /* index -> mark */
+
+  function pad(n,w){ n=String(n); while(n.length<w) n="0"+n; return n; }
+
+  function makeStub(data,index){
+    var el=document.createElement("article");
+    el.className="stub torn"+(stamps[index]==="VOID"?" void":"");
+    el.style.setProperty("--r",((index%3)-1)*0.7+"deg");
+    el.innerHTML=
+      '<div class="admit"><span class="big">ADMIT ONE</span>'+
+        '<span class="no">№ '+data.serial+'</span></div>'+
+      '<div class="body">'+
+        '<div class="main">'+
+          '<div class="field"><span>presentation of</span><b>'+data.name+'</b></div>'+
+          '<div class="field"><span>performance</span><b><em>'+data.show+'</em></b></div>'+
+          '<div class="field"><span>door · date</span><b>'+data.door+' · '+data.date+'</b></div>'+
+          '<div class="bar" aria-hidden="true"></div>'+
+        '</div>'+
+        '<div class="perf">'+
+          '<div><span style="font-size:8px;letter-spacing:.3em;color:#8a7f6d">SEAT</span>'+
+            '<div class="seat">'+data.seat+'</div></div>'+
+          '<div class="price">£'+data.price.toFixed(2)+'</div>'+
+        '</div>'+
+      '</div>'+
+      '<div class="stamp">'+(stamps[index]||"ADMITTED")+'</div>';
+    return el;
+  }
+
+  function issue(e){
+    if(e) e.preventDefault();
+    var d=new Date();
+    var data={
+      serial:serial,
+      name:(G("fName").value||"A. Traveller").toUpperCase(),
+      show:G("fShow").value,
+      seat:G("fSeat").value,
+      price:parseFloat(G("fPrice").value||"0"),
+      door:G("fDoor").value,
+      date:pad(d.getDate(),2)+"."+pad(d.getMonth()+1,2)+"."+d.getFullYear()
+    };
+    stamps[issued]="ADMITTED";
+    var el=makeStub(data,issued);
+    rolls.appendChild(el);
+    serial+=Math.floor(Math.random()*3)+1;
+    issued++;
+    take+=data.price;
+    update();
+    rolls.scrollTo({left:rolls.scrollWidth,behavior:reduce?"auto":"smooth"});
+    if(!reduce){ el.classList.add("tear"); setTimeout(function(){ el.classList.remove("tear"); },420); }
+  }
+
+  function tearLast(){
+    var kids=rolls.children;
+    if(!kids.length) return;
+    var last=kids[kids.length-1];
+    var idx=kids.length-1;
+    if(last.classList.contains("void")) return;
+    stamps[idx]="VOID";
+    last.classList.add("void");
+    last.querySelector(".stamp").textContent="VOID";
+    voided++;
+    take=Math.max(0,take-parseFloat(G("fPrice").value||"0"));
+    update();
+  }
+
+  function pressStamp(){
+    var kids=rolls.children;
+    if(!kids.length) return;
+    var idx=kids.length-1;
+    var mark=G("stampSel").value;
+    stamps[idx]=mark;
+    var last=kids[idx];
+    last.querySelector(".stamp").textContent=mark;
+    last.classList.toggle("void",mark==="VOID");
+    if(mark==="VOID") voided++;
+    update();
+  }
+
+  function update(){
+    G("issued").textContent=issued;
+    G("voided").textContent=voided;
+    G("cIssued").textContent=issued;
+    G("cVoid").textContent=voided;
+    G("cTake").textContent="£"+take.toFixed(2);
+    G("cSerial").textContent=issued?("№ "+(serial-1)):"—";
+  }
+
+  G("issueForm").addEventListener("submit",issue);
+  G("voidLast").addEventListener("click",tearLast);
+  G("stampBtn").addEventListener("click",pressStamp);
+
+  /* seed the roll with three house tickets */
+  [["H. OWENS","NIGHT WATCH","C-07",16,"STALLS"],
+   ["R. MBEKI","SEVEN VOICES","D-22",21,"CIRCLE"],
+   ["J. LINDQVIST","PAPER MOON","F-11",18.5,"STALLS"]].forEach(function(s){
+    var d=new Date();
+    stamps[issued]="ADMITTED";
+    rolls.appendChild(makeStub({
+      serial:serial, name:s[0], show:s[1], seat:s[2], price:s[3], door:s[4],
+      date:pad(d.getDate(),2)+"."+pad(d.getMonth()+1,2)+"."+d.getFullYear()
+    },issued));
+    serial+=2; issued++; take+=s[3];
+  });
+  update();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+TITLE: Signal Bloom — Reactive Petal Field with Optional Tone
+
+FULL PROMPT:
+Compose exactly one self-contained HTML page, "Signal Bloom", with no external assets or fonts. Fix a full-viewport canvas over #07070c, draw a 120px hairline lattice on top of everything each frame, and leave trails by painting rgba(7,7,12,.16) instead of clearing. Nodes are flower emitters: each draws `sym` quadratic-curve petals rotated around its centre, stroked in one of three family colours — pink #ff7ad9, violet #a78bfa, mint #7df5c8 — with a pulsing length driven by sin(phase). Every third node draws a faint violet carrier line to its neighbour. Clicking plants a node and pushes an expanding ripple; ripples fade by life decay. Layered HTML overlay: kicker + wide-tracked uppercase title whose letters are individual spans (they hop on burst), a chip with nodes/notes/bpm counts, a glass Modulation panel with four sliders (petal length, symmetry, drift, density) each showing a live value, three pills (Reseed, Sound off, Trails on), a legend with coloured dots, keycap-style hints (1/2/3 family, Space burst, C clear) with hard offset shadows, and a two-part footer.
+
+INTENDED DESIGN DESCRIPTION:
+A synthesizer's visualiser: everything is emitted light on near-black, with a faint grid underneath so the blooms read as blooming over a circuit.
+
+MAJOR VISUAL TECHNIQUES:
+- Petal geometry as two quadratic curves per petal, swept with a sin-modulated half-width
+- Trail persistence via alpha-flood rather than clearRect
+- Node drift with wrap-around at the viewport edges
+- Ripple system with radius growth and linear life decay, reused for clicks and bursts
+- Per-letter span split of the title for a staggered hop animation
+- WebAudio oscillator blips guarded by try/catch and gated behind a user-initiated sound toggle
+
+INTENDED INTERACTION MODEL:
+Click the field to plant a bloom in the current family (keys 1/2/3 preselect it); each plant ripples, sounds and increments the note counter. Space fires a centre burst that ripples every node and hops the title letters; C clears and reseeds. Sliders reshape petals live, and the density slider reseeds the field. Trails toggle repaints solid. Under reduced motion the draw runs once per resize instead of per frame; sound is off until explicitly enabled.

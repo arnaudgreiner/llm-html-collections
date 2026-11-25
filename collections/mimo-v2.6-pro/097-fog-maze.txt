@@ -1,0 +1,17 @@
+TITLE: Veil — Fog-of-War Maze
+
+FULL PROMPT:
+Create a self-contained interactive page titled "Veil: Fog-of-War Maze". Generate a perfect maze (44×32 by default, DFS backtracker over N/E/S/W wall bitmasks) with seeded RNG, then hide it behind fog-of-war: only cells whose centers fall within a 150px lantern radius become explored; render order is floor tint → explored walls (alpha .55) → radial fog gradient (transparent at the lantern to 0.97 dark at 2.3× radius) → in-vision walls redrawn in bright cyan with a soft second stroke on top. Player moves cell-by-cell (135ms cadence while a key is held) with exponential render lerp for a sliding feel; arrows/WASD plus an on-screen d-pad. Recompute a BFS path to the goal after every move; draw up to N cyan pulse motes along it (HINT +/− adjusts 0–40). Amber trail dots fade over 6s (toggle/clear). Goal beacon pulses gold through the veil; reaching it freezes the timer, fires a radial particle burst, and records the best time to localStorage (guarded). HUD: time, steps, best, hint depth; sizes S/M/L, N = new maze. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A pitch-black labyrinth where the map you have is the map you have earned — only the corridor your lantern touches exists; everything else is rumor, a hint of gold where the exit beats like a slow heart.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered fog: dim explored base redrawn beneath a radial darkness gradient, bright walls painted above it
+- BFS hint motes pulsing in phase-offset cyan
+- Exponential smoothing between discrete grid steps
+- Fading amber breadcrumb trail
+- Goal beacon glowing through unexplored fog + particle burst on exit
+
+INTENDED INTERACTION MODEL:
+Hold arrow keys/WASD (or the d-pad) to run corridors; grow or shrink the hint stream; toggle and clear the trail; change maze size or roll a new maze; reach the gold beacon to stop the clock.

@@ -1,0 +1,19 @@
+TITLE: Neon Sign Repair
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Neon Sign Repair". Render a dim brick wall built from layered CSS repeating gradients, hung with a metal-framed sign board reading "STARDUST" over "MOTEL". Each letter is an individual neon tube span: healthy tubes glow hot pink (the second line switches to cyan) through stacked text-shadows — tight core, mid halo, wide bloom, outer haze — while dead tubes fall to a flat charcoal with no glow. Tubes fail on their own every few seconds with a harsh step-timed flicker, and a "power surge" button kills 2–4 more at once. Clicking a dark or flickering tube re-strikes it with a short multi-pulse repair animation; clicking a lit tube cracks it. A control panel below carries a voltage slider (60–140V) that rescales every glow radius and the tube's opacity, a live "tubes out n/14" counter, a surge button and a re-lamp reset. A caption line under the panel narrates the current state. All CSS and JS inline, no external resources, no images.
+
+INTENDED DESIGN DESCRIPTION:
+The page feels like standing in an alley at 2 a.m. in front of a half-dead motel sign someone is patiently bringing back to life. The matte brick and dark metal frame swallow light, so the stacked pink and cyan bloom of the lit letters spills convincingly onto everything, and every tube that dies visibly drains warmth from the whole composition. The failing flicker, the multi-pulse strike of a repaired tube, and the voltage slider's live dimming make the sign behave like a real gas-discharge object rather than a picture of one.
+
+MAJOR VISUAL TECHNIQUES:
+- Stacked text-shadow neon bloom in four layers (core, halo, wide haze, outer spill)
+- CSS repeating-gradient brick wall with mortar courses and side shading
+- Step-timed keyframe flicker for failing tubes and a multi-pulse repair animation
+- Per-letter span construction with alternating pink/cyan tube runs
+- Voltage slider scaling every shadow radius and element opacity live
+- Dark inset sign board with serial plate and heavy drop shadow
+- Randomized self-failure timer plus scripted surge outages
+
+INTENDED INTERACTION MODEL:
+Click any letter to toggle its tube: lit tubes crack and go dark, dark or flickering tubes get re-struck with a visible strike animation. Drag the voltage slider to dim or overdrive the whole sign, which changes glow radius and opacity instantly. Press "power surge" to knock out 2–4 random tubes at once, and "re-lamp" to restore the sign to full brightness. The counter tracks how many of the 14 tubes are out, and the caption line reports what just happened; idle tubes also fail on their own every few seconds so the repair loop keeps moving.

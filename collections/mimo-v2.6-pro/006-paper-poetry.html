@@ -1,0 +1,210 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>006 · Paper &amp; Poetry</title>
+<style>
+:root{--paper:#f7f3ea;--ink:#1b1917;--rust:#8a3324;--pencil:#6f6a61;--rule:#d8d1c2}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:Georgia,"Times New Roman",serif;
+  font-size:18px;line-height:1.75;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:1;opacity:.55;
+  background:
+    repeating-linear-gradient(90deg,rgba(120,105,75,.05) 0 1px,transparent 1px 3px),
+    radial-gradient(120% 80% at 80% -10%,rgba(255,255,255,.7),transparent 60%);}
+#progress{position:fixed;top:0;left:0;height:3px;width:0;z-index:20;
+  background:linear-gradient(90deg,var(--rust),#c99a4b)}
+.sheet{position:relative;z-index:2;max-width:1120px;margin:0 auto;padding:70px 24px 90px;
+  display:grid;grid-template-columns:120px minmax(0,66ch) 1fr;gap:36px}
+/* left rail */
+.rail{font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--pencil);position:sticky;top:40px;align-self:start;text-align:right}
+.rail .n{display:block;color:var(--rust);font-size:34px;letter-spacing:0;font-family:Georgia,serif;
+  font-style:italic;margin-bottom:12px}
+.rail .dash{display:block;width:40px;height:1px;background:var(--rule);margin:16px 0 16px auto}
+/* header */
+header h1{font-size:clamp(44px,7.5vw,86px);line-height:.98;margin:0 0 6px;letter-spacing:-.03em;
+  font-weight:400}
+header h1 em{font-style:italic;color:var(--rust)}
+header .byline{font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--pencil);margin-bottom:34px}
+header .byline b{color:var(--ink);font-weight:600}
+/* prose */
+.stand{font-size:21px;line-height:1.7;color:#33302b;border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);padding:22px 0;margin:0 0 44px}
+.stand::first-letter{float:left;font-size:78px;line-height:.78;padding:6px 12px 0 0;color:var(--rust);
+  font-style:italic}
+.stanza{margin:0 0 46px;padding-left:26px;border-left:1px solid var(--rule)}
+.stanza h2{font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--pencil);font-weight:600;margin:0 0 20px}
+.verse{white-space:pre-line;margin:0;font-size:20px;line-height:1.95}
+.line{display:block;opacity:0;filter:blur(6px);transform:translateY(14px);
+  transition:opacity .9s ease,transform .9s cubic-bezier(.2,.9,.2,1),filter .9s ease;
+  transition-delay:calc(var(--d,0)*110ms)}
+.stanza.in .line{opacity:1;filter:blur(0);transform:none}
+.line.drop{color:var(--rust);font-style:italic}
+/* right rail sidenotes */
+.notes{font-family:"Segoe UI",system-ui,sans-serif;font-size:12.5px;line-height:1.7;color:var(--pencil);
+  position:sticky;top:40px;align-self:start}
+.note{border-top:1px solid var(--rule);padding:14px 0 18px;transition:.4s;cursor:default}
+.note b{display:block;color:var(--rust);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;
+  margin-bottom:6px}
+.note:hover,.note.hot{color:var(--ink);border-top-color:var(--rust);transform:translateX(-6px)}
+.end{border-top:2px solid var(--ink);margin-top:18px;padding-top:16px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--pencil);display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap}
+.fig{float:right;width:170px;margin:6px 0 14px 22px;text-align:center}
+.fig .box{height:170px;border:1px solid var(--rule);position:relative;overflow:hidden;
+  background:linear-gradient(155deg,#efe9dc, #e2dac9)}
+.fig .box::before{content:"";position:absolute;left:-30%;top:60%;width:160%;height:60px;
+  background:var(--rust);opacity:.75;transform:rotate(-14deg)}
+.fig .box::after{content:"";position:absolute;left:22px;top:26px;width:96px;height:96px;
+  border:1px solid var(--ink);border-radius:50%}
+.fig span{display:block;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--pencil);margin-top:8px}
+@media(max-width:960px){.sheet{grid-template-columns:1fr;gap:22px}
+  .rail,.notes{position:static;text-align:left}.rail .dash{margin:16px 0}}
+@media(prefers-reduced-motion:reduce){.line{opacity:1;filter:none;transform:none;transition:none}
+  html{scroll-behavior:auto}}
+</style>
+</head>
+<body>
+<div id="progress" aria-hidden="true"></div>
+
+<div class="sheet">
+  <aside class="rail" aria-hidden="true">
+    <span class="n">vi</span>
+    <span class="dash"></span>
+    Six short poems written for a page that never loads a single byte from elsewhere.
+    <span class="dash"></span>
+    Set in Georgia<br>Measure 66ch
+  </aside>
+
+  <main>
+    <header>
+      <h1>Quiet<br><em>Weather</em></h1>
+      <div class="byline">A chapbook in six parts · <b>M. Ardenna</b> · no. 006</div>
+    </header>
+
+    <p class="stand">Rain arrives the way a thought does — first as a change in pressure, then as a
+    sound at the window, then as the sudden certainty that you should have gone out prepared. These
+    six pieces were set to be read slowly, one stanza at a time, in whatever order the scroll takes you.</p>
+
+    <section class="stanza" data-note="1">
+      <h2>I · Pressure</h2>
+      <p class="verse"><span class="line" style="--d:0">The sky lowers itself an inch at a time,</span>
+<span class="line" style="--d:1">as if it had forgotten something</span>
+<span class="line" style="--d:2">on the surface of the earth</span>
+<span class="line drop" style="--d:3">and would rather not ask us for it.</span></p>
+    </section>
+
+    <section class="stanza" data-note="2">
+      <h2>II · The Kitchen at Four</h2>
+      <p class="verse"><span class="line" style="--d:0">A glass of water, unattended,</span>
+<span class="line" style="--d:1">collects the whole grey afternoon.</span>
+<span class="line" style="--d:2">I drink the weather and it tastes</span>
+<span class="line drop" style="--d:3">of aluminium and coming home.</span></p>
+    </section>
+
+    <section class="stanza" data-note="3">
+      <h2>III · Marginalia</h2>
+      <p class="verse"><span class="line" style="--d:0">Somebody before me read this book</span>
+<span class="line" style="--d:1">and disagreed with everything.</span>
+<span class="line" style="--d:2">Their pencil is patient, exact,</span>
+<span class="line" style="--d:3">a small grey argument in the dark.</span>
+<span class="line drop" style="--d:4">I side with them, of course.</span></p>
+    </section>
+
+    <section class="stanza" data-note="4">
+      <h2>IV · Fugue for a Crossing</h2>
+      <p class="verse"><span class="line" style="--d:0">Green, and everyone moves at once,</span>
+<span class="line" style="--d:1">a hundred private errands</span>
+<span class="line" style="--d:2">agreeing, for eleven seconds,</span>
+<span class="line drop" style="--d:3">to be a crowd.</span></p>
+    </section>
+
+    <section class="stanza" data-note="5">
+      <h2>V · Inventory</h2>
+      <p class="verse"><span class="line" style="--d:0">Two chairs. One lamp. The low hum</span>
+<span class="line" style="--d:1">of a fridge doing its small duty.</span>
+<span class="line" style="--d:2">Everything I own answers</span>
+<span class="line drop" style="--d:3">when I put my hand on it.</span></p>
+    </section>
+
+    <section class="stanza" data-note="6">
+      <h2>VI · Clearing</h2>
+      <p class="verse"><span class="line" style="--d:0">By evening the street is rinsed and new,</span>
+<span class="line" style="--d:1">each puddle holding a thin</span>
+<span class="line" style="--d:2">and perfectly legitimate</span>
+<span class="line drop" style="--d:3">rectangle of sky.</span></p>
+    </section>
+
+    <div class="end"><span>End of collection</span><span>006 / 100</span></div>
+  </main>
+
+  <aside class="notes">
+    <div class="fig">
+      <div class="box" aria-hidden="true"></div>
+      <span>Fig. 1 — horizon, reduced</span>
+    </div>
+    <div class="note" data-for="1"><b>On I</b>Written during a barometric drop. The stanza keeps a
+      single sentence running across four lines so the breath is never released early.</div>
+    <div class="note" data-for="2"><b>On II</b>A domestic still life. The rhyme is half-internal —
+      “weather” leaning on “together” but never quite touching it.</div>
+    <div class="note" data-for="3"><b>On III</b>Poems about reading are really poems about being read.
+      The last line turns the speaker into a second annotator.</div>
+    <div class="note" data-for="4"><b>On IV</b>Traffic as accidental community. Eleven seconds is
+      measured, not invented.</div>
+    <div class="note" data-for="5"><b>On V</b>The inventory refuses to be comprehensive; it is a test
+      of how little is needed for a room to answer back.</div>
+    <div class="note" data-for="6"><b>On VI</b>The closing couplet lets the weather finish the poem —
+      the sky gets the last word, framed by water.</div>
+  </aside>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var bar=document.getElementById("progress");
+  function onScroll(){
+    var h=document.documentElement.scrollHeight-innerHeight;
+    var p=h>0?(scrollY/h)*100:0;
+    bar.style.width=p.toFixed(2)+"%";
+  }
+  addEventListener("scroll",onScroll,{passive:true});
+  addEventListener("resize",onScroll);
+  onScroll();
+
+  var stanzas=document.querySelectorAll(".stanza");
+  if(reduce || !("IntersectionObserver" in window)){
+    Array.prototype.forEach.call(stanzas,function(s){ s.classList.add("in"); });
+  }else{
+    var io=new IntersectionObserver(function(entries){
+      entries.forEach(function(e){
+        if(e.isIntersecting){ e.target.classList.add("in"); io.unobserve(e.target); }
+      });
+    },{threshold:.28});
+    Array.prototype.forEach.call(stanzas,function(s){ io.observe(s); });
+  }
+
+  /* sidenote <-> stanza cross-highlight */
+  document.querySelectorAll(".note").forEach(function(n){
+    var target=document.querySelector('.stanza[data-note="'+n.dataset.for+'"]');
+    if(!target) return;
+    n.addEventListener("mouseenter",function(){ target.style.borderLeftColor="#8a3324"; });
+    n.addEventListener("mouseleave",function(){ target.style.borderLeftColor=""; });
+  });
+  document.querySelectorAll(".stanza").forEach(function(s){
+    var n=document.querySelector('.note[data-for="'+s.dataset.note+'"]');
+    if(!n) return;
+    s.addEventListener("mouseenter",function(){ n.classList.add("hot"); });
+    s.addEventListener("mouseleave",function(){ n.classList.remove("hot"); });
+  });
+})();
+</script>
+</body>
+</html>

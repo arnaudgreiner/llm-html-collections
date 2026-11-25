@@ -1,0 +1,18 @@
+TITLE: Pocket Sequencer — 16-Step Web Audio Drum Machine
+
+FULL PROMPT:
+Write exactly one self-contained HTML page, "Pocket Sequencer", with no external assets or audio files. Body: dark aubergine with a purple radial glow, centred column, letter-spaced uppercase micro-labels. Header with kicker, light/heavy split title and an explanatory deck stating that sound is synthesised. The .machine panel (rounded 20px, deep shadow) holds: a transport row with a pink Play/Stop button, Clear, Randomise, and two knob-style range controls (Tempo 70–170, Level 0–100 with live output read-outs); a 17-column CSS grid (row label + 16 square cells, aspect-ratio 1, min-height 20px) whose rows are kick / snare / hat / lead with muted sub-captions; armed cells take the row's colour (pink / yellow / cyan / green) with an inset bottom shade, every 4th column is pre-darkened as a beat marker, and the current step gets a white outline; a root-note pill row (C D F G A pentatonic) with a cyan active pill; and a keyboard hint line with styled <kbd> elements. Seed a groove so it plays immediately.
+
+INTENDED DESIGN DESCRIPTION:
+A hardware groovebox in the browser — dense, tactile, colour-coded per track, with every sound built from oscillators and noise buffers at play time.
+
+MAJOR VISUAL TECHNIQUES:
+- Web Audio graph: one master gain → analyser → destination, created lazily on first gesture
+- Sound design per row: pitch-dropping sine kick, filtered noise snare, high-passed noise hat, sawtooth lead through a lowpass sweep, each with an exponential gain envelope
+- setTimeout scheduler quantised to 60000/tempo/4 ms with immediate scheduling of the note
+- Grid built in JS with data-r/data-s and aria-pressed state kept in sync
+- Randomise with per-row density (0.28/0.16/0.55/0.30); button tone previews a row
+- Keyboard shortcuts Space/C/R, guarded against firing while an input has focus
+
+INTENDED INTERACTION MODEL:
+Click cells to arm/disarm them (each click gives an audible preview). Play starts a 16-step loop with a moving playhead; Stop halts it. Clear empties the grid, Randomise fills a new groove, the tempo slider changes loop speed live, the level slider rescales the master gain, and root pills re-pitch the lead. Space, C and R mirror the buttons. Reduced motion removes transitions; audio still works because playback is always user-initiated.

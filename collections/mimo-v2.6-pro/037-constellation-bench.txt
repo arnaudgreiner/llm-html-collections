@@ -1,0 +1,18 @@
+TITLE: Constellation Bench — Draw Your Own Figures on a Star Plate
+
+FULL PROMPT:
+Build one fully self-contained HTML page, "Constellation Bench", no external resources. Deep indigo background with a radial glow; header with kicker, thin/accent title and a hint. Stage: left a chart box (rounded, bordered, gradient sky) containing a 760×470 canvas — a coordinate grid in faint teal, ~340 deterministic background speckles that drift subtly with panning, and the loaded catalogue's stars drawn as radial-gradient glows with white cores sized by magnitude, labels at controlled density, plus a tooltip div and a HUD reading objects / lines / scale / field. Right rig: catalogue plate (four chips — messier 40, bright stars, solar club, faint show), a limit-magnitude slider (3–11) and a label-density slider (0–100), reset and clear buttons; an Object card showing category, name, description and a facts list (designation, magnitude, distance, spectral) that fills on selection; a monospace Plot log with timestamps. Catalogue: ~26 hand-written Messier-field objects, ~18 brightest stars, ~15 solar neighbours, ~12 faint showpieces, each with real-ish names, magnitudes, spectral classes and a one-line written character.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a glass-plate archive on a dark observatory table: cold precise teal linework around warm amber stars, and every click leaving a dashed line the way an astronomer's pencil would.
+
+MAJOR VISUAL TECHNIQUES:
+- Two-layer star rendering: radial gradient halo + solid core, radius derived from magnitude
+- Screen-space hit testing with a 16px threshold, recomputed per frame from a world→screen mapping
+- Pan/zoom as a transform of world coordinates (offsetPan + zoom) rather than canvas transforms, so labels stay crisp
+- Drag vs click disambiguation via a moved flag; wheel zoom clamped to 0.55–3.2
+- Magnitude limit culls objects both visually and in hit tests; density slider gates labels
+- Seeded LCG for repeatable background speckle so the sky is identical on every load
+
+INTENDED INTERACTION MODEL:
+Click a star to load it into the Object card and make it the anchor; click a second star to draw a dashed teal line between them, then it becomes the new anchor (clicking the anchor again releases it). Hover shows a tooltip with catalogue and magnitude. Drag pans the plate; the wheel zooms; reset restores 1×; clear wipes the lines; sliders re-cull live; plate chips reload the whole catalogue and reset the plot. The log timestamps every action. Reduced motion changes nothing here — the plate is entirely input-driven.

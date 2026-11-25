@@ -1,0 +1,18 @@
+TITLE: Sorting Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Sorting Bench". On a dark instrument page, show a 680×300 canvas of n bars (8–80) and drive them through four selectable algorithms — bubble, selection, insertion and shell — by precomputing the whole operation trace (compare, swap, single write, settle-mark, end) synchronously at run start, then playing it back at a chosen steps-per-second rate from the animation loop. Bars are colored live: pending slate blue, the active pair gold, written slots red, settled positions teal. A stats strip reports algorithm, N, comparisons, writes, progress percent and machine state (IDLE/RUNNING/PAUSED/SORTED); a legend explains the four colors. Controls: algorithm buttons, SIZE slider (shuffles and rebuilds), SPEED slider (1–60 ops/s), shuffle, run/pause toggle and a single STEP that advances exactly one traced operation for frame-by-frame study. The shell sort uses the classic n/2, n/4… gap sequence. All code inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a bench-top instrument for comparing algorithms, not a demo bar chart: dark steel background, phosphor-teal "settled" fill creeping across the field, gold and red flashing on the exact pair under the needle. Precomputing the trace makes the playback honest — comparisons and writes are exactly what the algorithm performed, STEP advances literally one operation, and speed only changes playback, never the work counted.
+
+MAJOR VISUAL TECHNIQUES:
+- Operation-trace precomputation (compare/swap/write/mark/end) for four algorithms
+- Fixed-rate playback decoupled from rAF rendering, speed = ops per second
+- Four-state bar coloring: pending, comparing, writing, settled
+- Step mode consuming exactly one traced operation
+- Canvas bars drawn with rounded tops, width derived from N
+- Live stats bound to trace playback progress
+
+INTENDED INTERACTION MODEL:
+Pick an algorithm, set SIZE and SPEED, press run and watch the wave of comparisons sweep the field until everything turns teal; press pause mid-run or use STEP to advance one operation at a time while watching the counters. Shuffle reshuffles in place, choosing another algorithm resets the bench, and the state chip tells you whether the trace is idle, running, paused or fully sorted.

@@ -1,0 +1,418 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Enigma — Field Cipher Machine</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0e0f13;color:#cfc7b8;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:24px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#d8a759;text-transform:uppercase}
+h1 i{font-style:normal;color:#7fa8c9}
+#case{background:linear-gradient(#1a1712,#12100c);border:1px solid #2e271d;border-radius:14px;padding:16px;box-shadow:0 14px 44px rgba(0,0,0,.6)}
+canvas{display:block;border-radius:8px;cursor:pointer;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:780px}
+button{background:#211d16;border:1px solid #453b2a;color:#d8cdba;font:inherit;font-size:9.5px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#d8a759;color:#ffe9c4}
+button.on{border-color:#d8a759;color:#ffe9c4;background:#2c251a}
+select{background:#181510;border:1px solid #453b2a;color:#d8cdba;font:inherit;font-size:10px;padding:7px 9px;border-radius:6px;cursor:pointer}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#877e6d}
+.stat b{color:#d8a759}
+#armed{color:#7fa8c9}
+#armed.hot{color:#ff8f6a}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#5f594d;text-align:center;max-width:760px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Enigma <i>M96</i> · field cipher</h1>
+<div id="case"><canvas id="cv" width="760" height="560"></canvas></div>
+<div class="bar">
+  <select id="o1"><option>I</option><option>II</option><option>III</option></select>
+  <select id="o2"><option>I</option><option>II</option><option>III</option></select>
+  <select id="o3"><option>I</option><option>II</option><option>III</option></select>
+  <button id="bMode">MODE: M3</button>
+  <button id="bRefl">REFLECTOR: B</button>
+  <button id="bThin">THIN: β</button>
+  <button id="bRnd">RANDOM KEYS</button>
+  <button id="bPlug">RANDOM PLUGS</button>
+  <button id="bRst">RESET</button>
+  <span class="stat">keys <b id="mK">0</b> · turnovers <b id="mT">0</b> · <span id="armed">notch clear</span></span>
+</div>
+<div class="hint">type on your keyboard or tap a lamp to encrypt · click a rotor window to advance it one letter, click its ring badge to set the ring 01–26 · click two plugboard letters to pair them, click a paired letter to pull its cable — when the right rotor reaches its notch letter the middle one is dragged along with it, the double-stepping fault every operator had to know</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=560;
+var RT={
+  I  :{w:"EKMFLGDQVZNTOWYHXUSPAIBRCJ",n:16},
+  II :{w:"AJDKSIRUXBLHWTMCQGZNPYFVOE",n:4},
+  III:{w:"BDFHJLCPRTXVZNYEIWGAKMUSQO",n:21},
+  beta :{w:"LEYJVCNIXWPBQMDRTAKZGFUHOS",n:-1},
+  gamma:{w:"FSOKANUHPCIMXTELBDVQGYRZOW",n:-1}
+};
+var INV={};
+for(var kk in RT){
+  var r=[];for(var i=0;i<26;i++)r[RT[kk].w.charCodeAt(i)-65]=String.fromCharCode(65+i);
+  INV[kk]=r.join("");
+}
+var REF={B:"YRUHQSLDPXNGOKMIEBFZCWVJAT",C:"FVPJIAOYEDRZXWGCTKUQSBNMHL"};
+var rot=[{t:"I",pos:0,ring:1},{t:"II",pos:0,ring:1},{t:"III",pos:0,ring:1}];
+var thin={t:"beta",pos:0,ring:1};
+var m4=false,refl="B";
+var plug=new Array(26);for(var p0=0;p0<26;p0++)plug[p0]=p0;
+var pairs=[];
+var inp="",outp="",keysN=0,turns=0,lamp=-1,lampT=-1e9;
+function mod(n){return ((n%26)+26)%26;}
+function fwd(r,c){
+  var d=RT[r.t],g=r.ring-1;
+  return mod(d.w.charCodeAt(mod(c+r.pos-g))-65-r.pos+g);
+}
+function bwd(r,c){
+  var d=INV[r.t],g=r.ring-1;
+  return mod(d.charCodeAt(mod(c+r.pos-g))-65-r.pos+g);
+}
+function plugF(c){return plug[c];}
+function encrypt(c){
+  c=plugF(c);
+  c=fwd(rot[2],c);
+  c=fwd(rot[1],c);
+  c=fwd(rot[0],c);
+  if(m4)c=fwd(thin,c);
+  c=REF[refl].charCodeAt(c)-65;
+  if(m4)c=bwd(thin,c);
+  c=bwd(rot[0],c);
+  c=bwd(rot[1],c);
+  c=bwd(rot[2],c);
+  return plugF(c);
+}
+function notchIdx(r){return RT[r.t].n;}
+function step(){
+  var was3=rot[2].pos===notchIdx(rot[2]);
+  rot[2].pos=mod(rot[2].pos+1);
+  if(was3){
+    var was2=rot[1].pos===notchIdx(rot[1]);
+    rot[1].pos=mod(rot[1].pos+1);
+    if(was2)rot[0].pos=mod(rot[0].pos+1);
+    turns++;
+  }
+}
+function typeChar(ci){
+  step();
+  var o=encrypt(ci);
+  inp+=String.fromCharCode(65+ci);
+  outp+=String.fromCharCode(65+o);
+  if(inp.length>60){inp=inp.slice(-60);outp=outp.slice(-60);}
+  lamp=o;lampT=performance.now();
+  keysN++;
+}
+function pairOf(c){
+  for(var i=0;i<pairs.length;i++)if(pairs[i][0]===c||pairs[i][1]===c)return i;
+  return -1;
+}
+function rebuildPlugs(){
+  for(var i=0;i<26;i++)plug[i]=i;
+  for(var j=0;j<pairs.length;j++){plug[pairs[j][0]]=pairs[j][1];plug[pairs[j][1]]=pairs[j][0];}
+}
+var selPlug=-1;
+function plugClick(c){
+  var has=pairOf(c);
+  if(has>=0){pairs.splice(has,1);selPlug=-1;rebuildPlugs();return;}
+  if(selPlug===-1){selPlug=c;return;}
+  if(selPlug===c){selPlug=-1;return;}
+  if(pairOf(selPlug)<0)pairs.push([Math.min(selPlug,c),Math.max(selPlug,c)]);
+  selPlug=-1;rebuildPlugs();
+}
+function randomPlugs(){
+  var pool=[];for(var i=0;i<26;i++)pool.push(i);
+  for(var k=pool.length-1;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=pool[k];pool[k]=pool[j];pool[j]=t;}
+  pairs=[];
+  for(var m=0;m<20;m+=2)pairs.push([Math.min(pool[m],pool[m+1]),Math.max(pool[m],pool[m+1])]);
+  rebuildPlugs();
+}
+function shuffleOrder(){
+  var base=["I","II","III"];
+  for(var k=2;k>0;k--){var j=Math.floor(Math.random()*(k+1));var t=base[k];base[k]=base[j];base[j]=t;}
+  for(var i=0;i<3;i++){rot[i].t=base[i];rot[i].pos=Math.floor(Math.random()*26);rot[i].ring=1+Math.floor(Math.random()*26);}
+  thin.pos=Math.floor(Math.random()*26);thin.ring=1+Math.floor(Math.random()*26);
+  syncSelects();
+}
+function syncSelects(){
+  document.getElementById("o1").value=rot[0].t;
+  document.getElementById("o2").value=rot[1].t;
+  document.getElementById("o3").value=rot[2].t;
+}
+function onOrderChange(idx,el){
+  var v=el.value,other=rot.findIndex(function(r){return r.t===v;});
+  if(other>=0&&other!==idx){
+    var swap=rot[idx].t;rot[idx].t=v;rot[other].t=swap;
+  }else rot[idx].t=v;
+  syncSelects();
+}
+document.getElementById("o1").addEventListener("change",function(){onOrderChange(0,this);});
+document.getElementById("o2").addEventListener("change",function(){onOrderChange(1,this);});
+document.getElementById("o3").addEventListener("change",function(){onOrderChange(2,this);});
+var bMode=document.getElementById("bMode"),bRefl=document.getElementById("bRefl"),bThin=document.getElementById("bThin");
+bMode.addEventListener("click",function(){
+  m4=!m4;
+  bMode.textContent=m4?"MODE: M4":"MODE: M3";
+  bMode.className=m4?"on":"";
+  refl=m4?"C":"B";
+  bRefl.textContent="REFLECTOR: "+refl;
+  bRefl.style.display=m4?"none":"";
+});
+bRefl.addEventListener("click",function(){
+  refl=refl==="B"?"C":"B";
+  bRefl.textContent="REFLECTOR: "+refl;
+});
+bThin.addEventListener("click",function(){
+  thin.t=thin.t==="beta"?"gamma":"beta";
+  bThin.textContent="THIN: "+(thin.t==="beta"?"β":"γ");
+});
+document.getElementById("bRnd").addEventListener("click",function(){shuffleOrder();});
+document.getElementById("bPlug").addEventListener("click",randomPlugs);
+document.getElementById("bRst").addEventListener("click",function(){
+  rot[0].t="I";rot[1].t="II";rot[2].t="III";
+  for(var i=0;i<3;i++){rot[i].pos=0;rot[i].ring=1;}
+  thin.pos=0;thin.ring=1;
+  inp="";outp="";keysN=0;turns=0;pairs=[];rebuildPlugs();syncSelects();
+});
+window.addEventListener("keydown",function(e){
+  if(e.ctrlKey||e.metaKey||e.altKey)return;
+  if(e.key&&e.key.length===1){
+    var u=e.key.toUpperCase().charCodeAt(0);
+    if(u>=65&&u<=90){typeChar(u-65);e.preventDefault();}
+  }else if(e.key==="Backspace"){
+    if(inp.length){inp=inp.slice(0,-1);outp=outp.slice(0,-1);}
+    e.preventDefault();
+  }
+});
+var CARD_X=[115,305,495],CARD_Y=176,CARD_W=150,CARD_H=150;
+cv.addEventListener("pointerdown",function(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  // lampboard
+  if(y>44&&y<152){
+    var col=Math.floor((x-94)/50),row=y<100?0:1;
+    if(col>=0&&col<13&&row>=0&&row<2){
+      var lx=94+col*50;
+      if(Math.abs(x-lx)<22){typeChar(row*13+col);return;}
+    }
+  }
+  // rotor cards
+  for(var i=0;i<3;i++){
+    var cx=CARD_X[i],cyy=CARD_Y;
+    if(x>=cx&&x<=cx+CARD_W&&y>=cyy&&y<=cyy+CARD_H){
+      var wx=cx+CARD_W/2,wy=cyy+82;
+      if(Math.hypot(x-wx,y-wy)<46){rot[i].pos=mod(rot[i].pos+1);return;}
+      if(x>cx+10&&x<cx+68&&y>cyy+12&&y<cyy+40){rot[i].ring=rot[i].ring%26+1;return;}
+      // swap rotor with neighbor by clicking its label
+      if(y>cyy+CARD_H-34){
+        var nb=x<cx+CARD_W/2?Math.max(0,i-1):Math.min(2,i+1);
+        if(nb!==i){var t=rot[i].t;rot[i].t=rot[nb].t;rot[nb].t=t;syncSelects();}
+        return;
+      }
+      return;
+    }
+  }
+  // thin rotor (M4)
+  if(m4&&x>=655&&x<=745&&y>=CARD_Y+40&&y<=CARD_Y+110){thin.pos=mod(thin.pos+1);return;}
+  // plugboard
+  if(y>352&&y<452){
+    var idx=Math.round((x-92)/25);
+    if(idx>=0&&idx<26){
+      var px=92+idx*25;
+      if(Math.abs(x-px)<14){plugClick(idx);return;}
+    }
+  }
+});
+function render(now){
+  ax.fillStyle="#15130e";ax.fillRect(0,0,W,H);
+  // bakelite screws
+  ax.fillStyle="#2e271d";
+  [[14,14],[W-14,14],[14,H-14],[W-14,H-14]].forEach(function(s){
+    ax.beginPath();ax.arc(s[0],s[1],6,0,6.2832);ax.fill();
+  });
+  // ---- lampboard ----
+  ax.font="11px ui-monospace,monospace";
+  ax.fillStyle="#877e6d";
+  ax.fillText("LAMPBOARD",94,34);
+  var lit=now-lampT<560;
+  for(var i=0;i<26;i++){
+    var col2=i%13,row2=Math.floor(i/13);
+    var lx=94+col2*50,ly=row2===0?72:126;
+    var on=lit&&lamp===i;
+    if(on){
+      var gl=ax.createRadialGradient(lx,ly,3,lx,ly,26);
+      gl.addColorStop(0,"rgba(255,214,140,.95)");
+      gl.addColorStop(1,"rgba(255,190,90,0)");
+      ax.fillStyle=gl;
+      ax.beginPath();ax.arc(lx,ly,26,0,6.2832);ax.fill();
+    }
+    ax.fillStyle=on?"#1a1509":"#0c0b08";
+    ax.beginPath();ax.arc(lx,ly,17,0,6.2832);ax.fill();
+    ax.strokeStyle=on?"#ffd98c":"#3a3326";
+    ax.lineWidth=on?2:1;
+    ax.stroke();
+    ax.fillStyle=on?"#ffe9b8":"#6f6757";
+    ax.font="14px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText(String.fromCharCode(65+i),lx,ly+5);
+  }
+  ax.textAlign="left";
+  // ---- rotors ----
+  ax.fillStyle="#877e6d";ax.font="11px ui-monospace,monospace";
+  ax.fillText(m4?"ROTOR STACK (M4 — THIN ROTOR IN PATH)":"ROTOR STACK",115,164);
+  ax.textAlign="right";
+  ax.fillText("REFLECTOR "+refl+" · THIN "+(thin.t==="beta"?"β":"γ"),645,164);
+  ax.textAlign="left";
+  for(var r3=0;r3<3;r3++){
+    var cx2=CARD_X[r3],cy2=CARD_Y;
+    var cardG=ax.createLinearGradient(cx2,cy2,cx2,cy2+CARD_H);
+    cardG.addColorStop(0,"#2a241a");
+    cardG.addColorStop(1,"#1b1710");
+    ax.fillStyle=cardG;
+    ax.fillRect(cx2,cy2,CARD_W,CARD_H);
+    ax.strokeStyle="#4a4030";ax.lineWidth=1.5;
+    ax.strokeRect(cx2,cy2,CARD_W,CARD_H);
+    // brass rivets
+    ax.fillStyle="#7a6438";
+    [[cx2+8,cy2+8],[cx2+CARD_W-8,cy2+8],[cx2+8,cy2+CARD_H-8],[cx2+CARD_W-8,cy2+CARD_H-8]].forEach(function(v){
+      ax.beginPath();ax.arc(v[0],v[1],3,0,6.2832);ax.fill();
+    });
+    // ring badge
+    var rr=rot[r3];
+    ax.fillStyle="#151209";
+    ax.fillRect(cx2+10,cy2+12,58,26);
+    ax.strokeStyle="#5a4d36";
+    ax.strokeRect(cx2+10,cy2+12,58,26);
+    ax.fillStyle="#d8a759";
+    ax.font="11px ui-monospace,monospace";
+    ax.fillText("RING "+(rr.ring<10?"0":"")+rr.ring,cx2+17,cy2+30);
+    // notch flag
+    var atNotch=rr.pos===RT[rr.t].n;
+    ax.fillStyle=atNotch?"#ff8f6a":"#3a3326";
+    ax.beginPath();
+    ax.moveTo(cx2+CARD_W-34,cy2+14);
+    ax.lineTo(cx2+CARD_W-20,cy2+21);
+    ax.lineTo(cx2+CARD_W-34,cy2+28);
+    ax.closePath();ax.fill();
+    // letter window
+    var wx2=cx2+CARD_W/2,wy2=cy2+82;
+    ax.fillStyle="#0a0906";
+    ax.beginPath();ax.arc(wx2,wy2,42,0,6.2832);ax.fill();
+    ax.strokeStyle="#6b5a3a";ax.lineWidth=3;
+    ax.stroke();
+    // window plate
+    ax.fillStyle="#efe3c8";
+    ax.fillRect(wx2-24,wy2-30,48,60);
+    ax.strokeStyle="#2a2417";ax.lineWidth=1;
+    ax.strokeRect(wx2-24,wy2-30,48,60);
+    ax.fillStyle="#171309";
+    ax.font="bold 34px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText(String.fromCharCode(65+rr.pos),wx2,wy2+12);
+    // neighbours hint letters
+    ax.font="13px ui-monospace,monospace";
+    ax.fillStyle="#5a5244";
+    ax.fillText(String.fromCharCode(65+mod(rr.pos-1)),wx2,wy2-36);
+    ax.fillText(String.fromCharCode(65+mod(rr.pos+1)),wx2,wy2+52);
+    ax.textAlign="left";
+    // label + order swap hint
+    ax.fillStyle="#a39a86";
+    ax.font="11px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText("ROTOR "+rot[r3].t+(r3===0?" (L)":r3===2?" (R)":""),wx2,cy2+CARD_H-14);
+    ax.fillStyle="#57503f";
+    ax.fillText("◂ swap ▸",wx2,cy2+CARD_H-2);
+    ax.textAlign="left";
+    if(atNotch){
+      ax.fillStyle="#ff8f6a";
+      ax.font="10px ui-monospace,monospace";
+      ax.textAlign="right";
+      ax.fillText("NOTCH",cx2+CARD_W-12,cy2+44);
+      ax.textAlign="left";
+    }
+  }
+  if(m4){
+    // thin rotor strip
+    ax.fillStyle="#221d15";
+    ax.fillRect(655,CARD_Y,90,CARD_H);
+    ax.strokeStyle="#4a4030";ax.strokeRect(655,CARD_Y,90,CARD_H);
+    ax.fillStyle="#877e6d";ax.font="10px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText(thin.t==="beta"?"THIN β":"THIN γ",700,CARD_Y+20);
+    ax.fillStyle="#efe3c8";
+    ax.fillRect(676,CARD_Y+40,48,60);
+    ax.strokeStyle="#2a2417";ax.strokeRect(676,CARD_Y+40,48,60);
+    ax.fillStyle="#171309";
+    ax.font="bold 34px ui-monospace,monospace";
+    ax.fillText(String.fromCharCode(65+thin.pos),700,CARD_Y+82);
+    ax.font="10px ui-monospace,monospace";
+    ax.fillStyle="#d8a759";
+    ax.fillText("RING "+thin.ring,700,CARD_Y+118);
+    ax.fillStyle="#57503f";
+    ax.fillText("click letter",700,CARD_Y+136);
+    ax.textAlign="left";
+  }
+  // ---- plugboard ----
+  ax.fillStyle="#877e6d";ax.font="11px ui-monospace,monospace";
+  ax.fillText("PLUGBOARD — STECKERZUHLUNG  ("+pairs.length+"/10)",92,344);
+  ax.strokeStyle="#3a3326";ax.lineWidth=1;
+  ax.beginPath();ax.moveTo(60,366);ax.lineTo(W-60,366);ax.stroke();
+  for(var c2=0;c2<26;c2++){
+    var px2=92+c2*25;
+    var inP=pairOf(c2)>=0;
+    ax.fillStyle=selPlug===c2?"#3c3018":(inP?"#1c1810":"#141209");
+    ax.beginPath();ax.arc(px2,404,13,0,6.2832);ax.fill();
+    ax.strokeStyle=selPlug===c2?"#ffd98c":(inP?"#d8a759":"#3a3326");
+    ax.lineWidth=selPlug===c2?2:1;
+    ax.stroke();
+    ax.fillStyle=inP?"#ffe9b8":"#6f6757";
+    ax.font="12px ui-monospace,monospace";
+    ax.textAlign="center";
+    ax.fillText(String.fromCharCode(65+c2),px2,409);
+  }
+  ax.textAlign="left";
+  // cables
+  for(var pc=0;pc<pairs.length;pc++){
+    var a=92+pairs[pc][0]*25,b=92+pairs[pc][1]*25;
+    ax.strokeStyle=pc%3===0?"#c9785a":pc%3===1?"#6fa8c9":"#9ac97f";
+    ax.lineWidth=2.4;
+    ax.beginPath();
+    ax.moveTo(a,417);
+    ax.bezierCurveTo(a,440+pc*2,b,440+pc*2,b,417);
+    ax.stroke();
+  }
+  // ---- ticker ----
+  ax.fillStyle="#141209";
+  ax.fillRect(60,466,W-120,80);
+  ax.strokeStyle="#2e271d";
+  ax.strokeRect(60,466,W-120,80);
+  ax.font="13px ui-monospace,monospace";
+  ax.fillStyle="#8a8272";
+  ax.fillText("IN ",74,492);
+  ax.fillStyle="#cfc7b8";
+  ax.fillText(inp,110,492);
+  ax.fillStyle="#8a8272";
+  ax.fillText("OUT",74,524);
+  ax.fillStyle="#ffd98c";
+  ax.fillText(outp,110,524);
+  document.getElementById("mK").textContent=keysN;
+  document.getElementById("mT").textContent=turns;
+  var armed=rot[2].pos===RT[rot[2].t].n;
+  var el=document.getElementById("armed");
+  el.textContent=armed?"NOTCH ARMED — NEXT KEY TURNS MIDDLE":"notch clear";
+  el.className=armed?"hot":"";
+}
+function loop(now){
+  render(now);
+  requestAnimationFrame(loop);
+}
+syncSelects();
+randomPlugs();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

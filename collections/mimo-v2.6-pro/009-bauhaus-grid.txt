@@ -1,0 +1,19 @@
+TITLE: Bauhaus Grid — Recomposable Poster Composition
+
+FULL PROMPT:
+Create a single self-contained HTML page named "Bauhaus Grid", a modernist exhibition poster that can be recomposed, with all styles and scripts inline and no external assets of any kind. Use a warm paper ground (#f4f1e8) carrying a single 12-column hairline printed by a background-size trick, ink black (#111111) and the three primaries only — red #e63329, blue #1b49d6, yellow #f5c400. Build a masthead with a heavy 900-weight uppercase headline whose words are interrupted by a red word and a blue knockout block, plus a right-aligned meta column with a yellow edition badge. Below it, three chunky bordered buttons (Recompose, Show labels, Invert ink), then a 12-column grid with fixed 96px rows containing a spanning statement card and nine geometric cells whose shapes are drawn purely with pseudo-elements: solid circle, triangle via clip-path, half-disc, concentric disc, vertical bar register, ring, cross, quarter round and a repeating radial quarter-wave band. Finish with a thick-ruled footer.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read as a letterpress poster pinned to a studio wall: flat colour, hard 3px rules, no gradients, no soft shadows — only offset ink shadows on hover, the way a second pass of a press sits slightly off-register. The statement card holds the top-left as the typographic anchor while the geometric cells cascade down and to the right, and the vertical column hairlines run behind everything so the structure is always visible.
+
+MAJOR VISUAL TECHNIQUES:
+- Twelve-column background hairline printed with background-size rather than extra elements
+- Shape construction entirely from ::before pseudo-elements and clip-path
+- Permuting CSS grid placement by writing shorthand grid strings per cell
+- Offset hard shadows on hover for a misregistered-print feel
+- Entrance stagger via setTimeout writing inline transitions, guarded by prefers-reduced-motion
+- Global invert mode built from CSS filters and variable swaps
+- Keyboard shortcut (R) wired to the same recompose handler as the button
+
+INTENDED INTERACTION MODEL:
+Clicking Recompose — or pressing R — shuffles the nine geometric blocks across the slots they already occupy, so the composition changes while the footprint stays constant. Show labels toggles a caption bar on every block. Invert ink flips the sheet to black paper with light geometry and reversed rules. Hovering any cell lifts it with a hard offset shadow and slides its label up. Reduced-motion users get no entrance stagger and no transitions.

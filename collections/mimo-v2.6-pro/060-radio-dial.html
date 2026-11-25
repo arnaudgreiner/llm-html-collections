@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Radio Dial</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#1b1512;color:#e8c98f;font-family:ui-monospace,Menlo,Consolas,monospace;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:20px;padding:30px 14px;
+  background-image:radial-gradient(circle at 50% 0,rgba(255,220,160,.08),transparent 60%)}
+#cab{width:520px;background:linear-gradient(150deg,#5b3a22,#3c2616 70%);border-radius:16px;padding:20px 22px;
+  border:2px solid #2a1a0e;box-shadow:0 34px 70px rgba(0,0,0,.65),inset 0 2px 0 rgba(255,220,160,.16);
+  background-image:repeating-linear-gradient(92deg,rgba(0,0,0,.14) 0 6px,transparent 6px 13px)}
+#brand{display:flex;justify-content:space-between;font-size:10px;letter-spacing:.34em;color:#d9a95f;margin-bottom:12px}
+#dialBox{position:relative;height:96px;background:linear-gradient(#f7e6bd,#e8d0a0);border:3px solid #2a1a0e;border-radius:8px;overflow:hidden}
+.off #dialBox{filter:brightness(.35) saturate(.5)}
+#dialSvg{position:absolute;inset:0;width:100%;height:100%}
+#needle{position:absolute;top:0;bottom:0;width:3px;background:#c0392b;box-shadow:0 0 7px rgba(192,57,43,.9);left:20%;
+  cursor:grab;touch-action:none}
+#needle::before{content:"";position:absolute;top:0;left:-7px;border-left:8px solid transparent;border-right:8px solid transparent;border-top:10px solid #c0392b}
+#dialBox .glass{position:absolute;inset:0;background:linear-gradient(115deg,rgba(255,255,255,.35),transparent 40%);pointer-events:none}
+#mid{display:flex;gap:16px;margin-top:16px;align-items:stretch}
+#scopeWrap{flex:1;background:#0c1f16;border:3px solid #2a1a0e;border-radius:8px;padding:6px;position:relative}
+#scope{display:block}
+#scopeTag{position:absolute;top:8px;left:10px;font-size:9px;letter-spacing:.24em;color:#5fbf7d;opacity:.85}
+#sideR{width:126px;display:flex;flex-direction:column;gap:10px}
+#vu{background:#f7e6bd;border:3px solid #2a1a0e;border-radius:8px;position:relative;height:74px}
+#vuNeedle{position:absolute;left:50%;bottom:10px;width:2px;height:52px;background:#2a1a0e;transform-origin:bottom center;
+  transform:rotate(-50deg);transition:transform .18s}
+#vuArc{position:absolute;inset:0}
+#knob{width:76px;height:76px;margin:2px auto 0;border-radius:50%;background:radial-gradient(circle at 34% 30%,#7a5330,#3c2616 70%);
+  border:3px solid #2a1a0e;position:relative;cursor:grab;touch-action:none;box-shadow:0 6px 14px rgba(0,0,0,.5)}
+#knob::after{content:"";position:absolute;top:7px;left:50%;width:3px;height:20px;background:#f0d7a6;transform:translateX(-50%);border-radius:2px}
+#knobTag{text-align:center;font-size:9px;letter-spacing:.2em;color:#d9a95f}
+#presets{display:flex;gap:7px;justify-content:center;margin-top:14px;flex-wrap:wrap}
+.preset{background:#2a1a0e;border:1px solid #6d4a28;color:#e8c98f;font:9px ui-monospace,monospace;letter-spacing:.1em;
+  padding:7px 9px;border-radius:6px;cursor:pointer}
+.preset:hover{background:#3c2616;color:#f7e0b4}
+.preset.lock{background:#c9962f;color:#2a1a0e;border-color:#f0d7a6}
+#power{margin-top:14px;display:flex;gap:10px;justify-content:center;align-items:center}
+#powerB{background:#2a1a0e;border:1px solid #6d4a28;color:#e8c98f;font:10px ui-monospace,monospace;letter-spacing:.2em;
+  padding:8px 20px;border-radius:7px;cursor:pointer}
+#powerB:hover{background:#3c2616}
+#stat{font-size:10px;letter-spacing:.16em;color:#d9a95f;min-height:14px;text-align:center;text-transform:uppercase}
+</style>
+</head>
+<body>
+<div id="cab">
+  <div id="brand"><span>HALICRAFTERS</span><span>MODEL S-38</span></div>
+  <div id="dialBox">
+    <svg id="dialSvg" viewBox="0 0 480 96" preserveAspectRatio="none"></svg>
+    <div id="needle"></div>
+    <div class="glass"></div>
+  </div>
+  <div id="mid">
+    <div id="scopeWrap">
+      <canvas id="scope" width="330" height="86"></canvas>
+      <div id="scopeTag">WAVEFORM MONITOR</div>
+    </div>
+    <div id="sideR">
+      <div id="vu">
+        <svg id="vuArc" viewBox="0 0 120 74">
+          <path d="M14 62 A 52 52 0 0 1 106 62" fill="none" stroke="#2a1a0e" stroke-width="2"/>
+          <text x="16" y="70" font-size="8" fill="#2a1a0e" font-family="ui-monospace,monospace">S</text>
+          <text x="97" y="70" font-size="8" fill="#2a1a0e" font-family="ui-monospace,monospace">F</text>
+        </svg>
+        <div id="vuNeedle"></div>
+      </div>
+      <div id="knob" title="volume"></div>
+      <div id="knobTag">VOLUME <span id="volV">60</span></div>
+    </div>
+  </div>
+  <div id="presets"></div>
+  <div id="power"><button id="powerB">POWER OFF</button><span id="stat">tuning…</span></div>
+</div>
+<script>
+(function(){
+"use strict";
+var FMIN=88,FMAX=108;
+var STATIONS=[
+ {f:88.3,c:"KMOON",s:"dream pop",w:"sine"},
+ {f:91.7,c:"WVRT",s:"late jazz",w:"warm"},
+ {f:94.5,c:"OBSIDIAN",s:"post-punk",w:"saw"},
+ {f:97.2,c:"KQRT",s:"public radio",w:"speech"},
+ {f:101.1,c:"SOLAR FM",s:"disco",w:"square"},
+ {f:105.9,c:"NIGHT OWL",s:"ambient",w:"drift"}
+];
+var freq=94.5,vol=60,on=true,phase=0;
+var needle=document.getElementById("needle"),stat=document.getElementById("stat");
+var scope=document.getElementById("scope"),sctx=scope.getContext("2d");
+var vu=document.getElementById("vuNeedle");
+// dial ticks
+(function(){
+  var svg=document.getElementById("dialSvg"),out="";
+  for(var f=88;f<=108;f++){
+    var x=10+((f-FMIN)/(FMAX-FMIN))*460;
+    out+='<line x1="'+x.toFixed(1)+'" y1="66" x2="'+x.toFixed(1)+'" y2="86" stroke="#2a1a0e" stroke-width="1.4"/>';
+    out+='<text x="'+x.toFixed(1)+'" y="60" font-size="11" fill="#2a1a0e" text-anchor="middle" font-family="ui-monospace,monospace">'+f+"</text>";
+    for(var h=1;h<4;h++){
+      var xh=10+((f+h/4-FMIN)/(FMAX-FMIN))*460;
+      out+='<line x1="'+xh.toFixed(1)+'" y1="76" x2="'+xh.toFixed(1)+'" y2="86" stroke="#2a1a0e" stroke-width="0.7"/>';
+    }
+  }
+  STATIONS.forEach(function(st,i){
+    var x=10+((st.f-FMIN)/(FMAX-FMIN))*460;
+    out+='<line x1="'+x.toFixed(1)+'" y1="14" x2="'+x.toFixed(1)+'" y2="44" stroke="#a03428" stroke-width="2"/>';
+    out+='<text x="'+x.toFixed(1)+'" y="12" font-size="8.5" fill="#7a281f" text-anchor="middle" font-family="ui-monospace,monospace">'+st.c+"</text>";
+  });
+  svg.innerHTML=out;
+})();
+// presets
+(function(){
+  var box=document.getElementById("presets"),html="";
+  STATIONS.forEach(function(st){
+    html+='<button class="preset" data-f="'+st.f+'">'+st.c+" "+st.f.toFixed(1)+"</button>";
+  });
+  box.innerHTML=html;
+  box.addEventListener("click",function(e){
+    var b=e.target;if(!b.classList.contains("preset"))return;
+    setFreq(+b.dataset.f);
+  });
+})();
+function setFreq(f){freq=Math.max(FMIN,Math.min(FMAX,f));paint();}
+function signal(){ // 0..1
+  var best=0,bs=null;
+  STATIONS.forEach(function(st){
+    var d=Math.abs(st.f-freq);
+    var v=Math.exp(-(d*d)/(2*0.12*0.12));
+    if(v>best){best=v;bs=st;}
+  });
+  return {s:best,st:bs};
+}
+function paint(){
+  var pct=(freq-FMIN)/(FMAX-FMIN);
+  needle.style.left=(4+pct*92)+"%";
+  var sig=signal();
+  var locked=on&&sig.s>0.45;
+  var amps=[];
+  document.querySelectorAll(".preset").forEach(function(b){
+    b.classList.toggle("lock",Math.abs(+b.dataset.f-freq)<0.06&&on);
+  });
+  vu.style.transform="rotate("+(-50+ (on? sig.s*100:0)*1.0).toFixed(1)+"deg)";
+  if(!on){stat.textContent="— receiver off —";return;}
+  if(locked)stat.textContent=sig.st.c+" "+sig.st.f.toFixed(1)+" mhz · "+sig.st.s;
+  else if(sig.s>0.15)stat.textContent="weak signal · "+sig.s.toFixed(2);
+  else stat.textContent="static between stations";
+}
+function wave(t,kind){
+  var x=t%1;
+  switch(kind){
+    case"sine":return Math.sin(2*Math.PI*x);
+    case"warm":return 0.6*Math.sin(2*Math.PI*x)+0.3*Math.sin(4*Math.PI*x)+0.15*Math.sin(6.3*Math.PI*x);
+    case"saw":return 2*(x-Math.floor(x+0.5));
+    case"speech":return Math.sin(2*Math.PI*x*3)*(Math.sin(2*Math.PI*x*0.7)>0?1:0.2);
+    case"square":return Math.sin(2*Math.PI*x)>0?0.8:-0.8;
+    case"drift":return 0.7*Math.sin(2*Math.PI*x*0.31)+0.3*Math.sin(2*Math.PI*x*0.77+1);
+  }
+  return 0;
+}
+function drawScope(){
+  var W=330,H=86;
+  sctx.fillStyle="#0c1f16";sctx.fillRect(0,0,W,H);
+  sctx.strokeStyle="rgba(95,191,125,.18)";
+  sctx.lineWidth=1;
+  for(var gx=0;gx<W;gx+=30){sctx.beginPath();sctx.moveTo(gx,0);sctx.lineTo(gx,H);sctx.stroke();}
+  for(var gy=0;gy<H;gy+=21){sctx.beginPath();sctx.moveTo(0,gy);sctx.lineTo(W,gy);sctx.stroke();}
+  sctx.strokeStyle="#5fe39a";sctx.lineWidth=2;sctx.beginPath();
+  var sig=on?signal():{s:0,st:null};
+  var vshape=sig.s>0.45&&sig.st;
+  var gain=(on?(0.25+0.75*sig.s):0)*(0.4+vol/100*0.6);
+  for(var x=0;x<W;x++){
+    var t=(x/W)*6+phase;
+    var v;
+    if(vshape)v=wave(t,sig.st.w);
+    else v=(Math.random()*2-1)*0.85;
+    var y=H/2 - v*gain*(H/2-8);
+    if(x===0)sctx.moveTo(x,y);else sctx.lineTo(x,y);
+  }
+  sctx.stroke();
+  if(on&&vshape){
+    sctx.fillStyle="rgba(95,227,154,.85)";
+    sctx.font="10px ui-monospace,monospace";
+    sctx.fillText(sig.st.c+" · "+sig.st.s,8,14);
+  }
+}
+function loop(){
+  phase+=0.06;
+  drawScope();
+  requestAnimationFrame(loop);
+}
+// needle drag
+function freqFromX(clientX,el){
+  var r=el.getBoundingClientRect();
+  var pct=(clientX-r.left)/r.width;
+  pct=(pct-0.04)/0.92;
+  return FMIN+pct*(FMAX-FMIN);
+}
+var dragging=false;
+needle.addEventListener("pointerdown",function(e){dragging=true;needle.setPointerCapture(e.pointerId);});
+needle.addEventListener("pointermove",function(e){if(dragging){setFreq(freqFromX(e.clientX,document.getElementById("dialBox")));}});
+needle.addEventListener("pointerup",function(){dragging=false;});
+document.getElementById("dialBox").addEventListener("pointerdown",function(e){
+  if(e.target===needle)return;
+  setFreq(freqFromX(e.clientX,this));
+});
+// volume knob (vertical drag)
+var kdrag=false,kstart=0,vstart=0;
+var knob=document.getElementById("knob");
+knob.addEventListener("pointerdown",function(e){kdrag=true;kstart=e.clientY;vstart=vol;knob.setPointerCapture(e.pointerId);});
+knob.addEventListener("pointermove",function(e){
+  if(!kdrag)return;
+  vol=Math.max(0,Math.min(100,vstart+(kstart-e.clientY)));
+  document.getElementById("volV").textContent=Math.round(vol);
+  knob.style.transform="rotate("+(-140+vol*2.8)+"deg)";
+});
+knob.addEventListener("pointerup",function(){kdrag=false;});
+document.getElementById("powerB").addEventListener("click",function(){
+  on=!on;
+  this.textContent=on?"POWER OFF":"POWER ON";
+  document.body.classList.toggle("off",!on);
+  paint();
+});
+knob.style.transform="rotate("+(-140+vol*2.8)+"deg)";
+paint();loop();
+})();
+</script>
+</body>
+</html>

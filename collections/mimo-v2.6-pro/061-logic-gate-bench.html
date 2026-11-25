@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Logic Gate Bench</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#101318;color:#c9d4e6;font-family:ui-monospace,Menlo,Consolas,monospace;
+  display:flex;flex-direction:column;align-items:center;gap:14px;padding:26px 14px}
+h1{font-size:14px;letter-spacing:.36em;color:#63e6be;text-transform:uppercase}
+#hint{font-size:10px;letter-spacing:.12em;color:#5b6b85}
+#board{position:relative;width:660px;height:430px;background:#161b24;border:1px solid #26314a;border-radius:12px;
+  overflow:hidden;box-shadow:0 22px 55px rgba(0,0,0,.55);
+  background-image:radial-gradient(circle,rgba(99,230,190,.07) 1px,transparent 1px);background-size:22px 22px}
+#wires{position:absolute;inset:0;width:100%;height:100%;pointer-events:none}
+#wires path{fill:none;stroke:#3f7fd6;stroke-width:2.5;cursor:pointer}
+body.snip #wires path{pointer-events:stroke}
+body.snip #wires path:hover{stroke:#ff6b6b}
+#board .tmp{stroke:#63e6be;stroke-dasharray:6 5;pointer-events:none!important}
+.gate{position:absolute;width:86px;height:56px;background:#1e2635;border:2px solid #3a4a68;border-radius:10px;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:grab;user-select:none}
+.gate:active{cursor:grabbing}
+.gate.high{border-color:#63e6be;box-shadow:0 0 14px rgba(99,230,190,.35)}
+.gate.low{border-color:#3a4a68}
+.gate .sym{font-size:17px;color:#e8d9b0;letter-spacing:.1em}
+.gate .val{font-size:10px;color:#5b6b85}
+.gate.high .val{color:#63e6be}
+.node{position:absolute;width:56px;height:44px;border-radius:9px;background:#232c3e;border:2px solid #3a4a68;
+  display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:pointer;user-select:none}
+.node .lbl{font-size:13px;color:#e8d9b0}
+.node .st{font-size:10px;color:#5b6b85}
+.node.high{border-color:#ffd166;box-shadow:0 0 14px rgba(255,209,102,.35)}
+.node.high .st{color:#ffd166}
+.out .st{color:#5b6b85}
+.out.high .st{color:#63e6be}
+.pin{position:absolute;width:11px;height:11px;border-radius:50%;background:#0d1117;border:2px solid #63e6be;cursor:crosshair;z-index:5}
+.pin:hover,.pin.armed{background:#63e6be}
+.pin.pending{background:#ffd166;border-color:#ffd166;animation:blink .7s infinite alternate}
+@keyframes blink{from{opacity:1}to{opacity:.35}}
+#panel{display:flex;gap:14px;flex-wrap:wrap;justify-content:center}
+button{background:#1e2635;border:1px solid #3a4a68;color:#c9d4e6;font:10px ui-monospace,monospace;letter-spacing:.15em;
+  padding:8px 15px;border-radius:7px;cursor:pointer}
+button:hover{border-color:#63e6be}
+button.on{background:#63e6be;color:#0d1117;border-color:#63e6be}
+#status{font-size:11px;letter-spacing:.1em;color:#8ea3c7;min-height:15px;text-align:center}
+#status.warn{color:#ffd166}
+</style>
+</head>
+<body>
+<h1>Logic Gate Bench</h1>
+<div id="hint">click A / B / C switches · drag gates · click an output pin then an input pin to wire · CUT MODE deletes wires</div>
+<div id="board">
+  <svg id="wires"></svg>
+</div>
+<div id="panel">
+  <button id="tangle">introduce feedback loop</button>
+  <button id="clear">unwire everything</button>
+  <button id="reset">restore starter circuit</button>
+  <button id="snip">cut mode: off</button>
+</div>
+<div id="status">evaluating…</div>
+<script>
+(function(){
+"use strict";
+var board=document.getElementById("board"),svg=document.getElementById("wires"),statusEl=document.getElementById("status");
+var W_G=86,H_G=56;
+var sources=[
+  {id:"A",x:26,y:56,v:1,el:null},
+  {id:"B",x:26,y:186,v:0,el:null},
+  {id:"C",x:26,y:316,v:1,el:null}
+];
+var outputs=[{id:"X",x:566,y:170,v:0,el:null},{id:"Y",x:566,y:262,v:0,el:null}];
+var gates=[]; // {id,type,x,y,ins:[null|null pin-ref],out}
+var wires=[]; // {from:'A'|'gN', to:'gN', pin:0|1}
+function starter(){
+  gates=[
+    {id:"g0",type:"AND",x:230,y:60,ins:["A","B"]},
+    {id:"g1",type:"XOR",x:230,y:200,ins:["A","C"]},
+    {id:"g2",type:"OR", x:390,y:130,ins:["g0","g1"]},
+    {id:"g3",type:"NOT",x:390,y:300,ins:["g2"]}
+  ];
+  wires=[
+    {from:"g0",to:"X"},{from:"g2",to:"g3",pin:0},{from:"g3",to:"Y"}
+  ];
+  // fix explicit source->gate wiring through gate.ins; wires store gate->gate/source edges
+  wires=[
+    {from:"A",to:"g0",pin:0},{from:"B",to:"g0",pin:1},
+    {from:"A",to:"g1",pin:0},{from:"C",to:"g1",pin:1},
+    {from:"g0",to:"g2",pin:0},{from:"g1",to:"g2",pin:1},
+    {from:"g2",to:"g3",pin:0},
+    {from:"g2",to:"X"},{from:"g3",to:"Y"}
+  ];
+}
+function gateById(id){for(var i=0;i<gates.length;i++)if(gates[i].id===id)return gates[i];return null;}
+function inCount(g){return g.type==="NOT"?1:2;}
+function pinPos(target,pin,isInput){
+  if(target==="A"||target==="B"||target==="C"){
+    var s=sources.filter(function(x){return x.id===target;})[0];
+    return {x:s.x+56,y:s.y+22};
+  }
+  if(target==="X"||target==="Y"){
+    var o=outputs.filter(function(x){return x.id===target;})[0];
+    return {x:o.x,y:o.y+22};
+  }
+  var g=gateById(target);
+  if(isInput){
+    var n=inCount(g);
+    var off=n===1?H_G/2:(pin===0?16:40);
+    return {x:g.x,y:g.y+off};
+  }
+  return {x:g.x+W_G,y:g.y+H_G/2};
+}
+function buildDom(){
+  board.querySelectorAll(".gate,.node,.pin").forEach(function(el){el.remove();});
+  sources.forEach(function(s){
+    var d=document.createElement("div");
+    d.className="node"+(s.v?" high":"");
+    d.style.left=s.x+"px";d.style.top=s.y+"px";
+    d.innerHTML='<div class="lbl">'+s.id+'</div><div class="st">'+(s.v?"HIGH":"LOW")+"</div>";
+    d.addEventListener("click",function(){s.v=s.v?0:1;buildDom();evaluate();});
+    board.appendChild(d);
+    var p=document.createElement("div");
+    p.className="pin";p.style.left=(s.x+56-5)+"px";p.style.top=(s.y+22-5)+"px";
+    p.dataset.src=s.id;p.title="output of "+s.id;
+    p.addEventListener("pointerdown",onPinOut);
+    board.appendChild(p);
+    s.el=d;
+  });
+  outputs.forEach(function(o){
+    var d=document.createElement("div");
+    d.className="node out";
+    d.style.left=o.x+"px";d.style.top=o.y+"px";
+    d.innerHTML='<div class="lbl">'+o.id+'</div><div class="st">'+(o.v?"HIGH":"LOW")+"</div>";
+    board.appendChild(d);
+    var p=document.createElement("div");
+    p.className="pin";p.style.left=(o.x-5)+"px";p.style.top=(o.y+22-5)+"px";
+    p.dataset.inTarget=o.id;p.title="input of "+o.id;
+    p.addEventListener("pointerdown",onPinIn);
+    board.appendChild(p);
+    o.el=d;
+  });
+  gates.forEach(function(g){
+    var d=document.createElement("div");
+    d.className="gate "+(g.val?"high":"low");
+    d.style.left=g.x+"px";d.style.top=g.y+"px";
+    d.innerHTML='<div class="sym">'+g.type+'</div><div class="val">'+(g.val===1?"1":g.val===0?"0":"?")+"</div>";
+    d.dataset.g=g.id;
+    d.addEventListener("pointerdown",onGateDown);
+    board.appendChild(d);
+    g.el=d;
+    var n=inCount(g);
+    for(var i=0;i<n;i++){
+      var p=document.createElement("div");
+      p.className="pin"+(pending&&pending.to===g.id&&pending.pin===i?" pending":"");
+      var off=n===1?H_G/2:(i===0?16:40);
+      p.style.left=(g.x-5)+"px";p.style.top=(g.y+off-5)+"px";
+      p.dataset.inTarget=g.id;p.dataset.pin=i;
+      p.addEventListener("pointerdown",onPinIn);
+      board.appendChild(p);
+    }
+    var po=document.createElement("div");
+    po.className="pin";
+    po.style.left=(g.x+W_G-5)+"px";po.style.top=(g.y+H_G/2-5)+"px";
+    po.dataset.src=g.id;
+    po.addEventListener("pointerdown",onPinOut);
+    board.appendChild(po);
+  });
+}
+function drawWires(){
+  var out="";
+  wires.forEach(function(w,i){
+    var a=pinPos(w.from,w.pin,true),b=pinPos(w.to,w.pin,false);
+    var c1=a.x+60,c2=b.x-60;
+    out+='<path data-w="'+i+'" d="M '+a.x+' '+a.y+' C '+c1+' '+a.y+', '+c2+' '+b.y+', '+b.x+' '+b.y+'" />';
+  });
+  if(pending){
+    var a2=pinPos(pending.from,pending.pin,true);
+    out+='<path class="tmp" d="M '+a2.x+' '+a2.y+' L '+cursor.x+' '+cursor.y+'" />';
+  }
+  svg.innerHTML=out;
+  if(snipMode){
+    svg.querySelectorAll("path[data-w]").forEach(function(p){
+      p.addEventListener("click",function(){
+        wires.splice(+p.dataset.w,1);drawWires();evaluate();
+        setStatus("wire cut",false);
+      });
+    });
+  }
+}
+var snipMode=false,pending=null,cursor={x:0,y:0};
+function onPinOut(e){
+  if(snipMode)return;
+  var id=e.currentTarget.dataset.src;
+  var pin=0;
+  pending={from:id,pin:0};
+  // choose the pin this source still has free when clicked from an input side later; store pin at commit
+  setStatus("wiring from "+id+" — click a gate input or output node",false);
+  drawWires();buildDom();
+  e.stopPropagation();
+}
+function onPinIn(e){
+  if(snipMode)return;
+  var t=e.currentTarget.dataset.inTarget;
+  var pin=e.currentTarget.dataset.pin?+e.currentTarget.dataset.pin:0;
+  if(pending){
+    wires=wires.filter(function(w){return !(w.to===t&&w.pin===pin);});
+    wires.push({from:pending.from,to:t,pin:pin});
+    pending=null;drawWires();buildDom();evaluate();
+    setStatus("wired",false);
+  }else{
+    // start wiring FROM this input? not supported: select an output first
+    setStatus("click an output pin first (gold markers)",true);
+  }
+  e.stopPropagation();
+}
+var dragging=null;
+function onGateDown(e){
+  if(snipMode)return;
+  if(e.target.classList.contains("pin"))return;
+  var g=gateById(e.currentTarget.dataset.g);
+  var r=board.getBoundingClientRect();
+  dragging={g:g,dx:(e.clientX-r.left)-g.x,dy:(e.clientY-r.top)-g.y};
+  e.currentTarget.setPointerCapture(e.pointerId);
+  e.stopPropagation();
+}
+board.addEventListener("pointermove",function(e){
+  var r=board.getBoundingClientRect();
+  cursor.x=e.clientX-r.left;cursor.y=e.clientY-r.top;
+  if(dragging){
+    dragging.g.x=Math.max(0,Math.min(660-W_G,cursor.x-dragging.dx));
+    dragging.g.y=Math.max(0,Math.min(430-H_G,cursor.y-dragging.dy));
+    buildDom();drawWires();
+  }else if(pending){drawWires();}
+});
+board.addEventListener("pointerup",function(){dragging=null;});
+board.addEventListener("pointerdown",function(e){
+  if(pending&&!e.target.classList.contains("pin")){
+    pending=null;drawWires();buildDom();setStatus("cancelled",false);
+  }
+});
+function setStatus(msg,warn){statusEl.textContent=msg;statusEl.className=warn?"warn":"";}
+function evaluate(){
+  var val={};
+  sources.forEach(function(s){val[s.id]=s.v;});
+  gates.forEach(function(g){g.val=undefined;});
+  // propagate through the WIRING (not a fixed topology): rewires are real
+  for(var pass=0;pass<gates.length+2;pass++){
+    var changed=false;
+    gates.forEach(function(g){
+      if(g.val===1||g.val===0)return; // already resolved this evaluate
+      var n=inCount(g),ins=[],i,w=null;
+      for(i=0;i<n;i++){
+        w=wires.filter(function(x){return x.to===g.id&&x.pin===i;})[0];
+        ins.push(w?val[w.from]:undefined);
+      }
+      for(i=0;i<ins.length;i++)if(ins[i]!==0&&ins[i]!==1)return; // input still unknown
+      var out;
+      switch(g.type){
+        case"AND":out=(ins[0]&&ins[1])?1:0;break;
+        case"OR":out=(ins[0]||ins[1])?1:0;break;
+        case"XOR":out=(ins[0]!==ins[1])?1:0;break;
+        case"NOT":out=ins[0]?0:1;break;
+        default:out=0;
+      }
+      g.val=out;val[g.id]=out;changed=true;
+    });
+    if(!changed)break;
+  }
+  // outputs take their first incoming wire
+  outputs.forEach(function(o){
+    var w=wires.filter(function(x){return x.to===o.id;})[0];
+    o.val=(w&&val[w.from]===1)?1:0;
+    if(o.el){
+      o.el.className="node out"+(o.val?" high":"");
+      o.el.querySelector(".st").textContent=o.val?"HIGH":"LOW";
+    }
+  });
+  var unresolved=gates.filter(function(g){return g.val!==0&&g.val!==1;});
+  var floating=unresolved.filter(function(g){
+    var n=inCount(g);
+    for(var i=0;i<n;i++){
+      var w=wires.filter(function(x){return x.to===g.id&&x.pin===i;})[0];
+      if(!w)return true;
+    }
+    return false;
+  });
+  if(floating.length){
+    setStatus("floating input — "+floating.map(function(g){return g.type;}).join(", ")+" missing a wire",true);
+  }else if(unresolved.length){
+    setStatus("⚠ feedback loop: "+unresolved.map(function(g){return g.type;}).join(", ")+" never settles",true);
+  }else{
+    setStatus("settled · A="+val.A+" B="+val.B+" C="+val.C+" → X="+outputs[0].val+" Y="+outputs[1].val,false);
+  }
+}
+document.getElementById("tangle").addEventListener("click",function(){
+  starter();
+  wires.push({from:"g3",to:"g0",pin:0}); // NOT(Y-ish) feeds back into AND
+  // rewire g3 input already from g2; now g0 pin0 fed by g3 and g3 fed by g2 — still acyclic. make true loop:
+  wires=wires.filter(function(w){return !(w.to==="g3"&&w.pin===0);});
+  wires.push({from:"g3",to:"g2",pin:0});
+  drawWires();buildDom();evaluate();
+  setStatus("⚠ feedback loop introduced (g2 ⇄ g3) — cycle never settles",true);
+});
+document.getElementById("clear").addEventListener("click",function(){wires=[];drawWires();evaluate();setStatus("bench cleared",false);});
+document.getElementById("reset").addEventListener("click",function(){starter();pending=null;drawWires();buildDom();evaluate();setStatus("starter circuit restored",false);});
+document.getElementById("snip").addEventListener("click",function(){
+  snipMode=!snipMode;
+  this.textContent="cut mode: "+(snipMode?"on":"off");
+  this.classList.toggle("on",snipMode);
+  document.body.classList.toggle("snip",snipMode);
+});
+starter();buildDom();drawWires();evaluate();
+})();
+</script>
+</body>
+</html>

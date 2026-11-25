@@ -1,0 +1,18 @@
+TITLE: Ticket Stub — Box Office Roll with Perforated Stubs
+
+FULL PROMPT:
+Create one self-contained HTML page, "Ticket Stub", no external resources. Letterpress theatre palette: warm cream paper with scanline grain, ink-black rules, postal red and stage-blue accents; monospace type throughout; header with kicker, thin/accent title and issued/void counters. Stage: left a horizontally scrolling roll of ticket stubs (flex 0 0 330px, tilted by a per-index custom property, hard offset shadows) each split by a dashed vertical perforation into a main panel (ADMIT ONE rule, serial number in red, patron, show in blue, door/date, a CSS barcode built from repeating gradients) and a stub column (seat in large red, price), with an absolutely positioned rotated stamp ring; plus a House rules card. Right rig: an issue form (name, show/seat selects, price, door), issue and tear-last buttons, a perforation-stamp card with a mark selector and press button, and a roll-counter card (issued, torn, take, current serial).
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like the glass counter of an old box office — cream stock, black rules, a serial number nobody questions, and a perforation you can almost hear.
+
+MAJOR VISUAL TECHNIQUES:
+- Perforation as an absolutely positioned dashed rule at 66% width, so the card splits optically without a grid change
+- Barcode from a single repeating-linear-gradient with irregular stop widths
+- Hard offset box-shadows (no blur) for letterpress depth; hover straightens the tilt
+- Serial-number arithmetic with zero padding, take accumulation and void refunds
+- State map stamps[index] → mark drives class and text together so re-render stays consistent
+- Smooth horizontal scroll-to-newest with behaviour gated by reduced motion
+
+INTENDED INTERACTION MODEL:
+Submit the form to append a new stub to the roll (serial advances by a randomised 1–3, take increases, the roll scrolls to it). "tear last stub" voids the newest, greys it and flips its stamp; the mark selector + press button applies ADMITTED / SOLD OUT / PRESS / VOID / COMP., with VOID also counting as a tear. All four counters update from one function. Three house stubs seed the roll at load. Reduced motion disables tilt animation, scroll smoothing and the tear pulse.

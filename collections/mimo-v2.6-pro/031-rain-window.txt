@@ -1,0 +1,18 @@
+TITLE: Rain Window — Condensation You Can Wipe on a Rainy Pane
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Rain Window", with no external resources. A dusk city sits behind glass: CSS-gradient sky, four blurred bokeh light circles drifting, and a JS-generated skyline of dark building blocks whose window lights flicker with staggered steps animations. Two stacked full-screen canvases: #rain (all weather) and #fog (condensation, on top, pointer-events enabled). Rain draws two layers — fast far streaks whose alpha varies per drop, and beads clinging to the pane that wobble-ellipse radials, accelerate until they run, leave a trailing streak, grow randomly, and reset at the bottom. A glassmorphic console top-left with kicker, title, 58px temperature, condition line, four stat tiles (humidity, wind, visibility, glass), a downpour slider with value readout and two buttons (condensation toggle, breathe). Top-right a drop counter; bottom-left a wipe hint. Condensation repaints a translucent bluish haze plus 700 soft white specks, and pointer movement erases it with a radial destination-out brush so the city sharpens wherever you wipe. "Breathe" fogs it back in over half a second.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like standing at a rain-lashed window at dusk: the room's warmth behind you, the city smeared into bokeh, and a pane you can actually clear with your hand.
+
+MAJOR VISUAL TECHNIQUES:
+- Two-canvas layering: weather beneath, condensation above, so the wipe reveals real rain
+- destination-out radial brushing to erase fog locally
+- Bead physics: velocity-dependent fall, hold states, growth, aspect-ratio squash via save/translate/scale
+- Procedural skyline and window twinkle built from divs with steps() animations
+- blur() bokeh with staggered drift keyframes; backdrop-filter glass panel
+- Slider drives drop counts, streak counts and four derived statistics in one handler
+
+INTENDED INTERACTION MODEL:
+Drag anywhere across the glass to wipe the condensation clear and bring the skyline into focus; the downpour slider (10–100) recuts the drop population and updates wind, humidity, visibility and glass temperature; the condensation button turns the fog off entirely; breathe re-fogs the pane with a short eased repaint. Reduced-motion users keep the fog and the drops static and the twinkle animations are disabled.

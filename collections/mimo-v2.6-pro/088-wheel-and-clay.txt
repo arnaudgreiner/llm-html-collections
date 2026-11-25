@@ -1,0 +1,17 @@
+TITLE: Wheel & Clay — Thrown Vessel
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Wheel & Clay: Thrown Vessel". Simulate a potter's wheel with a 46-ring radial profile array (radius by height). Every new session starts at a randomized height with a randomized belly/lip formula, so forms differ each wheel start. The wheel head spins continuously (concentric arcs rotate with phase). Drag vertically over the pot with a selectable tool — PULL OUT (grow radius), COLLAPSE (shrink radius), SLAM DOWN (move mass from a ring to the ring below) — to reshape the wall live. Buttons apply archetypal gestures: CENTER IT (uniform shrink), BOWL SHAPE (sine belly), NECK SHAPE (constricted throat and flaring lip). A GLAZE selector swaps a five-stop horizontal gradient (terracotta, celadon, cobalt, bone, raw clay); FIRE IT shrinks the silhouette 8%, switches to a hard gloss sheen and changes the status line. Rendering: filled silhouette from the profile, finger ridges every other ring, elliptical rim opening with dark interior, wet-foam highlight while unfired. Live metrics: height cm, width cm, volume ml by ring summation. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dim studio, one stool, one spinning wheel: the pot is a column of numbers you feel with your hand. The craft is making an abstract profile array read as wet clay — sheen, ridges, and the honest weight of a rim.
+
+MAJOR VISUAL TECHNIQUES:
+- Radial profile array → filled silhouette with per-ring shading
+- Continuous spin via wheel-phase concentric arcs
+- Gradient-based glaze schemes with five-stop horizontal ramp
+- Wet sheen vs fired gloss as separate highlight passes
+- Randomized initial form (belly/lip exponents)
+
+INTENDED INTERACTION MODEL:
+Choose a tool, drag on the wall to raise/collapse/slam it, snap to archetypes with buttons, glaze and fire, watch metrics respond to every gesture.

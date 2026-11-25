@@ -1,0 +1,125 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Neon Sign Repair</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:22px;
+  background:#171114;
+  background-image:repeating-linear-gradient(0deg,#1d1519 0 26px,#221a1e 26px 28px,#1a1317 28px 54px,#221a1e 54px 56px),
+                   repeating-linear-gradient(90deg,rgba(0,0,0,.35) 0 52px,rgba(255,255,255,.02) 52px 54px);
+  font-family:ui-monospace,Menlo,Consolas,monospace;color:#cbb}
+#sign{position:relative;padding:34px 46px 40px;background:#0d0b0c;border:6px solid #3a3236;border-radius:14px;
+  box-shadow:0 24px 60px rgba(0,0,0,.7),inset 0 0 0 3px #191416}
+#sign:before{content:"SIGN SER. 1947-B";position:absolute;top:8px;left:14px;font-size:9px;letter-spacing:.2em;color:#5d5459}
+h1{text-align:center;font-size:44px;letter-spacing:.14em;font-weight:400;margin-bottom:12px;white-space:nowrap}
+#sub{text-align:center;font-size:16px;letter-spacing:.62em;white-space:nowrap}
+.tube{display:inline-block;cursor:pointer;transition:color .12s,color .12s,text-shadow .12s;color:#ff4fa3;
+  text-shadow:0 0 4px #ff4fa3,0 0 14px #ff2f92,0 0 34px rgba(255,47,146,.65),0 0 70px rgba(255,47,146,.35)}
+.tube.cy{color:#5ef0ff;text-shadow:0 0 4px #5ef0ff,0 0 14px #2fe0ff,0 0 34px rgba(47,224,255,.6),0 0 70px rgba(47,224,255,.32)}
+.tube.dead{color:#2a2226;text-shadow:0 0 0 transparent;animation:none}
+.tube.fixing{animation:repair .5s ease-out}
+@keyframes repair{0%{opacity:.2}30%{opacity:1}45%{opacity:.25}60%{opacity:1}75%{opacity:.4}100%{opacity:1}}
+.tube.broken{animation:flick .16s steps(2,end) infinite}
+@keyframes flick{0%{color:#2a2226;text-shadow:none}50%{color:#ffe9f4;text-shadow:0 0 6px #ff4fa3,0 0 18px #ff2f92}}
+#panel{display:flex;gap:18px;align-items:center;background:#100d0e;border:1px solid #342b30;border-radius:12px;padding:12px 18px;font-size:11px}
+#panel label{color:#9c8f94;letter-spacing:.1em}
+.row{display:flex;align-items:center;gap:8px}
+input[type=range]{width:120px;accent-color:#ff4fa3}
+button{background:#1c1519;border:1px solid #4a3b43;color:#ffb8d6;font:inherit;font-size:11px;padding:6px 12px;border-radius:8px;cursor:pointer;letter-spacing:.08em}
+button:hover{background:#2a1e24}
+#status b{color:#5ef0ff}
+#vread{color:#ffd47f}
+#msg{font-size:11px;letter-spacing:.24em;text-transform:uppercase;color:#6f6167;min-height:14px}
+</style>
+</head>
+<body>
+<div id="sign">
+  <h1 id="line1"></h1>
+  <div id="sub"></div>
+</div>
+<div id="panel">
+  <div class="row"><label>VOLTAGE</label><input id="volt" type="range" min="60" max="140" value="110"><span id="vread">110V</span></div>
+  <div class="row"><label id="status">TUBES OUT <b id="outN">0</b>/14</label></div>
+  <button id="surge">power surge</button>
+  <button id="reset">re-lamp</button>
+</div>
+<div id="msg">click a dark tube to strike it</div>
+<script>
+(function(){
+"use strict";
+var LINE1="STARDUST",LINE2="MOTEL";
+var h1=document.getElementById("line1"),sub=document.getElementById("sub");
+var volt=document.getElementById("volt"),vread=document.getElementById("vread");
+var outN=document.getElementById("outN"),msg=document.getElementById("msg");
+var tubes=[],broken=0;
+function build(str,target,cyanBase){
+  target.innerHTML="";
+  for(var i=0;i<str.length;i++){
+    var ch=str[i];
+    var sp=document.createElement("span");
+    if(ch===" "){sp.innerHTML="&nbsp;";sp.style.textShadow="none";target.appendChild(sp);continue;}
+    sp.className="tube"+((i>=cyanBase)?" cy":"");
+    sp.textContent=ch;
+    sp.dataset.state="on";
+    sp.addEventListener("click",function(){
+      if(this.dataset.state==="on"){
+        this.dataset.state="dead";this.classList.remove("broken");this.classList.add("dead");
+        broken++;paint();msg.textContent="tube cracked — click to strike it again";
+      }else{
+        this.classList.remove("dead","broken");this.classList.add("fixing");
+        var el=this;setTimeout(function(){el.classList.remove("fixing");},520);
+        this.dataset.state="on";broken--;paint();
+        msg.textContent=broken===0?"sign fully lit":"tube struck";
+      }
+    });
+    target.appendChild(sp);tubes.push(sp);
+  }
+}
+build(LINE1,h1,4);build(LINE2,sub,0);
+function paint(){
+  outN.textContent=broken;
+  var v=+volt.value;
+  vread.textContent=v+"V";
+  var scale=(v/110);
+  for(var i=0;i<tubes.length;i++){
+    var t=tubes[i];if(t.dataset.state!=="on")continue;
+    var base=t.classList.contains("cy")?[ "94,240,255","47,224,255","rgba(47,224,255,.6)","rgba(47,224,255,.32)"]
+                                       :["255,79,163","255,47,146","rgba(255,47,146,.65)","rgba(255,47,146,.35)"];
+    t.style.textShadow="0 0 "+(4*scale)+"px rgb("+base[0]+"),0 0 "+(14*scale)+"px rgb("+base[1]+"),0 0 "+(34*scale)+"px "+base[2]+",0 0 "+(70*scale)+"px "+base[3];
+    t.style.opacity=(0.55+0.45*Math.min(1,v/100)).toFixed(2);
+  }
+}
+volt.addEventListener("input",paint);
+document.getElementById("surge").addEventListener("click",function(){
+  var pool=tubes.filter(function(t){return t.dataset.state==="on";});
+  var hits=Math.min(pool.length,2+Math.floor(Math.random()*3));
+  for(var i=0;i<hits;i++){
+    var pick=pool.splice(Math.floor(Math.random()*pool.length),1)[0];
+    pick.dataset.state="dead";pick.classList.remove("fixing");pick.classList.add("broken");
+    broken++;
+  }
+  paint();msg.textContent="surge! relamp the flickering tubes";
+});
+document.getElementById("reset").addEventListener("click",function(){
+  for(var i=0;i<tubes.length;i++){
+    var t=tubes[i];t.dataset.state="on";t.classList.remove("dead","broken","fixing");t.style.opacity="";
+  }
+  broken=0;paint();msg.textContent="fresh tubes — the sign hums";
+});
+paint();
+setInterval(function(){
+  if(broken>=tubes.length)return;
+  var pool=tubes.filter(function(t){return t.dataset.state==="on";});
+  if(!pool.length)return;
+  var pick=pool[Math.floor(Math.random()*pool.length)];
+  pick.classList.add("broken");
+  var el=pick;
+  setTimeout(function(){if(el.dataset.state==="on")el.classList.remove("broken");},400+Math.random()*700);
+},6500);
+})();
+</script>
+</body>
+</html>

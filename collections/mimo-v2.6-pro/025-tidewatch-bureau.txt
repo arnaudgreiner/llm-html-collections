@@ -1,0 +1,18 @@
+TITLE: Tidewatch Bureau — SVG Tide Chart Dashboard
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Tidewatch Bureau", with no external resources. Use a blue-charcoal dashboard (#0d1420) with rounded #131c2b panels and hairline #1e2a3d borders. Header: uppercase kicker, "Tidewatch" light + "Bureau" heavy title, and a three-button segmented control (24 h / 7 d / 30 d) whose active segment is solid sea-blue. Main panel: three stat tiles (current / peak / mean in metres), a 640×300 SVG chart with five horizontal grid lines labelled in metres, a red dashed flood mark at 4.20 m with an end-anchored label, a filled linear-gradient area path, a dashed amber surge-model path that is a 3-point smooth plus offset, a 2.5px sea-blue tide line, a last-point dot that turns red above threshold, a value label, and six x-axis tick labels that adapt to the range. Beneath: a start/end tick row. Right column: a flood gauge with a rounded gradient fill that turns amber→red past 100% and unhides a warning box, plus a four-row station board with columns for level, 1-hour delta (amber when rising) and a status pill with a coloured dot. Footer: two-part uppercase folio line.
+
+INTENDED DESIGN DESCRIPTION:
+Coastal instrumentation in a quiet control room — one dominant chart, everything else subordinate, red used only where the number is dangerous.
+
+MAJOR VISUAL TECHNIQUES:
+- Deterministic pseudo-noise (sin-hash) so the tide series is identical on every load
+- Series built from two-tide sine + spring/neap swell + roughness, one bucket per range
+- SVG path generation with padding-aware x/y scale mappers and a closed area path
+- Stroke-dashoffset draw-in animation measured with getTotalLength()
+- Threshold logic reused for the line marker colour, gauge fill gradient and alert visibility
+- Range switching regenerates everything from one draw() function on a 9s live-drift interval
+
+INTENDED INTERACTION MODEL:
+Switching the segmented control regenerates the series, redraws the chart, recomputes stats, gauge and station board. The gauge shows current level as a percentage of the 4.20 m flood mark; crossing it turns the fill red and reveals the closed-quays warning. Station deltas colour themselves by direction. Everything is local — no feeds — and reduced motion drops the draw-in animation and slows the drift interval.

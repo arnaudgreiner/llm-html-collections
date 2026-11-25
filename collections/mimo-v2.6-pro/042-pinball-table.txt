@@ -1,0 +1,18 @@
+TITLE: Pinball Table — Three-Ball Cabinet with Real Physics
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Pinball Table", with no external resources. Aquarium-steel palette: deep teal felt gradient table inside a charcoal cabinet with a 6px steel bezel and a fixed diagonal glass sheen overlay; orange flippers, pink slingshots, amber drop targets; header with kicker, thin/accent title and high score. Stage: left the 420×660 cabinet canvas; right a backglass card (score, balls left, bonus multiplier in tabular figures with a pop animation on scoring, plus a live message line), a controls card (LAUNCH, NUDGE, two pointer-hold flipper buttons, and two keycap hints for ←/→ and space) and a scoring-rules card.
+
+INTENDED DESIGN DESCRIPTION:
+It should read as a slightly tired arcade cabinet photographed head-on: felt worn smooth, chrome rails, one steel ball, and numbers that only matter for the length of a ball.
+
+MAJOR VISUAL TECHNIQUES:
+- Segment-vs-circle collision helper reused for rails, guides, slings and both flippers
+- Flippers as hinged segments lerping between rest and raised angles; only apply the kick while the angle is still moving
+- Impulse response: reflect velocity about the contact normal, then add a fixed kick magnitude per object type
+- Drop-target bank with an all-down check that doubles the bonus multiplier to a cap of 8×
+- Bumper/slings flash counters (frames of lit styling) that decrement with physics
+- Score pop keyframe class re-triggered by reflow
+
+INTENDED INTERACTION MODEL:
+Press LAUNCH (or space) to fire the ball up the shooter lane; hold ←/→ or the on-screen flipper buttons to swing the flippers; NUDGE adds random impulse. Bumpers pay 100, slings 50, each drop target 300 and clearing the bank 1500 plus a doubled bonus; draining decrements balls left, and a third drain resets the game while keeping the high score. Reduced motion swaps the free-running loop for bounded 16ms physics bursts driven by the same input.

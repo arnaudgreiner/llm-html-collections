@@ -1,0 +1,17 @@
+TITLE: Mirror Tube — Kaleidoscope
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Mirror Tube: Kaleidoscope". Render a 560×560 circular tube with an offscreen buffer: chips (3–7-sided glass polygons with white edge strokes and highlight ticks) live in one region and are composited into 3–16 mirror facets — each facet rotates the buffer into its angular wedge with clipping, alternating facet parity flipping under the FLIP control. Buffer fades with a trail slider (lighter blend accumulation), chips drift with swirl and reflect off the tube wall, and the whole rosette rotates under a spin slider. JewEL/NEON/AMBER/ICE palettes recolour chips, ring-seed drops a fresh cluster, empty clears. Pointer-drag inside the circle spills more chips (capped at 140). Bezel, seam lines and stats for chips/facets/azimuth complete the instrument. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A brass-to-the-eye toy tube: dark glass, coloured chips, and mathematics doing all the drawing. The craft is that the composition is one small asymmetric cluster reflected into perfect order.
+
+MAJOR VISUAL TECHNIQUES:
+- Offscreen accumulation buffer with adjustable trail decay (lighter composite)
+- Per-facet clip-and-rotate replication with mirrored parity
+- Chip physics: swirl drift, rotational tumble, circular wall reflection
+- Palette swaps mutating live objects
+- Layered bezel/seam chrome over the optical field
+
+INTENDED INTERACTION MODEL:
+Drag to spill glass chips, set mirror count from triangle to hexadecagon, tune spin and persistence, flip handedness, reseed the ring or empty the tube.

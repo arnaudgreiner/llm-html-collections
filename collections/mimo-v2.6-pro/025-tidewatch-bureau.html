@@ -1,0 +1,289 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>025 · Tidewatch Bureau</title>
+<style>
+:root{--bg:#0d1420;--panel:#131c2b;--line:#1e2a3d;--txt:#dfe7f2;--mute:#7d8ea6;
+  --sea:#3fa9f5;--warn:#ffb454;--bad:#ff5f6d;--ok:#4ade80}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:linear-gradient(#0d1420,#0a101a);color:var(--txt);
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:40px}
+.wrap{max-width:1240px;margin:0 auto;padding:26px 20px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:1px solid var(--line);padding-bottom:18px}
+.kicker{font-size:10px;letter-spacing:.46em;text-transform:uppercase;color:var(--mute)}
+h1{margin:9px 0 0;font-size:clamp(28px,4.4vw,46px);font-weight:200;letter-spacing:.03em}
+h1 b{font-weight:800;color:var(--sea)}
+.seg{display:flex;border:1px solid var(--line);border-radius:10px;overflow:hidden}
+.seg button{padding:10px 15px;background:#0f1724;color:var(--mute);border:0;
+  font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  border-right:1px solid var(--line);transition:.2s}
+.seg button:last-child{border-right:0}
+.seg button.on{background:var(--sea);color:#04121f;font-weight:700}
+.seg button:hover:not(.on){color:var(--sea)}
+
+.grid{display:grid;grid-template-columns:1.6fr 1fr;gap:18px;margin-top:20px}
+@media(max-width:900px){.grid{grid-template-columns:1fr}}
+.panel{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:18px}
+.panel h2{margin:0 0 14px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--mute);display:flex;justify-content:space-between;gap:10px;align-items:center}
+.panel h2 b{color:var(--sea);font-weight:700;letter-spacing:.1em}
+svg{display:block;width:100%;height:auto;overflow:visible}
+.gline{stroke:var(--line);stroke-width:1}
+.axis{fill:var(--mute);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;
+  font-family:"Segoe UI",system-ui,sans-serif}
+.val{fill:var(--txt);font-size:11px;font-weight:700;font-family:"Segoe UI",system-ui,sans-serif}
+.area{fill:url(#gradSea);opacity:.55}
+.line{fill:none;stroke:var(--sea);stroke-width:2.5;stroke-linejoin:round;stroke-linecap:round}
+.line2{fill:none;stroke:var(--warn);stroke-width:1.6;stroke-dasharray:5 5}
+.thr{stroke:var(--bad);stroke-width:1;stroke-dasharray:3 6;opacity:.7}
+.dot{fill:var(--sea);stroke:#0d1420;stroke-width:2}
+.dot.hot{fill:var(--bad)}
+
+.stats{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:16px}
+.stat{background:#0f1724;border:1px solid var(--line);border-radius:11px;padding:12px}
+.stat span{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.stat b{display:block;margin-top:6px;font-size:26px;font-weight:700;font-variant-numeric:tabular-nums}
+.stat.up b{color:var(--warn)} .stat.ok b{color:var(--ok)} .stat.bad b{color:var(--bad)}
+
+.gauge{position:relative;margin-top:6px}
+.gauge .track{height:16px;border-radius:9px;background:#0f1724;border:1px solid var(--line);
+  overflow:hidden;position:relative}
+.gauge .fill{height:100%;width:0;border-radius:9px;transition:width .9s cubic-bezier(.22,.9,.24,1)}
+.gauge .lbl{display:flex;justify-content:space-between;font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--mute);margin-top:7px}
+.tick{display:flex;justify-content:space-between;font-size:9.5px;color:var(--mute);
+  letter-spacing:.16em;text-transform:uppercase;margin-top:16px}
+
+table{width:100%;border-collapse:collapse;font-size:12.5px}
+th{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute);
+  text-align:left;padding:7px 6px;border-bottom:1px solid var(--line);font-weight:600}
+td{padding:9px 6px;border-bottom:1px solid rgba(30,42,61,.6);
+  font-variant-numeric:tabular-nums}
+tr:last-child td{border-bottom:0}
+.st{display:inline-flex;align-items:center;gap:7px;font-size:10px;letter-spacing:.16em;
+  text-transform:uppercase}
+.st i{width:8px;height:8px;border-radius:50%}
+.ok i{background:var(--ok)} .watch i{background:var(--warn)} .alert i{background:var(--bad)}
+.ok{color:var(--ok)} .watch{color:var(--warn)} .alert{color:var(--bad)}
+
+.alertbox{margin-top:16px;border:1px solid rgba(255,95,109,.4);background:rgba(255,95,109,.08);
+  border-radius:12px;padding:13px 15px;font-size:13px;line-height:1.6;color:#ffd7db;
+  display:flex;gap:12px;align-items:flex-start}
+.alertbox b{color:var(--bad)}
+.alertbox.hide{display:none}
+.foot{max-width:1240px;margin:26px auto 0;padding:0 20px;display:flex;justify-content:space-between;
+  gap:14px;flex-wrap:wrap;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;
+  color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 025 · coastal instrumentation</span>
+      <h1>Tidewatch <b>Bureau</b></h1>
+    </div>
+    <div class="seg" role="group" aria-label="time range">
+      <button type="button" data-r="24">24 h</button>
+      <button type="button" data-r="7" class="on">7 d</button>
+      <button type="button" data-r="30">30 d</button>
+    </div>
+  </header>
+
+  <div class="grid">
+    <section class="panel">
+      <h2>Water level · station 04 <b id="rangeLbl">last 7 days</b></h2>
+      <div class="stats">
+        <div class="stat"><span>Current</span><b id="vNow">0.00<small style="font-size:13px"> m</small></b></div>
+        <div class="stat up"><span>Peak</span><b id="vMax">0.00<small style="font-size:13px"> m</small></b></div>
+        <div class="stat ok"><span>Mean</span><b id="vAvg">0.00<small style="font-size:13px"> m</small></b></div>
+      </div>
+      <svg id="chart" viewBox="0 0 640 300" role="img" aria-label="tide level chart"></svg>
+      <div class="tick"><span id="tStart">—</span><span>rising tide in blue · surge model dashed</span><span id="tEnd">now</span></div>
+    </section>
+
+    <div>
+      <section class="panel">
+        <h2>Flood threshold</h2>
+        <div class="gauge">
+          <div class="track"><div class="fill" id="gFill" style="background:linear-gradient(90deg,#3fa9f5,#4ade80)"></div></div>
+          <div class="lbl"><span id="gPct">0% of threshold</span><span id="gVal">0.00 m / 4.20 m</span></div>
+        </div>
+        <div class="alertbox hide" id="alertBox">
+          <span style="font-size:17px;line-height:1">⚠</span>
+          <span><b>Threshold exceeded</b><br>Water level passed the flood mark. Low-lying quays are
+            closed until the fall cycle.</span>
+        </div>
+      </section>
+
+      <section class="panel" style="margin-top:18px">
+        <h2>Station board</h2>
+        <table>
+          <thead><tr><th>Station</th><th>Level</th><th>Δ 1h</th><th>Status</th></tr></thead>
+          <tbody id="board"></tbody>
+        </table>
+      </section>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>values simulated locally · no network, no feeds</span>
+    <span>025 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var THRESH=4.20, range=7;
+  var NAMES=["04 Harbour","11 North Pier","07 Estuary","19 Outer Buoy"];
+  var svg=document.getElementById("chart");
+
+  /* deterministic pseudo-noise so the page is stable between loads */
+  function noise(seed){
+    var x=Math.sin(seed*12.9898)*43758.5453;
+    return x-Math.floor(x);
+  }
+
+  function series(days){
+    var pts=[];
+    var n=days===24?24:days*6;               /* 4h buckets for days, hourly for 24h */
+    for(var i=0;i<n;i++){
+      var t=i/n;
+      var lunar = Math.sin(t*Math.PI*2*days*1.0 + days)*1.15;  /* two tides per day */
+      var spring= Math.sin(t*Math.PI*2*days*0.14)*0.35;        /* spring/neap swell */
+      var rough = (noise(i+days*7)-0.5)*0.28;
+      pts.push(3.3 + lunar + spring + rough);
+    }
+    return pts;
+  }
+
+  function draw(){
+    var data=series(range);
+    var W=640,H=300, padL=42, padR=12, padT=14, padB=34;
+    var min=0.5, max=5.4;
+    var x=function(i){ return padL + i*(W-padL-padR)/(data.length-1); };
+    var y=function(v){ return padT + (max-v)/(max-min)*(H-padT-padB); };
+
+    var grid="";
+    for(var g=1;g<5;g++){
+      var gv=min+(max-min)*g/5;
+      grid+='<line class="gline" x1="'+padL+'" y1="'+y(gv).toFixed(1)+'" x2="'+(W-padR)+
+        '" y2="'+y(gv).toFixed(1)+'"/>'+
+        '<text class="axis" x="4" y="'+(y(gv)+3).toFixed(1)+'">'+gv.toFixed(1)+'m</text>';
+    }
+    var xlabels="";
+    var steps=6;
+    for(var s=0;s<=steps;s++){
+      var xi=Math.round(s*(data.length-1)/steps);
+      var lab = range===24 ? (xi+":00") :
+        ("d"+(Math.max(1,Math.round(xi/(data.length-1)*range))));
+      xlabels+='<text class="axis" text-anchor="middle" x="'+x(xi).toFixed(1)+
+        '" y="'+(H-12)+'">'+lab+'</text>';
+    }
+
+    var dLine="", dArea="";
+    data.forEach(function(v,i){
+      var px=x(i).toFixed(1), py=y(v).toFixed(1);
+      dLine += (i?" L":"M")+px+" "+py;
+    });
+    dArea = dLine+" L"+x(data.length-1).toFixed(1)+" "+y(min)+" L"+padL+" "+y(min)+" Z";
+
+    /* surge model: smoothed copy offset upward */
+    var d2="";
+    data.forEach(function(v,i){
+      var sm=(v + (data[i-1]||v) + (data[i+1]||v))/3 + 0.18;
+      d2 += (i?" L":"M")+x(i).toFixed(1)+" "+y(sm).toFixed(1);
+    });
+
+    /* last point marker */
+    var lastV=data[data.length-1];
+    var hot=lastV>=THRESH;
+
+    svg.innerHTML=
+      '<defs><linearGradient id="gradSea" x1="0" y1="0" x2="0" y2="1">'+
+        '<stop offset="0%" stop-color="#3fa9f5" stop-opacity=".55"/>'+
+        '<stop offset="100%" stop-color="#3fa9f5" stop-opacity="0"/>'+
+      '</linearGradient></defs>'+
+      grid+
+      '<line class="thr" x1="'+padL+'" y1="'+y(THRESH)+'" x2="'+(W-padR)+'" y2="'+y(THRESH)+'"/>'+
+      '<text class="axis" x="'+(W-padR)+'" y="'+(y(THRESH)-6)+'" text-anchor="end" '+
+        'fill="#ff5f6d">flood mark 4.20m</text>'+
+      '<path class="area" d="'+dArea+'"/>'+
+      '<path class="line2" d="'+d2+'"/>'+
+      '<path class="line" d="'+dLine+'"/>'+
+      '<circle class="dot'+(hot?" hot":"")+'" cx="'+x(data.length-1).toFixed(1)+
+        '" cy="'+y(lastV).toFixed(1)+'" r="5"/>'+
+      '<text class="val" text-anchor="end" x="'+(W-padR)+'" y="'+(y(lastV)-12).toFixed(1)+'">'+
+        lastV.toFixed(2)+' m</text>'+
+      xlabels;
+
+    if(!reduce){
+      var p=svg.querySelector(".line");
+      var len=p.getTotalLength();
+      p.style.strokeDasharray=len; p.style.strokeDashoffset=len;
+      p.style.transition="stroke-dashoffset 1.2s ease";
+      requestAnimationFrame(function(){ p.style.strokeDashoffset=0; });
+    }
+
+    /* stats */
+    var mx=Math.max.apply(null,data), av=data.reduce(function(a,b){return a+b;},0)/data.length;
+    document.getElementById("vNow").innerHTML=lastV.toFixed(2)+'<small style="font-size:13px"> m</small>';
+    document.getElementById("vMax").innerHTML=mx.toFixed(2)+'<small style="font-size:13px"> m</small>';
+    document.getElementById("vAvg").innerHTML=av.toFixed(2)+'<small style="font-size:13px"> m</small>';
+    document.getElementById("rangeLbl").textContent=
+      range===24? "last 24 hours" : "last "+range+" days";
+    document.getElementById("tStart").textContent= range===24? "00:00" : ("d1 of "+range);
+
+    /* gauge */
+    var pct=Math.min(140, (lastV/THRESH)*100);
+    var fill=document.getElementById("gFill");
+    fill.style.width=Math.min(100,pct)+"%";
+    fill.style.background = pct>=100
+      ? "linear-gradient(90deg,#ffb454,#ff5f6d)"
+      : "linear-gradient(90deg,#3fa9f5,#4ade80)";
+    document.getElementById("gPct").textContent=Math.round(pct)+"% of threshold";
+    document.getElementById("gVal").textContent=lastV.toFixed(2)+" m / 4.20 m";
+    document.getElementById("alertBox").classList.toggle("hide", pct<100);
+
+    /* board */
+    var tb=document.getElementById("board");
+    tb.innerHTML="";
+    NAMES.forEach(function(nm,i){
+      var base=data[data.length-1] + (noise(i*3+range)-0.5)*1.4;
+      var delta=(noise(i+range+99)-0.5)*0.4;
+      var cls = base>=THRESH? "alert" : (base>=3.9? "watch" : "ok");
+      var word= cls==="alert"? "Alert" : (cls==="watch"? "Watch" : "Normal");
+      var tr=document.createElement("tr");
+      tr.innerHTML="<td>"+nm+"</td>"+
+        "<td>"+base.toFixed(2)+" m</td>"+
+        "<td class='"+(delta>=0?"watch":"ok")+"'>"+(delta>=0?"+":"")+delta.toFixed(2)+" m</td>"+
+        "<td><span class='st "+cls+"'><i></i>"+word+"</span></td>";
+      tb.appendChild(tr);
+    });
+  }
+
+  [].slice.call(document.querySelectorAll(".seg button")).forEach(function(b){
+    b.addEventListener("click",function(){
+      [].slice.call(document.querySelectorAll(".seg button")).forEach(function(o){
+        o.classList.remove("on");
+      });
+      b.classList.add("on");
+      range=+b.dataset.r;
+      draw();
+    });
+  });
+
+  draw();
+  /* gentle live drift so the read-out is never dead */
+  setInterval(function(){ draw(); }, reduce? 60000 : 9000);
+})();
+</script>
+</body>
+</html>

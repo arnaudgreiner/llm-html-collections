@@ -1,0 +1,18 @@
+TITLE: Slow Manifesto — Scroll-Driven Editorial Longform
+
+FULL PROMPT:
+Write exactly one self-contained HTML page, "Slow Manifesto", using no external resources. Build a long-form essay surface on #f7f4ec in Georgia: a fixed 3px accent bar (#0b5fff) across the top, a fixed 230px right margin rail with a hairline left border, translucent backdrop blur, a small uppercase sans heading and five section links that grow a blue left rule and italicise when active, plus a live "read N%" figure pinned to the rail bottom. The hero occupies 96vh with an eyebrow, a clamp()-sized display title where one word is an italic blue accent, an italic deck, a four-item meta row and a scroll cue whose blue segment loops down an overflow-hidden tick. Five chapters follow, each with a blue chapter label, a clamp-sized headline, two columns of 18.5px Georgia body with a 66px italic blue drop cap, pull quotes marked by a 3px blue rule, and one marker-highlighted phrase using a linear-gradient underline. Chapters 1–4 and the closing block carry a .reveal class that fades and rises in on intersection. Finish with a large three-line sign-off and a rule-separated colophon. Collapse to one column and hide the rail under 900px.
+
+INTENDED DESIGN DESCRIPTION:
+A printed essay translated to scroll — bookish proportions, a functional margin instead of decoration, and exactly one accent colour used the way a proofreader's pencil is.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS multi-column body text with break-inside:avoid on paragraphs
+- ::first-letter drop cap and a gradient marker highlight
+- Fixed top progress bar plus right-hand rail, both driven by one scroll handler
+- IntersectionObserver reveal with an instant fallback for reduced motion or missing IO
+- Word count read from .page.innerText so the meta figure reflects the real text
+- clamp() typography from 46px to 132px and a 96vh hero
+
+INTENDED INTERACTION MODEL:
+Scrolling drives the top bar, the percentage read-out and which contents entry is active (last section whose top passes 35% of the viewport). Clicking a contents link smooth-scrolls to that chapter. Sections fade up once when they enter the viewport. Under reduced motion, smooth scrolling, reveals and the tick animation are all disabled and everything is shown immediately.

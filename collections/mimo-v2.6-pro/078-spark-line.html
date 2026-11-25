@@ -1,0 +1,324 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Spark Line — Morse Telegraph Bench</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#14100c;color:#c4b49a;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#f0b45a;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fc7c0}
+#bench{background:#1d1712;border:1px solid #35291d;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:8px;background:#100d09;cursor:pointer;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:940px}
+button{background:#231b13;border:1px solid #3d3021;color:#d4c3a6;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#f0b45a;color:#ffe9c4}
+button.on{background:#f0b45a;border-color:#f0b45a;color:#1a1209;font-weight:700}
+label{font-size:9.5px;letter-spacing:.14em;color:#6d6152;display:flex;gap:7px;align-items:center}
+input[type=range]{width:110px;accent-color:#f0b45a}
+input[type=text]{background:#100d09;border:1px solid #3d3021;color:#ffe9c4;font:inherit;font-size:10px;padding:7px 10px;border-radius:6px;width:170px;letter-spacing:.2em}
+input[type=text]:focus{outline:none;border-color:#f0b45a}
+.read{font-size:10px;letter-spacing:.18em;background:#100d09;border:1px solid #3d3021;padding:8px 12px;border-radius:7px;min-width:280px;text-align:center;color:#8fc7c0}
+.read b{color:#f0b45a}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#6d6152}
+.stat b{color:#8fc7c0}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#4b4136;text-align:center;max-width:900px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Spark Line <i>M78</i> · morse telegraph bench</h1>
+<div id="bench"><canvas id="cv" width="940" height="380"></canvas></div>
+<div class="bar">
+  <input type="text" id="msg" value="THE QUICK BROWN FOX" maxlength="24" spellcheck="false">
+  <button id="bSend">⚡ TRANSMIT</button>
+  <button id="bWord">✦ RANDOM WORD</button>
+  <label>WPM <input type="range" id="spd" min="5" max="30" value="14"><b id="wpm" style="color:#f0b45a">14</b></label>
+  <button id="bSound" class="on">TONE</button>
+  <button id="bClear">CLEAR DECODE</button>
+  <span class="stat">unit <b id="mU">429ms</b> · letters <b id="mL">0</b> · key <b id="mK">RX</b></span>
+</div>
+<div class="read">decoded: <b id="out">▮</b></div>
+<div class="hint">TRANMIT plays your message through the lamp, sounder and tape · in practice, tap the brass key — short tap = dot, hold = dash, pauses split letters and words · the tape keeps scrolling everything it sees</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=940,H=380;
+var MORSE={A:".-",B:"-...",C:"-.-.",D:"-..",E:".",F:"..-.",G:"--.",H:"....",I:"..",J:".---",K:"-.-",L:".-..",M:"--",N:"-.",O:"---",P:".--.",Q:"--.-",R:".-.",S:"...",T:"-",U:"..-",V:"...-",W:".--",X:"-..-",Y:"-.--",Z:"--..","0":"-----","1":".----","2":"..---","3":"...--","4":"....-","5":".....","6":"-....","7":"--...","8":"---..","9":"----."};
+var WORDS=["SPARK","VALENCE","ORCHARD","TELEGRAM","BEACON","QUARTZ","LANTERN","MERIDIAN"];
+var wpm=14,soundOn=true;
+function unitMs(){return 1200/wpm;}
+var out="",letters=0;
+var seq=[],si=0,sendOn=false;
+var keyOn=false,keyDownAt=0,lastUp=0;
+var rxCode="",rxFinished=true,spaceAdded=false;
+var lamp=0,lampTarget=0;
+var tape=[];          // {w, kind, x, letter?}
+var marks=[];         // pending tape widths while key down
+var actx=null,osc=null,gain=null;
+function ensureAudio(){
+  if(!soundOn)return;
+  if(!actx){
+    var AC=window.AudioContext||window.webkitAudioContext;
+    if(!AC)return;
+    actx=new AC();
+  }
+  if(actx.state==="suspended")actx.resume();
+  if(!osc){
+    osc=actx.createOscillator();
+    gain=actx.createGain();
+    osc.type="square";osc.frequency.value=620;
+    gain.gain.value=0;
+    osc.connect(gain);gain.connect(actx.destination);
+    osc.start();
+  }
+}
+function setTone(on){
+  if(!gain)return;
+  gain.gain.value=on&&soundOn?0.05:0;
+}
+function pushMark(kind){
+  marks.push({kind:kind,at:performance.now()});
+}
+function flushMarks(){
+  var now=performance.now();
+  marks.forEach(function(m){
+    var dur=now-m.at;
+    tape.push({w:Math.max(9,Math.min(70,dur*0.055+ (m.kind==="dash"?16:8))),kind:m.kind,x:W+30,letter:false});
+  });
+  marks=[];
+}
+function letterDone(){
+  if(!rxCode)return;
+  for(var k in MORSE){
+    if(MORSE[k]===rxCode){out+=k;break;}
+  }
+  letters++;
+  tape.push({w:14,kind:"tick",x:W+30,letter:true,ch:out.slice(-1)});
+  rxCode="";spaceAdded=false;
+  syncOut();
+}
+function syncOut(){
+  document.getElementById("out").textContent=out||"▮";
+  document.getElementById("mL").textContent=letters;
+}
+function buildSeq(){
+  seq=[];si=0;
+  var txt=(document.getElementById("msg").value||"").toUpperCase();
+  for(var i=0;i<txt.length;i++){
+    var c=txt[i],code=MORSE[c];
+    if(c===" "||!code){seq.push({on:false,d:7});continue;}
+    for(var j=0;j<code.length;j++){
+      seq.push({on:true,d:code[j]==="."?1:3});
+      if(j<code.length-1)seq.push({on:false,d:1});
+    }
+    seq.push({on:false,d:3});
+  }
+  seq.push({on:false,d:0.001});
+}
+function startSend(){
+  buildSeq();
+  if(!seq.length)return;
+  ensureAudio();
+  sendOn=true;si=0;st0=performance.now();
+  loop.acc=0;
+  lampTarget=seq[0].on?1:0;
+  setTone(!!seq[0].on);
+}
+var st0=0;
+document.getElementById("bSend").addEventListener("click",startSend);
+document.getElementById("bWord").addEventListener("click",function(){
+  document.getElementById("msg").value=WORDS[Math.floor(Math.random()*WORDS.length)];
+});
+document.getElementById("bSound").addEventListener("click",function(){
+  soundOn=!soundOn;this.className=soundOn?"on":"";
+  if(!soundOn)setTone(false);else ensureAudio();
+});
+document.getElementById("bClear").addEventListener("click",function(){
+  out="";letters=0;syncOut();
+});
+document.getElementById("spd").addEventListener("input",function(){
+  wpm=Number(this.value);
+  document.getElementById("wpm").textContent=wpm;
+  document.getElementById("mU").textContent=Math.round(unitMs())+"ms";
+});
+// key interaction (canvas is also clickable anywhere)
+function keyPos(e){
+  var r=cv.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height};
+}
+cv.addEventListener("pointerdown",function(e){
+  if(sendOn)return;
+  cv.setPointerCapture(e.pointerId);
+  ensureAudio();
+  keyOn=true;keyDownAt=performance.now();
+  lampTarget=1;setTone(true);
+  document.getElementById("mK").textContent="KEY DOWN";
+});
+function keyUp(){
+  if(!keyOn)return;
+  keyOn=false;lampTarget=0;setTone(false);
+  var held=performance.now()-keyDownAt;
+  var u=unitMs();
+  var sym=held<u*2?"dot":"dash";
+  pushMark(sym);
+  rxCode+=(sym==="dot"?".":"-");
+  rxFinished=false;
+  lastUp=performance.now();
+  document.getElementById("mK").textContent="RX";
+}
+cv.addEventListener("pointerup",keyUp);
+cv.addEventListener("pointercancel",keyUp);
+// ---- rendering ----
+function rr(x,y,w,h,r){
+  ax.beginPath();
+  ax.moveTo(x+r,y);ax.arcTo(x+w,y,x+w,y+h,r);
+  ax.arcTo(x+w,y+h,x,y+h,r);ax.arcTo(x,y+h,x,y,r);
+  ax.arcTo(x,y,x+w,y,r);ax.closePath();ax.fill();
+}
+function drawKey(cx,cy,on){
+  ax.save();
+  // base plate
+  ax.fillStyle="#2a2118";rr(cx-90,cy+40,180,26,6);
+  ax.fillStyle="#3a2e20";rr(cx-84,cy+44,168,8,4);
+  // pivot post
+  ax.fillStyle="#4a3a27";rr(cx-60,cy-4,14,48,3);
+  // lever
+  var tilt=on?0.20:0.02;
+  ax.save();
+  ax.translate(cx-53,cy+8);
+  ax.rotate(tilt);
+  ax.fillStyle="#7a5c34";rr(-6,-8,150,14,7);
+  // spring
+  ax.strokeStyle="#8f7a52";ax.lineWidth=2;
+  ax.beginPath();
+  for(var i=0;i<8;i++)ax.lineTo(-30+i*4,10+(i%2)*6);
+  ax.stroke();
+  // knob
+  ax.fillStyle="#171209";ax.beginPath();ax.arc(118,-6,17,0,6.2832);ax.fill();
+  ax.fillStyle=on?"#f0b45a":"#54432c";ax.beginPath();ax.arc(118,-6,11,0,6.2832);ax.fill();
+  ax.restore();
+  // contact spark
+  if(on){
+    ax.fillStyle="rgba(255,220,140,.9)";
+    ax.beginPath();ax.arc(cx-53,cy+44,5,0,6.2832);ax.fill();
+    ax.fillStyle="rgba(255,180,60,.25)";
+    ax.beginPath();ax.arc(cx-53,cy+44,14,0,6.2832);ax.fill();
+  }
+  ax.restore();
+}
+function drawLamp(cx,cy,g){
+  ax.save();
+  // post
+  ax.fillStyle="#3a2e20";rr(cx-5,cy,10,80,4);
+  // glass
+  ax.fillStyle="#171209";ax.beginPath();ax.arc(cx,cy-18,34,0,6.2832);ax.fill();
+  var gr=ax.createRadialGradient(cx,cy-18,4,cx,cy-18,34);
+  gr.addColorStop(0,"rgba(255,244,200,"+(0.25+0.75*g)+")");
+  gr.addColorStop(0.5,"rgba(240,180,90,"+(0.15+0.6*g)+")");
+  gr.addColorStop(1,"rgba(120,70,20,.2)");
+  ax.fillStyle=gr;ax.beginPath();ax.arc(cx,cy-18,32,0,6.2832);ax.fill();
+  if(g>0.05){
+    var halo=ax.createRadialGradient(cx,cy-18,30,cx,cy-18,110*g+30);
+    halo.addColorStop(0,"rgba(255,200,110,"+(0.35*g)+")");
+    halo.addColorStop(1,"rgba(255,200,110,0)");
+    ax.fillStyle=halo;ax.beginPath();ax.arc(cx,cy-18,110*g+30,0,6.2832);ax.fill();
+  }
+  ax.strokeStyle="#54432c";ax.lineWidth=3;
+  ax.beginPath();ax.arc(cx,cy-18,34,0,6.2832);ax.stroke();
+  ax.restore();
+}
+function drawTape(){
+  var ty=300,th=64;
+  ax.fillStyle="#efe6d2";rr(16,ty,W-32,th,6);
+  ax.fillStyle="rgba(140,120,90,.25)";
+  for(var gx=20;gx<W-20;gx+=26)ax.fillRect(gx,ty+th-9,1,6);
+  ax.strokeStyle="rgba(120,100,70,.4)";ax.lineWidth=1;
+  ax.strokeRect(16.5,ty+0.5,W-33,th-1);
+  tape.forEach(function(m){
+    var x=m.x;
+    if(x>W+40||x+m.w<10)return;
+    ax.fillStyle="#1b1712";
+    if(m.kind==="tick"){
+      ax.fillStyle="rgba(160,60,40,.8)";
+      ax.fillRect(x,ty+6,2,th-22);
+      ax.fillStyle="#7a3324";
+      ax.font="bold 13px ui-monospace,monospace";
+      ax.fillText(m.ch||"",x+4,ty+th-14);
+    }else if(m.kind==="dot"){
+      rr(x,ty+10,Math.min(m.w,22),14,7);
+    }else{
+      rr(x,ty+10,m.w,14,7);
+    }
+  });
+}
+function render(dt){
+  ax.fillStyle="#100d09";ax.fillRect(0,0,W,H);
+  var vg=ax.createRadialGradient(W/2,150,40,W/2,150,520);
+  vg.addColorStop(0,"rgba(60,45,25,.5)");vg.addColorStop(1,"rgba(0,0,0,0)");
+  ax.fillStyle=vg;ax.fillRect(0,0,W,300);
+  // wires
+  ax.strokeStyle="#4a3a27";ax.lineWidth=3;
+  ax.beginPath();
+  ax.moveTo(150,250);ax.bezierCurveTo(300,270,420,210,560,236);
+  ax.moveTo(700,236);ax.bezierCurveTo(760,250,800,260,860,300);
+  ax.stroke();
+  drawKey(230,220,keyOn||sendOn&&lampTarget>0.5);
+  drawLamp(640,150,lamp);
+  // sounder
+  ax.fillStyle="#2a2118";rr(760,180,110,60,7);
+  ax.fillStyle=lamp>0.5?"#f0b45a":"#54432c";
+  ax.beginPath();ax.arc(815,210,16,0,6.2832);ax.fill();
+  ax.fillStyle="#6d6152";ax.font="9px ui-monospace,monospace";
+  ax.fillText("SOUNDER",782,264);
+  ax.fillText("KEY",214,300);
+  ax.fillText("SPARK LAMP",596,110);
+  drawTape();
+}
+function loop(now){
+  var dt=Math.min(0.05,(now-(loop.last||now))/1000);loop.last=now;
+  var u=unitMs();
+  // transmitter
+  if(sendOn){
+    if(!loop.acc)loop.acc=0;
+    loop.acc+=dt*1000/u;
+    while(si<seq.length&&loop.acc>=seq[si].d){
+      loop.acc-=seq[si].d;si++;
+      if(si>=seq.length){
+        sendOn=false;lampTarget=0;setTone(false);loop.acc=0;
+        break;
+      }
+      var cur=seq[si];
+      lampTarget=cur.on?1:0;
+      setTone(cur.on);
+      if(cur.on&&cur.d>=1){tape.push({w:cur.d>=3?26:11,kind:cur.d>=3?"dash":"dot",x:W+30,letter:false});}
+      if(!cur.on&&cur.d>=3){if(rxCode)letterDone();}
+      if(!cur.on&&cur.d>=7){if(out&&out.slice(-1)!==" ") {out+=" ";syncOut();}}
+    }
+  }else if(!keyOn&&rxCode&&!rxFinished){
+    if(now-lastUp>u*2.5){letterDone();rxFinished=true;}
+    if(now-lastUp>u*6.5&&!spaceAdded&&out&&out.slice(-1)!==" "){
+      out+=" ";spaceAdded=true;syncOut();
+    }
+  }
+  // lamp ease
+  lamp+=(lampTarget-lamp)*Math.min(1,dt*18);
+  // tape
+  tape.forEach(function(m){m.x-=dt*26;});
+  tape=tape.filter(function(m){return m.x+m.w>-30;});
+  if(marks.length&&!keyOn&&!sendOn)flushMarks();
+  render(dt);
+  requestAnimationFrame(loop);
+}
+document.getElementById("msg").addEventListener("keydown",function(e){
+  if(e.key==="Enter")startSend();
+});
+document.getElementById("wpm").textContent=wpm;
+document.getElementById("mU").textContent=Math.round(unitMs())+"ms";
+syncOut();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

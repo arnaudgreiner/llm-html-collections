@@ -1,0 +1,451 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>039 · Night Ferry</title>
+<style>
+:root{--bg:#05070d;--panel:#0b1018;--line:#1d2735;--ink:#dfe7f2;--mute:#7d8ba1;
+  --amber:#ffb454;--sea:#0f1b26}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(900px 500px at 50% -10%,#12203a,transparent),
+  var(--bg);color:var(--ink);min-height:100vh;font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:26px;font-weight:300}
+h1 b{font-weight:700;color:var(--amber)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:var(--amber);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 290px;gap:24px;padding:20px 28px 0}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+.seaBox{position:relative;border:1px solid var(--line);border-radius:16px;overflow:hidden;
+  background:linear-gradient(180deg,#0a1424 0%,#08111d 45%,var(--sea) 46%,#0a1622 100%)}
+canvas{display:block;width:100%;height:auto}
+.hud{position:absolute;left:16px;top:14px;display:flex;gap:16px;flex-wrap:wrap;
+  font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute);pointer-events:none}
+.hud b{color:var(--amber);font-variant-numeric:tabular-nums}
+.legend{position:absolute;right:16px;bottom:14px;font-size:9.5px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--mute);text-align:right;pointer-events:none}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.slab{display:flex;align-items:center;gap:9px;margin-bottom:11px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.slab input{flex:1;accent-color:var(--amber)}
+.slab b{color:var(--ink);width:52px;text-align:right;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:9px}
+.b{flex:1;font:inherit;font-size:10px;letter-spacing:.18em;text-transform:uppercase;font-weight:700;
+  padding:10px 6px;border-radius:8px;border:1px solid var(--line);background:#131c28;
+  color:var(--ink);cursor:pointer;transition:.16s}
+.b:hover{transform:translateY(-2px);border-color:var(--amber);color:var(--amber)}
+.b.on{background:var(--amber);border-color:var(--amber);color:#05070d}
+table.log{width:100%;border-collapse:collapse;font-size:11.5px;font-variant-numeric:tabular-nums}
+table.log th{font-size:8.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);
+  text-align:left;padding:4px 6px;border-bottom:1px solid var(--line);font-weight:600}
+table.log td{padding:6px;border-bottom:1px dotted var(--line);color:#aab4c6}
+table.log td:last-child,table.log th:last-child{text-align:right}
+table.log tr.warn td{color:var(--amber)}
+.gauge{display:flex;align-items:flex-end;gap:3px;height:56px;margin-top:6px}
+.gauge i{flex:1;background:linear-gradient(180deg,var(--amber),#5a3a12);border-radius:2px 2px 0 0;
+  transition:height .3s ease}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">channel four · pilot aboard</span>
+  <h1>Night <b>Ferry</b></h1>
+  <span class="meta">passage <b id="hdgOut">090°</b> · eta <b id="etaOut">--:--</b></span>
+</header>
+
+<div class="stage">
+  <main class="seaBox">
+    <canvas id="sea" width="780" height="470"></canvas>
+    <div class="hud">speed <b id="hudSpd">11.0</b> kt · swell <b id="hudSwell">1.6</b> m · log <b id="hudNm">0.0</b> nm · passengers <b id="hudPax">42</b></div>
+    <div class="legend">amber = course · watch for crossing vessels</div>
+  </main>
+
+  <aside class="rig">
+    <section class="card">
+      <h2>Bridge orders</h2>
+      <label class="slab">helm <input id="helm" type="range" min="-45" max="45" value="0"><b id="helmOut">0°</b></label>
+      <label class="slab">throttle <input id="thr" type="range" min="4" max="20" step="0.5" value="11"><b id="thrOut">11.0 kt</b></label>
+      <label class="slab">swell <input id="swell" type="range" min="0" max="60" value="16"><b id="swellOut">1.6 m</b></label>
+      <div class="btns" style="margin-top:6px">
+        <button class="b on" id="auto" type="button">auto pilot</button>
+        <button class="b" id="showLights" type="button">deck lights</button>
+      </div>
+    </section>
+
+    <section class="card">
+      <h2>Whistle</h2>
+      <div class="btns">
+        <button class="b" id="oneShort" type="button">1 short</button>
+        <button class="b" id="twoShort" type="button">2 short</button>
+        <button class="b" id="longBlast" type="button">long</button>
+      </div>
+      <p style="font-size:11px;line-height:1.7;color:var(--mute);margin:11px 0 0">
+        Rule 34: one short = altering course to starboard; two = to port; a long answers a
+        vessel you cannot see. Other craft answer back.</p>
+    </section>
+
+    <section class="card">
+      <h2>Engine order telegraph</h2>
+      <div class="gauge" id="gauge" aria-hidden="true"></div>
+      <table class="log" style="margin-top:9px">
+        <thead><tr><th>log</th><th>entry</th></tr></thead>
+        <tbody id="logBody"></tbody>
+      </table>
+    </section>
+  </aside>
+</div>
+
+<footer class="foot" style="display:flex;justify-content:space-between;padding:19px 28px 0;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)">
+  <span>canvas sea · crossing traffic answers your signals</span><span>039 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("sea"), ctx=cv.getContext("2d");
+  var W=cv.width, H=cv.height;
+  var MID=H*0.46;
+  var G=function(id){return document.getElementById(id);};
+
+  var ship={x:70, y:MID+150, hdg:0, spd:11, thr:11, helm:0, nm:0};
+  var autoPilot=true, deckLights=false;
+  var swell=1.6;
+  var DAY=["21:40","21:52","22:05","22:18","22:31","22:44"];
+  var wakes=[];
+
+  /* crossing traffic, spawned on lanes above/below the ferry */
+  var vessels=[];
+  function spawnVessel(){
+    var fromLeft=Math.random()<0.5;
+    var lane=Math.random()<0.5?-70:80;
+    vessels.push({
+      x:fromLeft?-40:W+40,
+      y:MID+lane+(Math.random()*40-20),
+      vx:(fromLeft?1:-1)*(0.5+Math.random()*0.7),
+      wob:Math.random()*6.28,
+      lit:false,
+      name:["ISLE MAID","CORVUS","TIDE MARK","SABLE STAR","NORTH GULL","PILOT 4"][vessels.length%6],
+      phase:0, blink:0
+    });
+  }
+  spawnVessel(); spawnVessel();
+
+  function tone(freq,dur,type,gain){
+    try{
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return;
+      if(!tone.ctx) tone.ctx=new AC();
+      var c=tone.ctx, o=c.createOscillator(), g=c.createGain();
+      o.type=type||"sine"; o.frequency.value=freq;
+      g.gain.setValueAtTime(0.0001,c.currentTime);
+      g.gain.exponentialRampToValueAtTime(gain||0.14,c.currentTime+0.04);
+      g.gain.exponentialRampToValueAtTime(0.0001,c.currentTime+(dur||0.5));
+      o.connect(g); g.connect(c.destination);
+      o.start(); o.stop(c.currentTime+(dur||0.5)+0.05);
+    }catch(e){/* audio unavailable — silent is fine */}
+  }
+
+  function log(txt,warn){
+    var b=G("logBody");
+    var tr=document.createElement("tr");
+    if(warn) tr.className="warn";
+    var t=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    tr.innerHTML="<td>"+p(t.getHours())+":"+p(t.getMinutes())+"</td><td>"+txt+"</td>";
+    b.insertBefore(tr,b.firstChild);
+    while(b.children.length>5) b.removeChild(b.lastChild);
+  }
+
+  function whistle(pattern){
+    /* pattern: array of [on, off] in ms */
+    var t=0;
+    pattern.forEach(function(seg){
+      setTimeout(function(){ tone(220,seg[0]/1000,"sawtooth",0.10);
+        tone(223,seg[0]/1000,"sine",0.10); }, t);
+      t+=seg[0]+seg[1];
+    });
+    log("whistle · "+pattern.length+" blast"+(pattern.length>1?"s":""),true);
+    /* other vessels answer */
+    setTimeout(function(){
+      var lit=vessels.filter(function(v){return v.answering;});
+      vessels.forEach(function(v,i){ if(Math.random()<0.6) v.answering=true; });
+      setTimeout(function(){
+        vessels.forEach(function(v){
+          if(v.answering){ tone(180,0.35,"sawtooth",0.07); v.answering=false; }
+        });
+      },700);
+      if(vessels.length) log("answering signal received");
+    },900);
+  }
+
+  function drawFrame(){
+    ctx.clearRect(0,0,W,H);
+    /* sea */
+    var g=ctx.createLinearGradient(0,0,0,MID);
+    g.addColorStop(0,"#0a1424"); g.addColorStop(1,"#071019");
+    ctx.fillStyle=g; ctx.fillRect(0,0,W,MID);
+    g=ctx.createLinearGradient(0,MID,0,H);
+    g.addColorStop(0,"#122130"); g.addColorStop(1,"#0a1622");
+    ctx.fillStyle=g; ctx.fillRect(0,MID,W,H-MID);
+    ctx.strokeStyle="rgba(255,180,84,.25)";
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.moveTo(0,MID+.5); ctx.lineTo(W,MID+.5); ctx.stroke();
+
+    /* moon path */
+    ctx.fillStyle="rgba(232,240,255,.75)";
+    ctx.beginPath(); ctx.arc(W*0.78,64,15,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="rgba(10,20,36,1)";
+    ctx.beginPath(); ctx.arc(W*0.78+7,59,14,0,Math.PI*2); ctx.fill();
+    var moonG=ctx.createRadialGradient(W*0.78,64,10,W*0.78,64,150);
+    moonG.addColorStop(0,"rgba(214,229,255,.18)"); moonG.addColorStop(1,"rgba(0,0,0,0)");
+    ctx.fillStyle=moonG; ctx.fillRect(W*0.78-160,0,320,320);
+
+    /* swell lines */
+    var t=performance.now()/1000;
+    ctx.lineWidth=1;
+    for(var r=0;r<7;r++){
+      var yy=MID+16+r*((H-MID-20)/7);
+      ctx.strokeStyle="rgba(140,180,210,"+(0.10+r*0.015).toFixed(2)+")";
+      ctx.beginPath();
+      for(var x=0;x<=W;x+=14){
+        var y=yy+Math.sin((x/70)+t*(0.6+r*0.12)+r)*swell*(1.1+r*0.08);
+        if(x===0) ctx.moveTo(x,y); else ctx.lineTo(x,y);
+      }
+      ctx.stroke();
+    }
+    for(var r2=0;r2<3;r2++){
+      var yb=28+r2*34;
+      ctx.strokeStyle="rgba(90,130,170,.10)";
+      ctx.beginPath();
+      for(var x2=0;x2<=W;x2+=16){
+        var y2=yb+Math.sin((x2/90)+t*0.4+r2)*swell*0.5;
+        if(x2===0) ctx.moveTo(x2,y2); else ctx.lineTo(x2,y2);
+      }
+      ctx.stroke();
+    }
+
+    /* beacons on the shore side */
+    [[90,54],[240,40],[470,48],[640,58]].forEach(function(b,i){
+      var blink=(Math.sin(t*2+i)+1)/2;
+      ctx.fillStyle="rgba(255,180,84,"+(0.25+blink*0.75).toFixed(2)+")";
+      ctx.beginPath(); ctx.arc(b[0],b[1],2.6,0,Math.PI*2); ctx.fill();
+    });
+
+    /* other vessels */
+    vessels.forEach(function(v){
+      ctx.save();
+      ctx.translate(v.x,v.y);
+      ctx.fillStyle=v.lit?"#c9d6e6":"#1a2735";
+      ctx.beginPath();
+      ctx.moveTo(-16,4); ctx.lineTo(16,4); ctx.lineTo(10,-4); ctx.lineTo(-10,-4);
+      ctx.closePath(); ctx.fill();
+      ctx.strokeStyle="rgba(150,180,210,.5)";
+      ctx.stroke();
+      if(v.lit){
+        ctx.fillStyle="#ffb454";
+        ctx.fillRect(-1,-9,2,3);
+        ctx.fillStyle="rgba(255,180,84,.5)";
+        ctx.beginPath(); ctx.arc(0,-9,7,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle="rgba(200,214,230,.7)";
+      ctx.font="9.5px 'Segoe UI',sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(v.name, 0, 18);
+      ctx.restore();
+      /* wake */
+      ctx.strokeStyle="rgba(160,200,230,.20)";
+      ctx.beginPath(); ctx.moveTo(v.x,v.y+5);
+      ctx.lineTo(v.x-v.vx*46,v.y+5+Math.sin(t*2+v.wob)*3); ctx.stroke();
+    });
+
+    /* the ferry */
+    ctx.save();
+    ctx.translate(ship.x,ship.y);
+    ctx.rotate(ship.hdg*Math.PI/180);
+
+    /* wake foam */
+    var wk=ctx.createLinearGradient(0,6,0,54);
+    wk.addColorStop(0,"rgba(226,238,250,.55)"); wk.addColorStop(1,"rgba(226,238,250,0)");
+    ctx.fillStyle=wk;
+    ctx.beginPath();
+    ctx.moveTo(-13,10); ctx.lineTo(13,10);
+    ctx.lineTo(30*(1+Math.sin(t*3)*0.06),54); ctx.lineTo(-30*(1+Math.cos(t*3)*0.06),54);
+    ctx.closePath(); ctx.fill();
+
+    /* hull */
+    ctx.fillStyle="#101a26";
+    ctx.strokeStyle="#ffb454"; ctx.lineWidth=1.6;
+    ctx.beginPath();
+    ctx.moveTo(30,0);
+    ctx.lineTo(14,-11);
+    ctx.lineTo(-24,-11);
+    ctx.lineTo(-27,0);
+    ctx.lineTo(-24,11);
+    ctx.lineTo(14,11);
+    ctx.closePath(); ctx.fill(); ctx.stroke();
+    /* superstructure */
+    ctx.fillStyle="#dfe7f2";
+    ctx.fillRect(-14,-7,20,14);
+    ctx.fillStyle="#0b1018";
+    ctx.fillRect(-11,-4,6,4); ctx.fillRect(-3,-4,6,4);
+    ctx.fillStyle="#7d8ba1";
+    ctx.fillRect(8,-4,5,8);
+    /* funnel */
+    ctx.fillStyle="#e05a3c";
+    ctx.beginPath(); ctx.arc(-2,0,4.5,0,Math.PI*2); ctx.fill();
+    ctx.fillStyle="#0b1018";
+    ctx.beginPath(); ctx.arc(-2,0,2.2,0,Math.PI*2); ctx.fill();
+    /* deck lights */
+    if(deckLights){
+      ctx.fillStyle="rgba(255,214,140,.95)";
+      [-18,-8,2,12].forEach(function(dx){ ctx.fillRect(dx,-1.5,3,3); });
+      var lg=ctx.createRadialGradient(0,0,4,0,0,44);
+      lg.addColorStop(0,"rgba(255,214,140,.28)"); lg.addColorStop(1,"rgba(255,214,140,0)");
+      ctx.fillStyle=lg;
+      ctx.beginPath(); ctx.arc(0,0,44,0,Math.PI*2); ctx.fill();
+    }
+    /* masthead light */
+    ctx.fillStyle="#e8f0ff";
+    ctx.beginPath(); ctx.arc(0,-9,2,0,Math.PI*2); ctx.fill();
+    ctx.restore();
+
+    /* course line (dead reckoning) */
+    ctx.strokeStyle="rgba(255,180,84,.7)";
+    ctx.setLineDash([7,7]); ctx.lineWidth=1.4;
+    ctx.beginPath();
+    ctx.moveTo(ship.x,ship.y);
+    ctx.lineTo(ship.x+Math.cos(ship.hdg*Math.PI/180)*170,
+               ship.y+Math.sin(ship.hdg*Math.PI/180)*170);
+    ctx.stroke();
+    ctx.setLineDash([]);
+
+    /* compass tick ring around the ferry */
+    ctx.strokeStyle="rgba(255,180,84,.28)";
+    ctx.lineWidth=1;
+    ctx.beginPath(); ctx.arc(ship.x,ship.y,44,0,Math.PI*2); ctx.stroke();
+    for(var a=0;a<360;a+=45){
+      var ar=a*Math.PI/180;
+      ctx.beginPath();
+      ctx.moveTo(ship.x+Math.cos(ar)*44, ship.y+Math.sin(ar)*44);
+      ctx.lineTo(ship.x+Math.cos(ar)*(a%90===0?54:49), ship.y+Math.sin(ar)*(a%90===0?54:49));
+      ctx.stroke();
+    }
+  }
+
+  function step(){
+    /* helm: auto pilot steers back toward the lane centre */
+    if(autoPilot){
+      var target=MID+150;
+      var err=(target-ship.y);
+      ship.hdg+= Math.max(-1.4,Math.min(1.4, err*0.0016)) - ship.hdg*0.02;
+      ship.helm=Math.round(Math.max(-45,Math.min(45, err*0.4)));
+      G("helm").value=ship.helm;
+      G("helmOut").textContent=ship.helm+"°";
+    }else{
+      ship.hdg+=ship.helm*0.004;
+    }
+    ship.spd+=(ship.thr-ship.spd)*0.05;
+    var rad=ship.hdg*Math.PI/180;
+    ship.x+=Math.cos(rad)*ship.spd*0.42;
+    ship.y+=Math.sin(rad)*ship.spd*0.42;
+    ship.nm+=ship.spd/3600;
+
+    /* wrap horizontally, bounce gently in the lane */
+    if(ship.x>W+44) ship.x=-44;
+    if(ship.x<-44) ship.x=W+44;
+    if(ship.y<MID+40){ ship.y=MID+40; ship.hdg=Math.abs(ship.hdg); }
+    if(ship.y>H-40){ ship.y=H-40; ship.hdg=-Math.abs(ship.hdg); }
+
+    vessels.forEach(function(v){
+      v.x+=v.vx; v.wob+=0.02;
+      v.lit=deckLights?false:(Math.sin(v.wob*2)>0.2);
+      if(v.x<-60||v.x>W+60){ v.x=v.vx>0?-40:W+40; v.y=MID+(Math.random()<0.5?-70:80)+(Math.random()*40-20); }
+      var dx=v.x-ship.x, dy=v.y-ship.y;
+      if(dx*dx+dy*dy<60*60 && !v.warned){ v.warned=true; log("close quarters · "+v.name,true); }
+      if(dx*dx+dy*dy>90*90) v.warned=false;
+    });
+
+    if(Math.random()<0.004) spawnVessel();
+    if(vessels.length>5) vessels.shift();
+
+    wakes.push({x:ship.x,y:ship.y});
+    if(wakes.length>28) wakes.shift();
+
+    drawFrame();
+
+    /* readouts */
+    G("hudSpd").textContent=ship.spd.toFixed(1);
+    G("hudSwell").textContent=swell.toFixed(1);
+    G("hudNm").textContent=ship.nm.toFixed(1);
+    G("hdgOut").textContent=("00"+((Math.round(ship.hdg)+360)%360)).slice(-3)+"°";
+    var remain=24.8-ship.nm;
+    var mins=Math.max(0,Math.round(remain/Math.max(ship.spd,1)*60));
+    G("etaOut").textContent=("0"+Math.floor(mins/60)).slice(-2)+":"+("0"+(mins%60)).slice(-2);
+    updateGauge();
+
+    if(!reduce) requestAnimationFrame(step);
+  }
+
+  var gauge=document.getElementById("gauge");
+  for(var gi=0;gi<14;gi++) gauge.appendChild(document.createElement("i"));
+  var bars=gauge.children;
+  function updateGauge(){
+    for(var i=0;i<bars.length;i++){
+      var v=Math.abs(Math.sin(performance.now()/420+i*0.7))*0.7+0.3;
+      var h=(ship.thr/20)*v*100;
+      bars[i].style.height=h.toFixed(0)+"%";
+    }
+  }
+
+  /* controls */
+  G("helm").addEventListener("input",function(){
+    ship.helm=parseInt(this.value,10);
+    G("helmOut").textContent=ship.helm+"°";
+    if(ship.helm!==0 && autoPilot){ setAuto(false); }
+  });
+  G("thr").addEventListener("input",function(){
+    ship.thr=parseFloat(this.value);
+    G("thrOut").textContent=ship.thr.toFixed(1)+" kt";
+  });
+  G("swell").addEventListener("input",function(){
+    swell=parseInt(this.value,10)/10;
+    G("swellOut").textContent=swell.toFixed(1)+" m";
+  });
+  function setAuto(on){
+    autoPilot=on;
+    G("auto").classList.toggle("on",on);
+    G("auto").textContent=on?"auto pilot":"manual helm";
+  }
+  G("auto").addEventListener("click",function(){ setAuto(!autoPilot); log(autoPilot?"auto pilot engaged":"manual helm"); });
+  G("showLights").addEventListener("click",function(){
+    deckLights=!deckLights;
+    this.classList.toggle("on",deckLights);
+    this.textContent=deckLights?"lights out":"deck lights";
+    log(deckLights?"deck lights on":"deck lights out");
+    if(reduce) drawFrame();
+  });
+  G("oneShort").addEventListener("click",function(){ whistle([[260,180]]); });
+  G("twoShort").addEventListener("click",function(){ whistle([[260,180],[260,0]]); });
+  G("longBlast").addEventListener("click",function(){ whistle([[900,0]]); });
+
+  document.addEventListener("visibilitychange",function(){ /* keep state, nothing to stop */ });
+
+  log("pilot aboard · all fast");
+  if(!reduce){ requestAnimationFrame(step); }
+  else{ drawFrame(); updateGauge(); }
+})();
+</script>
+</body>
+</html>

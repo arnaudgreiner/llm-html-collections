@@ -1,0 +1,18 @@
+TITLE: Ripple Tank
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Ripple Tank". On a deep petrol-blue page, present a 720×400 tank canvas bordered like a laboratory basin. Compute a live two-source (up to four) interference field in an ImageData buffer at half resolution and upscale it smoothly: each emitter radiates sin(k·r − ωt + φ)/√r, and the sum is mapped through a crest-boosted palette so wavefronts glow teal-white over dark water. Emitters are amber glow dots that can be dragged with pointer events; a control panel carries sliders for wavelength (18–90px), propagation speed (0–2×), and source count (1–4), plus buttons to switch between the live ripple view and a time-averaged "nodal lines" view that paints the destructive-interference spokes green, and to freeze/resume the phase. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a physics lab's ripple tank photographed from above in a dark room: cold teal water, amber dipper heads, monospace instrument labels. The interference pattern is the whole point — hyperbolic fringes that visibly slide when a source is dragged and lock into standing nodal spokes when toggled — making abstract wave addition into something you steer with your hands.
+
+MAJOR VISUAL TECHNIQUES:
+- Per-pixel ImageData wave simulation with 1/√r attenuation, upscaled with smoothing
+- Multi-source superposition with independent emitter phases
+- Crest-boosted color mapping (pow shaping) for glowing wavefronts
+- Time-averaged intensity mode rendering destructive nodal lines
+- Pointer-drag emitter repositioning with clamped local coordinates
+- rAF loop with phase accumulator and freeze toggle
+
+INTENDED INTERACTION MODEL:
+Drag either amber emitter to move it and watch the fringe pattern reorganize in real time; raise SOURCES up to four for richer lattices. Slide WAVELENGTH to stretch or compress the fringes and SPEED to accelerate or stall the phase (including zero). Press "show nodal lines" to swap the live surface for the stationary interference envelope and back, and "freeze" to hold the frame for inspection while you drag.

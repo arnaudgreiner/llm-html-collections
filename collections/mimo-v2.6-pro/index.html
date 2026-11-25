@@ -1,0 +1,1206 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>MiMo-V2.6-Pro 100 HTML Files</title>
+<style>
+:root{
+  --bg:#0a0c12; --panel:#11141d; --line:rgba(255,255,255,.09);
+  --ink:#e9edf8; --mut:#98a2ba; --dim:#5f6a84;
+  --violet:#7b6cff; --teal:#4ee6c7; --rose:#ff6ec4;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--bg); color:var(--ink);
+  font-family:"Segoe UI",system-ui,-apple-system,Roboto,Helvetica,Arial,sans-serif;
+  -webkit-font-smoothing:antialiased;
+}
+body::before{ /* soft colour wash */
+  content:""; position:fixed; inset:0; z-index:-1; pointer-events:none;
+  background:
+    radial-gradient(60vw 40vh at 12% -6%, rgba(123,108,255,.16), transparent 65%),
+    radial-gradient(50vw 36vh at 88% -4%, rgba(78,230,199,.10), transparent 65%),
+    radial-gradient(70vw 50vh at 50% 118%, rgba(255,110,196,.07), transparent 70%);
+}
+.wrap{max-width:1280px;margin:0 auto;padding:48px 24px 72px}
+header.top{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-between;gap:18px;margin-bottom:14px}
+.eyebrow{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:var(--dim);margin:0 0 14px}
+h1{margin:0;font-size:clamp(28px,4.2vw,46px);font-weight:650;letter-spacing:-.025em;line-height:1.05}
+h1 .grad{background:linear-gradient(92deg,var(--violet),var(--teal) 55%,var(--rose));-webkit-background-clip:text;background-clip:text;color:transparent}
+.sub{color:var(--mut);margin:10px 0 0;font-size:14.5px}
+.sub code{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12.5px;color:var(--dim)}
+.toolbar{position:sticky;top:0;z-index:5;display:flex;gap:14px;align-items:center;flex-wrap:wrap;
+  padding:14px 0;margin-bottom:26px;background:linear-gradient(var(--bg) 82%,transparent);}
+#filter{flex:1 1 260px;max-width:440px;padding:10px 14px;border-radius:999px;border:1px solid var(--line);
+  background:var(--panel);color:var(--ink);font-size:14px;outline:none;transition:border-color .18s}
+#filter:focus{border-color:rgba(123,108,255,.6)}
+#count{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:12px;color:var(--dim);letter-spacing:.06em}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(330px,1fr));gap:22px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  display:flex;flex-direction:column;transition:transform .22s ease,border-color .22s ease,box-shadow .22s ease}
+.card:hover{transform:translateY(-4px);border-color:rgba(123,108,255,.45);box-shadow:0 14px 34px rgba(0,0,0,.42)}
+.card.hide{display:none}
+.shot{display:block;background:#04050a;border-bottom:1px solid var(--line)}
+.shot img{display:block;width:100%;height:auto;aspect-ratio:16/10;object-fit:cover;object-position:top center}
+.body{padding:15px 17px 17px;display:flex;flex-direction:column;gap:9px;flex:1}
+.meta{display:flex;justify-content:space-between;align-items:baseline;gap:10px}
+.num{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:11.5px;color:var(--teal);
+  border:1px solid rgba(78,230,199,.35);border-radius:999px;padding:2px 9px;letter-spacing:.08em}
+.fname{font-family:ui-monospace,Menlo,Consolas,monospace;font-size:10.5px;color:var(--dim);
+  overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+h2{margin:0;font-size:16.5px;font-weight:600;letter-spacing:-.012em;line-height:1.32}
+h2 a{color:var(--ink);text-decoration:none}
+h2 a:hover{color:var(--teal)}
+.body p{margin:0;color:var(--mut);font-size:13.2px;line-height:1.55;flex:1;
+  display:-webkit-box;-webkit-line-clamp:4;-webkit-box-orient:vertical;overflow:hidden}
+.links{display:flex;gap:16px;align-items:center;margin-top:2px}
+.links a{font-size:12.5px;letter-spacing:.06em;text-transform:uppercase;text-decoration:none}
+.links .open{color:var(--teal);font-weight:600}
+.links .open:hover{text-decoration:underline}
+.links .prompt{color:var(--dim)}
+.links .prompt:hover{color:var(--mut)}
+footer{margin-top:56px;padding-top:22px;border-top:1px solid var(--line);
+  color:var(--dim);font-size:12.5px;display:flex;justify-content:space-between;flex-wrap:wrap;gap:10px}
+@media (prefers-reduced-motion: reduce){ .card,.card:hover{transition:none;transform:none} }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <p class="eyebrow">MiaAI Lab &middot; LLM front-end studies</p>
+      <h1>MiMo-V2.6-Pro <span class="grad">100 HTML Files</span></h1>
+      <p class="sub">100 self-contained single-file studies &mdash; every page is one HTML document with inline CSS and JS, no external assets. Generated 22 Sep 2026.</p>
+    </div>
+  </header>
+  <div class="toolbar">
+    <input id="filter" type="search" placeholder="Filter by name, number or technique&hellip;" aria-label="Filter studies">
+    <span id="count">100 / 100</span>
+  </div>
+  <main class="grid" id="grid">
+      <article class="card" data-search="001 aurora glass — luminous translucent design system the page should feel like standing behind a sheet of hand-polished glass at night while coloured searchlights move somewhere beyond it — expensive, calm and weightless. the composition is a centred editorial column: navigation pill, eyebrow badge, giant two-line headline, lede paragraph, two pill buttons, a wide frosted stat card, and a three-card grid, all layered above a living aurora field. depth comes from stacked blur, saturation and inset light rather than drop shadows alone, and the accent colours are used sparingly so the glass and the typography remain the luxury signals. 001-aurora-glass.html">
+        <a class="shot" target="_blank" rel="noopener" href="001-aurora-glass.html" aria-label="Open Aurora Glass — Luminous Translucent Design System">
+          <img src="screenshots/001.jpg" alt="Screenshot of Aurora Glass — Luminous Translucent Design System" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">001</span><span class="fname">001-aurora-glass.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="001-aurora-glass.html">Aurora Glass — Luminous Translucent Design System</a></h2>
+          <p>The page should feel like standing behind a sheet of hand-polished glass at night while coloured searchlights move somewhere beyond it — expensive, calm and weightless. The composition is a centred editorial column: navigation pill, eyebrow badge, giant two-line headline, lede paragraph, two pill buttons, a wide frosted stat card, and a three-card grid, all layered above a living aurora field. Depth comes from stacked blur, saturation and inset light rather than drop shadows alone, and the accent colours are used sparingly so the glass and the typography remain the luxury signals.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="001-aurora-glass.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="001-aurora-glass.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="002 neon terminal — cyberpunk operations shell the page should feel like a crt bolted into a rainy arcade — hostile, humming and alive, with every surface either glowing or in shadow. the layout is a top status rail, an oversized glitch wordmark with a tracked-out subtitle, then an asymmetric two-column body pairing system telemetry with an interactive shell. monospace type carries everything so the page reads as machine output, while the neon accents are rationed to borders, meters and prompt characters so the black space does the heavy lifting. 002-neon-terminal.html">
+        <a class="shot" target="_blank" rel="noopener" href="002-neon-terminal.html" aria-label="Open Neon Terminal — Cyberpunk Operations Shell">
+          <img src="screenshots/002.jpg" alt="Screenshot of Neon Terminal — Cyberpunk Operations Shell" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">002</span><span class="fname">002-neon-terminal.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="002-neon-terminal.html">Neon Terminal — Cyberpunk Operations Shell</a></h2>
+          <p>The page should feel like a CRT bolted into a rainy arcade — hostile, humming and alive, with every surface either glowing or in shadow. The layout is a top status rail, an oversized glitch wordmark with a tracked-out subtitle, then an asymmetric two-column body pairing system telemetry with an interactive shell. Monospace type carries everything so the page reads as machine output, while the neon accents are rationed to borders, meters and prompt characters so the black space does the heavy lifting.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="002-neon-terminal.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="002-neon-terminal.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="003 brutalist manifesto — raw editorial manifesto sheet the page should look like a manifesto photocopied, cut up and pasted back down slightly wrong — loud, confident and deliberately uncomfortable. layout is a stacked broadsheet: ticker, masthead, second ticker, an asymmetric 12-column cell grid mixing 3/4/6/8/12 spans, and a footer with a chunky press-able button. typography is heavy grotesk set tight with negative tracking against courier for meta text, and rotated sticker badges break the grid on purpose. the energy comes from flat colour collisions and hard rules rather than any softness. 003-brutalist-manifesto.html">
+        <a class="shot" target="_blank" rel="noopener" href="003-brutalist-manifesto.html" aria-label="Open Brutalist Manifesto — Raw Editorial Manifesto Sheet">
+          <img src="screenshots/003.jpg" alt="Screenshot of Brutalist Manifesto — Raw Editorial Manifesto Sheet" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">003</span><span class="fname">003-brutalist-manifesto.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="003-brutalist-manifesto.html">Brutalist Manifesto — Raw Editorial Manifesto Sheet</a></h2>
+          <p>The page should look like a manifesto photocopied, cut up and pasted back down slightly wrong — loud, confident and deliberately uncomfortable. Layout is a stacked broadsheet: ticker, masthead, second ticker, an asymmetric 12-column cell grid mixing 3/4/6/8/12 spans, and a footer with a chunky press-able button. Typography is heavy grotesk set tight with negative tracking against Courier for meta text, and rotated sticker badges break the grid on purpose. The energy comes from flat colour collisions and hard rules rather than any softness.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="003-brutalist-manifesto.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="003-brutalist-manifesto.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="004 liquid chrome — gooey metal fluid study the page should read as a laboratory viewport into a crucible of mercury — cold, heavy and hypnotic — with typography that looks milled from solid metal. composition is strictly centred and vertical: kicker, giant chrome wordmark, short lede, control rack, then a four-column notes grid. the metal bodies drift behind and through the ui at a lower layer, never obscuring the text. colour is almost absent except for a cyan-to-magenta accent line on the controls, which keeps the monochrome metal believable. 004-liquid-chrome.html">
+        <a class="shot" target="_blank" rel="noopener" href="004-liquid-chrome.html" aria-label="Open Liquid Chrome — Gooey Metal Fluid Study">
+          <img src="screenshots/004.jpg" alt="Screenshot of Liquid Chrome — Gooey Metal Fluid Study" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">004</span><span class="fname">004-liquid-chrome.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="004-liquid-chrome.html">Liquid Chrome — Gooey Metal Fluid Study</a></h2>
+          <p>The page should read as a laboratory viewport into a crucible of mercury — cold, heavy and hypnotic — with typography that looks milled from solid metal. Composition is strictly centred and vertical: kicker, giant chrome wordmark, short lede, control rack, then a four-column notes grid. The metal bodies drift behind and through the UI at a lower layer, never obscuring the text. Colour is almost absent except for a cyan-to-magenta accent line on the controls, which keeps the monochrome metal believable.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="004-liquid-chrome.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="004-liquid-chrome.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="005 deep field atlas — interactive constellation plate the result should feel like a copperplate astronomical engraving that has come alive under the observer&#x27;s hand — scholarly, quiet and immense. the layout frames the full-screen sky with content pinned to the corners and a two-panel instrument block near the bottom: catalogue on the left, prose on the right, both on translucent navy plates with hairline rules. gold (#ffcf6b) is the only accent and marks anything the observer has touched or named. type pairs a refined serif display with a tracked-out sans for instrumentation. 005-deep-field-atlas.html">
+        <a class="shot" target="_blank" rel="noopener" href="005-deep-field-atlas.html" aria-label="Open Deep Field Atlas — Interactive Constellation Plate">
+          <img src="screenshots/005.jpg" alt="Screenshot of Deep Field Atlas — Interactive Constellation Plate" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">005</span><span class="fname">005-deep-field-atlas.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="005-deep-field-atlas.html">Deep Field Atlas — Interactive Constellation Plate</a></h2>
+          <p>The result should feel like a copperplate astronomical engraving that has come alive under the observer&#x27;s hand — scholarly, quiet and immense. The layout frames the full-screen sky with content pinned to the corners and a two-panel instrument block near the bottom: catalogue on the left, prose on the right, both on translucent navy plates with hairline rules. Gold (#ffcf6b) is the only accent and marks anything the observer has touched or named. Type pairs a refined serif display with a tracked-out sans for instrumentation.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="005-deep-field-atlas.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="005-deep-field-atlas.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="006 paper &amp; poetry — scroll-revealed chapbook the page should feel like a well-set chapbook on uncoated stock — unhurried, generous and typographically confident, with the whitespace of a real book rather than a web layout. content is deliberately off-centre: instruments and apparatus sit in the rails while the verse keeps a narrow, comfortable measure. rust is used only for emphasis (drop cap, folio numeral, hover states) so the eye reads black first. georgia carries the poetry; a tracked sans carries the machinery. 006-paper-poetry.html">
+        <a class="shot" target="_blank" rel="noopener" href="006-paper-poetry.html" aria-label="Open Paper &amp; Poetry — Scroll-Revealed Chapbook">
+          <img src="screenshots/006.jpg" alt="Screenshot of Paper &amp; Poetry — Scroll-Revealed Chapbook" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">006</span><span class="fname">006-paper-poetry.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="006-paper-poetry.html">Paper &amp; Poetry — Scroll-Revealed Chapbook</a></h2>
+          <p>The page should feel like a well-set chapbook on uncoated stock — unhurried, generous and typographically confident, with the whitespace of a real book rather than a web layout. Content is deliberately off-centre: instruments and apparatus sit in the rails while the verse keeps a narrow, comfortable measure. Rust is used only for emphasis (drop cap, folio numeral, hover states) so the eye reads black first. Georgia carries the poetry; a tracked sans carries the machinery.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="006-paper-poetry.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="006-paper-poetry.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="007 synth sunset — procedural retrowave horizon the page should read as a record sleeve for a drive that never ends: enormous glowing type floating over an infinite horizon, instrument controls sitting under it like a car stereo. composition is a centred column over the fixed scene, with the panel kept translucent so the horizon remains visible through it. the palette is hot magenta against deep violet with cyan as the only cool note, and every glow is a drop-shadow or box-shadow rather than a blur filter. 007-synth-sunset.html">
+        <a class="shot" target="_blank" rel="noopener" href="007-synth-sunset.html" aria-label="Open Synth Sunset — Procedural Retrowave Horizon">
+          <img src="screenshots/007.jpg" alt="Screenshot of Synth Sunset — Procedural Retrowave Horizon" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">007</span><span class="fname">007-synth-sunset.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="007-synth-sunset.html">Synth Sunset — Procedural Retrowave Horizon</a></h2>
+          <p>The page should read as a record sleeve for a drive that never ends: enormous glowing type floating over an infinite horizon, instrument controls sitting under it like a car stereo. Composition is a centred column over the fixed scene, with the panel kept translucent so the horizon remains visible through it. The palette is hot magenta against deep violet with cyan as the only cool note, and every glow is a drop-shadow or box-shadow rather than a blur filter.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="007-synth-sunset.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="007-synth-sunset.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="008 blueprint wireframe — interactive engineering drawing the page should look like a real released drawing pulled from a plan chest: cool cyan-on-blue linework, one warm accent reserved strictly for dimensions, axes and active states, and monospaced lettering throughout so numbers align in columns. the composition is a framed sheet with corner registration marks and nested inset frames, and every panel is a rule rather than a shadow — flat, precise and dense with information. 008-blueprint-wireframe.html">
+        <a class="shot" target="_blank" rel="noopener" href="008-blueprint-wireframe.html" aria-label="Open Blueprint Wireframe — Interactive Engineering Drawing">
+          <img src="screenshots/008.jpg" alt="Screenshot of Blueprint Wireframe — Interactive Engineering Drawing" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">008</span><span class="fname">008-blueprint-wireframe.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="008-blueprint-wireframe.html">Blueprint Wireframe — Interactive Engineering Drawing</a></h2>
+          <p>The page should look like a real released drawing pulled from a plan chest: cool cyan-on-blue linework, one warm accent reserved strictly for dimensions, axes and active states, and monospaced lettering throughout so numbers align in columns. The composition is a framed sheet with corner registration marks and nested inset frames, and every panel is a rule rather than a shadow — flat, precise and dense with information.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="008-blueprint-wireframe.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="008-blueprint-wireframe.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="009 bauhaus grid — recomposable poster composition the page should read as a letterpress poster pinned to a studio wall: flat colour, hard 3px rules, no gradients, no soft shadows — only offset ink shadows on hover, the way a second pass of a press sits slightly off-register. the statement card holds the top-left as the typographic anchor while the geometric cells cascade down and to the right, and the vertical column hairlines run behind everything so the structure is always visible. 009-bauhaus-grid.html">
+        <a class="shot" target="_blank" rel="noopener" href="009-bauhaus-grid.html" aria-label="Open Bauhaus Grid — Recomposable Poster Composition">
+          <img src="screenshots/009.jpg" alt="Screenshot of Bauhaus Grid — Recomposable Poster Composition" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">009</span><span class="fname">009-bauhaus-grid.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="009-bauhaus-grid.html">Bauhaus Grid — Recomposable Poster Composition</a></h2>
+          <p>The page should read as a letterpress poster pinned to a studio wall: flat colour, hard 3px rules, no gradients, no soft shadows — only offset ink shadows on hover, the way a second pass of a press sits slightly off-register. The statement card holds the top-left as the typographic anchor while the geometric cells cascade down and to the right, and the vertical column hairlines run behind everything so the structure is always visible.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="009-bauhaus-grid.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="009-bauhaus-grid.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="010 isometric island — extruded css 3d diorama the page should feel like a bright architectural survey model photographed on a pale studio sweep — flat pastel colour, hard shading faces and no textures, so the geometry itself does all the work. the stage sits centre-left with a small sun disc in its corner; the information column is a thin-ruled panel at the right. day mode is airy and blue; night mode darkens the sky, raises a star field, slides the sun into a moon and lays a translucent indigo veil over the model so the boxes read as lit-from-within. 010-isometric-island.html">
+        <a class="shot" target="_blank" rel="noopener" href="010-isometric-island.html" aria-label="Open Isometric Island — Extruded CSS 3D Diorama">
+          <img src="screenshots/010.jpg" alt="Screenshot of Isometric Island — Extruded CSS 3D Diorama" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">010</span><span class="fname">010-isometric-island.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="010-isometric-island.html">Isometric Island — Extruded CSS 3D Diorama</a></h2>
+          <p>The page should feel like a bright architectural survey model photographed on a pale studio sweep — flat pastel colour, hard shading faces and no textures, so the geometry itself does all the work. The stage sits centre-left with a small sun disc in its corner; the information column is a thin-ruled panel at the right. Day mode is airy and blue; night mode darkens the sky, raises a star field, slides the sun into a moon and lays a translucent indigo veil over the model so the boxes read as lit-from-within.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="010-isometric-island.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="010-isometric-island.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="011 transit map — four-line schematic network diagram the page should look like a photograph of a network diagram mounted in a control room — dark, calm and luminous, with the four saturated lines doing all the shouting against near-black. labels are small and confident, interchanges are visually heavier than stops, and every panel is separated by a hairline rather than a card shadow. 011-transit-map.html">
+        <a class="shot" target="_blank" rel="noopener" href="011-transit-map.html" aria-label="Open Transit Map — Four-Line Schematic Network Diagram">
+          <img src="screenshots/011.jpg" alt="Screenshot of Transit Map — Four-Line Schematic Network Diagram" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">011</span><span class="fname">011-transit-map.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="011-transit-map.html">Transit Map — Four-Line Schematic Network Diagram</a></h2>
+          <p>The page should look like a photograph of a network diagram mounted in a control room — dark, calm and luminous, with the four saturated lines doing all the shouting against near-black. Labels are small and confident, interchanges are visually heavier than stops, and every panel is separated by a hairline rather than a card shadow.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="011-transit-map.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="011-transit-map.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="012 woven loom — canvas cloth simulator with loupe the page should feel like a working bench in a dim weaving shed: the cloth is the only bright thing, framed by dark rules and quiet cream type, with ochre (#e8a33d) reserved for active states and the loupe crosshair. nothing is skeuomorphic-with-images — the textile is genuinely drawn thread by thread, so its colour and structure are real. 012-woven-loom.html">
+        <a class="shot" target="_blank" rel="noopener" href="012-woven-loom.html" aria-label="Open Woven Loom — Canvas Cloth Simulator with Loupe">
+          <img src="screenshots/012.jpg" alt="Screenshot of Woven Loom — Canvas Cloth Simulator with Loupe" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">012</span><span class="fname">012-woven-loom.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="012-woven-loom.html">Woven Loom — Canvas Cloth Simulator with Loupe</a></h2>
+          <p>The page should feel like a working bench in a dim weaving shed: the cloth is the only bright thing, framed by dark rules and quiet cream type, with ochre (#e8a33d) reserved for active states and the loupe crosshair. Nothing is skeuomorphic-with-images — the textile is genuinely drawn thread by thread, so its colour and structure are real.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="012-woven-loom.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="012-woven-loom.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="013 weather radar — sweeping canvas scope with storm cells the page should feel like a duty desk in a weather office at night: everything is dark, cold and ruled with hairlines, and the only motion is the beam. the scope reads as real — rings, spokes, bearings, ground clutter, hard white cores in the strongest echoes — while the panels stay flat and legible. 013-weather-radar.html">
+        <a class="shot" target="_blank" rel="noopener" href="013-weather-radar.html" aria-label="Open Weather Radar — Sweeping Canvas Scope with Storm Cells">
+          <img src="screenshots/013.jpg" alt="Screenshot of Weather Radar — Sweeping Canvas Scope with Storm Cells" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">013</span><span class="fname">013-weather-radar.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="013-weather-radar.html">Weather Radar — Sweeping Canvas Scope with Storm Cells</a></h2>
+          <p>The page should feel like a duty desk in a weather office at night: everything is dark, cold and ruled with hairlines, and the only motion is the beam. The scope reads as real — rings, spokes, bearings, ground clutter, hard white cores in the strongest echoes — while the panels stay flat and legible.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="013-weather-radar.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="013-weather-radar.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="014 kitchen notebook — editorial cookbook with sticky index and scaling yields the page should read like a well-kept kitchen folio printed letterpress on cream stock: double rules, generous leading, leading zeroes on the method numbers inside red circles, and one accent colour used sparingly enough that it always means &quot;look here&quot;. everything is flat — no shadows, no rounded cards — and the only colour outside the ink-and-paper scheme is the red. 014-kitchen-notebook.html">
+        <a class="shot" target="_blank" rel="noopener" href="014-kitchen-notebook.html" aria-label="Open Kitchen Notebook — Editorial Cookbook with Sticky Index and Scaling Yields">
+          <img src="screenshots/014.jpg" alt="Screenshot of Kitchen Notebook — Editorial Cookbook with Sticky Index and Scaling Yields" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">014</span><span class="fname">014-kitchen-notebook.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="014-kitchen-notebook.html">Kitchen Notebook — Editorial Cookbook with Sticky Index and Scaling Yields</a></h2>
+          <p>The page should read like a well-kept kitchen folio printed letterpress on cream stock: double rules, generous leading, leading zeroes on the method numbers inside red circles, and one accent colour used sparingly enough that it always means &quot;look here&quot;. Everything is flat — no shadows, no rounded cards — and the only colour outside the ink-and-paper scheme is the red.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="014-kitchen-notebook.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="014-kitchen-notebook.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="015 l-system garden — recursive branching plant on canvas the page should feel like a botanical plate shown at night — dark, quiet, luminous at the tips only. structure colour grades from trunk brown (#6b563c) to leaf lime across depth, and marigold glows mark the leaf tips, so the eye reads the plant&#x27;s hierarchy instantly without any labels. 015-l-system-garden.html">
+        <a class="shot" target="_blank" rel="noopener" href="015-l-system-garden.html" aria-label="Open L-System Garden — Recursive Branching Plant on Canvas">
+          <img src="screenshots/015.jpg" alt="Screenshot of L-System Garden — Recursive Branching Plant on Canvas" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">015</span><span class="fname">015-l-system-garden.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="015-l-system-garden.html">L-System Garden — Recursive Branching Plant on Canvas</a></h2>
+          <p>The page should feel like a botanical plate shown at night — dark, quiet, luminous at the tips only. Structure colour grades from trunk brown (#6b563c) to leaf lime across depth, and marigold glows mark the leaf tips, so the eye reads the plant&#x27;s hierarchy instantly without any labels.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="015-l-system-garden.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="015-l-system-garden.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="016 cassette deck — skeuomorphic tape transport with live vu meters the deck should read as heavy 1980s consumer hardware photographed on a shelf: warm metal, cold inset windows, screws at the corners, and light only where a machine would actually emit it — the lcd, the lamps, and the leds. everything obeys a physical metaphor, so buttons move down rather than glow outward. 016-cassette-deck.html">
+        <a class="shot" target="_blank" rel="noopener" href="016-cassette-deck.html" aria-label="Open Cassette Deck — Skeuomorphic Tape Transport with Live VU Meters">
+          <img src="screenshots/016.jpg" alt="Screenshot of Cassette Deck — Skeuomorphic Tape Transport with Live VU Meters" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">016</span><span class="fname">016-cassette-deck.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="016-cassette-deck.html">Cassette Deck — Skeuomorphic Tape Transport with Live VU Meters</a></h2>
+          <p>The deck should read as heavy 1980s consumer hardware photographed on a shelf: warm metal, cold inset windows, screws at the corners, and light only where a machine would actually emit it — the LCD, the lamps, and the LEDs. Everything obeys a physical metaphor, so buttons move down rather than glow outward.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="016-cassette-deck.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="016-cassette-deck.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="017 studio kanban — drag-and-drop workflow board a calm, dim engineering console: surfaces are dark and recessed, colour is spent only where it carries meaning — priority borders, owner avatars, overdue reds — so the board stays legible at a glance even when it is full. 017-studio-kanban.html">
+        <a class="shot" target="_blank" rel="noopener" href="017-studio-kanban.html" aria-label="Open Studio Kanban — Drag-and-Drop Workflow Board">
+          <img src="screenshots/017.jpg" alt="Screenshot of Studio Kanban — Drag-and-Drop Workflow Board" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">017</span><span class="fname">017-studio-kanban.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="017-studio-kanban.html">Studio Kanban — Drag-and-Drop Workflow Board</a></h2>
+          <p>A calm, dim engineering console: surfaces are dark and recessed, colour is spent only where it carries meaning — priority borders, owner avatars, overdue reds — so the board stays legible at a glance even when it is full.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="017-studio-kanban.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="017-studio-kanban.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="018 pegboard drop — canvas peg physics with a prize bank an arcade cabinet seen in a dark room: the only light sources are the pegs, the balls and a bin that flares when it scores, so attention stays on motion rather than chrome. 018-pegboard-drop.html">
+        <a class="shot" target="_blank" rel="noopener" href="018-pegboard-drop.html" aria-label="Open Pegboard Drop — Canvas Peg Physics with a Prize Bank">
+          <img src="screenshots/018.jpg" alt="Screenshot of Pegboard Drop — Canvas Peg Physics with a Prize Bank" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">018</span><span class="fname">018-pegboard-drop.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="018-pegboard-drop.html">Pegboard Drop — Canvas Peg Physics with a Prize Bank</a></h2>
+          <p>An arcade cabinet seen in a dark room: the only light sources are the pegs, the balls and a bin that flares when it scores, so attention stays on motion rather than chrome.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="018-pegboard-drop.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="018-pegboard-drop.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="019 word foundry — generated word search set like letterpress a print shop&#x27;s proofing table: aged paper, hairline frames, a red used the way a proof mark is used — sparingly, and always as a correction or a completion. 019-word-foundry.html">
+        <a class="shot" target="_blank" rel="noopener" href="019-word-foundry.html" aria-label="Open Word Foundry — Generated Word Search Set Like Letterpress">
+          <img src="screenshots/019.jpg" alt="Screenshot of Word Foundry — Generated Word Search Set Like Letterpress" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">019</span><span class="fname">019-word-foundry.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="019-word-foundry.html">Word Foundry — Generated Word Search Set Like Letterpress</a></h2>
+          <p>A print shop&#x27;s proofing table: aged paper, hairline frames, a red used the way a proof mark is used — sparingly, and always as a correction or a completion.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="019-word-foundry.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="019-word-foundry.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="020 parcel orbit — canvas orbital dispatch console mission-control glass floating over a live starfield: all light is emitted by the simulation itself, and every control is a translucent panel so the orbit never stops being the subject. 020-parcel-orbit.html">
+        <a class="shot" target="_blank" rel="noopener" href="020-parcel-orbit.html" aria-label="Open Parcel Orbit — Canvas Orbital Dispatch Console">
+          <img src="screenshots/020.jpg" alt="Screenshot of Parcel Orbit — Canvas Orbital Dispatch Console" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">020</span><span class="fname">020-parcel-orbit.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="020-parcel-orbit.html">Parcel Orbit — Canvas Orbital Dispatch Console</a></h2>
+          <p>Mission-control glass floating over a live starfield: all light is emitted by the simulation itself, and every control is a translucent panel so the orbit never stops being the subject.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="020-parcel-orbit.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="020-parcel-orbit.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="021 signal bloom — reactive petal field with optional tone a synthesizer&#x27;s visualiser: everything is emitted light on near-black, with a faint grid underneath so the blooms read as blooming over a circuit. 021-signal-bloom.html">
+        <a class="shot" target="_blank" rel="noopener" href="021-signal-bloom.html" aria-label="Open Signal Bloom — Reactive Petal Field with Optional Tone">
+          <img src="screenshots/021.jpg" alt="Screenshot of Signal Bloom — Reactive Petal Field with Optional Tone" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">021</span><span class="fname">021-signal-bloom.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="021-signal-bloom.html">Signal Bloom — Reactive Petal Field with Optional Tone</a></h2>
+          <p>A synthesizer&#x27;s visualiser: everything is emitted light on near-black, with a faint grid underneath so the blooms read as blooming over a circuit.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="021-signal-bloom.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="021-signal-bloom.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="022 slow manifesto — scroll-driven editorial longform a printed essay translated to scroll — bookish proportions, a functional margin instead of decoration, and exactly one accent colour used the way a proofreader&#x27;s pencil is. 022-slow-manifesto.html">
+        <a class="shot" target="_blank" rel="noopener" href="022-slow-manifesto.html" aria-label="Open Slow Manifesto — Scroll-Driven Editorial Longform">
+          <img src="screenshots/022.jpg" alt="Screenshot of Slow Manifesto — Scroll-Driven Editorial Longform" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">022</span><span class="fname">022-slow-manifesto.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="022-slow-manifesto.html">Slow Manifesto — Scroll-Driven Editorial Longform</a></h2>
+          <p>A printed essay translated to scroll — bookish proportions, a functional margin instead of decoration, and exactly one accent colour used the way a proofreader&#x27;s pencil is.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="022-slow-manifesto.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="022-slow-manifesto.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="023 deckhand terminal — simulated flight console with command parser a crt flight console: phosphor green on near-black, everything drawn with text characters, glow simulated by text-shadow rather than filters. 023-deckhand-terminal.html">
+        <a class="shot" target="_blank" rel="noopener" href="023-deckhand-terminal.html" aria-label="Open Deckhand Terminal — Simulated Flight Console with Command Parser">
+          <img src="screenshots/023.jpg" alt="Screenshot of Deckhand Terminal — Simulated Flight Console with Command Parser" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">023</span><span class="fname">023-deckhand-terminal.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="023-deckhand-terminal.html">Deckhand Terminal — Simulated Flight Console with Command Parser</a></h2>
+          <p>A CRT flight console: phosphor green on near-black, everything drawn with text characters, glow simulated by text-shadow rather than filters.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="023-deckhand-terminal.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="023-deckhand-terminal.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="024 turntable catalogue — css 3d sleeve carousel a record-shop turntable rendered in css 3d: flat printed sleeves standing on a rotating ring, seen with perspective. 024-turntable-catalogue.html">
+        <a class="shot" target="_blank" rel="noopener" href="024-turntable-catalogue.html" aria-label="Open Turntable Catalogue — CSS 3D Sleeve Carousel">
+          <img src="screenshots/024.jpg" alt="Screenshot of Turntable Catalogue — CSS 3D Sleeve Carousel" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">024</span><span class="fname">024-turntable-catalogue.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="024-turntable-catalogue.html">Turntable Catalogue — CSS 3D Sleeve Carousel</a></h2>
+          <p>A record-shop turntable rendered in CSS 3D: flat printed sleeves standing on a rotating ring, seen with perspective.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="024-turntable-catalogue.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="024-turntable-catalogue.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="025 tidewatch bureau — svg tide chart dashboard coastal instrumentation in a quiet control room — one dominant chart, everything else subordinate, red used only where the number is dangerous. 025-tidewatch-bureau.html">
+        <a class="shot" target="_blank" rel="noopener" href="025-tidewatch-bureau.html" aria-label="Open Tidewatch Bureau — SVG Tide Chart Dashboard">
+          <img src="screenshots/025.jpg" alt="Screenshot of Tidewatch Bureau — SVG Tide Chart Dashboard" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">025</span><span class="fname">025-tidewatch-bureau.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="025-tidewatch-bureau.html">Tidewatch Bureau — SVG Tide Chart Dashboard</a></h2>
+          <p>Coastal instrumentation in a quiet control room — one dominant chart, everything else subordinate, red used only where the number is dangerous.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="025-tidewatch-bureau.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="025-tidewatch-bureau.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="026 kite board — drag-and-drop production kanban a print-studio production board: graph paper under pinned index cards, colour used only for urgency, all state changes animated but fast. 026-kite-board.html">
+        <a class="shot" target="_blank" rel="noopener" href="026-kite-board.html" aria-label="Open Kite Board — Drag-and-Drop Production Kanban">
+          <img src="screenshots/026.jpg" alt="Screenshot of Kite Board — Drag-and-Drop Production Kanban" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">026</span><span class="fname">026-kite-board.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="026-kite-board.html">Kite Board — Drag-and-Drop Production Kanban</a></h2>
+          <p>A print-studio production board: graph paper under pinned index cards, colour used only for urgency, all state changes animated but fast.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="026-kite-board.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="026-kite-board.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="027 pocket sequencer — 16-step web audio drum machine a hardware groovebox in the browser — dense, tactile, colour-coded per track, with every sound built from oscillators and noise buffers at play time. 027-pocket-sequencer.html">
+        <a class="shot" target="_blank" rel="noopener" href="027-pocket-sequencer.html" aria-label="Open Pocket Sequencer — 16-Step Web Audio Drum Machine">
+          <img src="screenshots/027.jpg" alt="Screenshot of Pocket Sequencer — 16-Step Web Audio Drum Machine" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">027</span><span class="fname">027-pocket-sequencer.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="027-pocket-sequencer.html">Pocket Sequencer — 16-Step Web Audio Drum Machine</a></h2>
+          <p>A hardware groovebox in the browser — dense, tactile, colour-coded per track, with every sound built from oscillators and noise buffers at play time.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="027-pocket-sequencer.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="027-pocket-sequencer.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="028 mosaic press — 32×32 pixel canvas editor a stationer&#x27;s pixel plate: a dark machined workbench, one bright artwork surface, controls reduced to swatches and small tracked labels. 028-mosaic-press.html">
+        <a class="shot" target="_blank" rel="noopener" href="028-mosaic-press.html" aria-label="Open Mosaic Press — 32×32 Pixel Canvas Editor">
+          <img src="screenshots/028.jpg" alt="Screenshot of Mosaic Press — 32×32 Pixel Canvas Editor" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">028</span><span class="fname">028-mosaic-press.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="028-mosaic-press.html">Mosaic Press — 32×32 Pixel Canvas Editor</a></h2>
+          <p>A stationer&#x27;s pixel plate: a dark machined workbench, one bright artwork surface, controls reduced to swatches and small tracked labels.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="028-mosaic-press.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="028-mosaic-press.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="029 twenty-six — typing trial with live meters a letterpress proofing sheet: ruled paper, one passage set in serif, everything else a small tracked instrument label. 029-twenty-six.html">
+        <a class="shot" target="_blank" rel="noopener" href="029-twenty-six.html" aria-label="Open Twenty-Six — Typing Trial with Live Meters">
+          <img src="screenshots/029.jpg" alt="Screenshot of Twenty-Six — Typing Trial with Live Meters" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">029</span><span class="fname">029-twenty-six.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="029-twenty-six.html">Twenty-Six — Typing Trial with Live Meters</a></h2>
+          <p>A letterpress proofing sheet: ruled paper, one passage set in serif, everything else a small tracked instrument label.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="029-twenty-six.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="029-twenty-six.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="030 hedge maze lab — generated hedge plan with animated solver a landscape gardener&#x27;s engraved plan of a clipped hedge maze: warm paper, ink-green walls, amber surveyor&#x27;s route. 030-hedge-maze-lab.html">
+        <a class="shot" target="_blank" rel="noopener" href="030-hedge-maze-lab.html" aria-label="Open Hedge Maze Lab — Generated Hedge Plan with Animated Solver">
+          <img src="screenshots/030.jpg" alt="Screenshot of Hedge Maze Lab — Generated Hedge Plan with Animated Solver" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">030</span><span class="fname">030-hedge-maze-lab.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="030-hedge-maze-lab.html">Hedge Maze Lab — Generated Hedge Plan with Animated Solver</a></h2>
+          <p>A landscape gardener&#x27;s engraved plan of a clipped hedge maze: warm paper, ink-green walls, amber surveyor&#x27;s route.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="030-hedge-maze-lab.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="030-hedge-maze-lab.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="031 rain window — condensation you can wipe on a rainy pane the page should feel like standing at a rain-lashed window at dusk: the room&#x27;s warmth behind you, the city smeared into bokeh, and a pane you can actually clear with your hand. 031-rain-window.html">
+        <a class="shot" target="_blank" rel="noopener" href="031-rain-window.html" aria-label="Open Rain Window — Condensation You Can Wipe on a Rainy Pane">
+          <img src="screenshots/031.jpg" alt="Screenshot of Rain Window — Condensation You Can Wipe on a Rainy Pane" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">031</span><span class="fname">031-rain-window.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="031-rain-window.html">Rain Window — Condensation You Can Wipe on a Rainy Pane</a></h2>
+          <p>The page should feel like standing at a rain-lashed window at dusk: the room&#x27;s warmth behind you, the city smeared into bokeh, and a pane you can actually clear with your hand.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="031-rain-window.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="031-rain-window.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="032 receipt tape — torn thermal receipt with live totals the page should look like a torn thermal slip lying on a shop counter — the paper crisp and slightly crooked under a hard shadow, the wood underneath warm and dark, the till panel sitting beside it like a card the shop keeps for staff. 032-receipt-tape.html">
+        <a class="shot" target="_blank" rel="noopener" href="032-receipt-tape.html" aria-label="Open Receipt Tape — Torn Thermal Receipt with Live Totals">
+          <img src="screenshots/032.jpg" alt="Screenshot of Receipt Tape — Torn Thermal Receipt with Live Totals" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">032</span><span class="fname">032-receipt-tape.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="032-receipt-tape.html">Receipt Tape — Torn Thermal Receipt with Live Totals</a></h2>
+          <p>The page should look like a torn thermal slip lying on a shop counter — the paper crisp and slightly crooked under a hard shadow, the wood underneath warm and dark, the till panel sitting beside it like a card the shop keeps for staff.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="032-receipt-tape.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="032-receipt-tape.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="033 dither desk — one-bit halftone reduction bench the page should feel like a small print shop&#x27;s bench: dark, quiet, one warm accent — a plate under a magnifier where you drag a seam to see what the reduction throws away. 033-dither-desk.html">
+        <a class="shot" target="_blank" rel="noopener" href="033-dither-desk.html" aria-label="Open Dither Desk — One-Bit Halftone Reduction Bench">
+          <img src="screenshots/033.jpg" alt="Screenshot of Dither Desk — One-Bit Halftone Reduction Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">033</span><span class="fname">033-dither-desk.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="033-dither-desk.html">Dither Desk — One-Bit Halftone Reduction Bench</a></h2>
+          <p>The page should feel like a small print shop&#x27;s bench: dark, quiet, one warm accent — a plate under a magnifier where you drag a seam to see what the reduction throws away.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="033-dither-desk.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="033-dither-desk.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="034 ink mixer — process-colour halftone bench the page should read as a printer&#x27;s colour bench: cream stock under good light, four translucent screens overlapping the way real process inks do, and a tidy preset library a colourist could pick from. 034-ink-mixer.html">
+        <a class="shot" target="_blank" rel="noopener" href="034-ink-mixer.html" aria-label="Open Ink Mixer — Process-Colour Halftone Bench">
+          <img src="screenshots/034.jpg" alt="Screenshot of Ink Mixer — Process-Colour Halftone Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">034</span><span class="fname">034-ink-mixer.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="034-ink-mixer.html">Ink Mixer — Process-Colour Halftone Bench</a></h2>
+          <p>The page should read as a printer&#x27;s colour bench: cream stock under good light, four translucent screens overlapping the way real process inks do, and a tidy preset library a colourist could pick from.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="034-ink-mixer.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="034-ink-mixer.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="035 lift directory — call the car at marlowe house the page should feel like the brass panel by a 1970s lift: quiet, expensive, mechanical — you press a floor and the whole building answers in sequence. 035-lift-directory.html">
+        <a class="shot" target="_blank" rel="noopener" href="035-lift-directory.html" aria-label="Open Lift Directory — Call the Car at Marlowe House">
+          <img src="screenshots/035.jpg" alt="Screenshot of Lift Directory — Call the Car at Marlowe House" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">035</span><span class="fname">035-lift-directory.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="035-lift-directory.html">Lift Directory — Call the Car at Marlowe House</a></h2>
+          <p>The page should feel like the brass panel by a 1970s lift: quiet, expensive, mechanical — you press a floor and the whole building answers in sequence.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="035-lift-directory.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="035-lift-directory.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="036 broadsheet — the eastgate broadsheet front page the page should read as a folded broadsheet laid on a dark table: rules and columns doing all the work, no photographs, red used exactly three times per page, and type set tight enough that you lean in. 036-broadsheet.html">
+        <a class="shot" target="_blank" rel="noopener" href="036-broadsheet.html" aria-label="Open Broadsheet — The Eastgate Broadsheet Front Page">
+          <img src="screenshots/036.jpg" alt="Screenshot of Broadsheet — The Eastgate Broadsheet Front Page" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">036</span><span class="fname">036-broadsheet.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="036-broadsheet.html">Broadsheet — The Eastgate Broadsheet Front Page</a></h2>
+          <p>The page should read as a folded broadsheet laid on a dark table: rules and columns doing all the work, no photographs, red used exactly three times per page, and type set tight enough that you lean in.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="036-broadsheet.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="036-broadsheet.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="037 constellation bench — draw your own figures on a star plate the page should feel like a glass-plate archive on a dark observatory table: cold precise teal linework around warm amber stars, and every click leaving a dashed line the way an astronomer&#x27;s pencil would. 037-constellation-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="037-constellation-bench.html" aria-label="Open Constellation Bench — Draw Your Own Figures on a Star Plate">
+          <img src="screenshots/037.jpg" alt="Screenshot of Constellation Bench — Draw Your Own Figures on a Star Plate" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">037</span><span class="fname">037-constellation-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="037-constellation-bench.html">Constellation Bench — Draw Your Own Figures on a Star Plate</a></h2>
+          <p>The page should feel like a glass-plate archive on a dark observatory table: cold precise teal linework around warm amber stars, and every click leaving a dashed line the way an astronomer&#x27;s pencil would.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="037-constellation-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="037-constellation-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="038 weather vane — steer the standing wind the page should feel like a cold hilltop station at night: a small instrument panel on one side, and the wind itself drawn as moving threads over a dark survey grid. 038-weather-vane.html">
+        <a class="shot" target="_blank" rel="noopener" href="038-weather-vane.html" aria-label="Open Weather Vane — Steer the Standing Wind">
+          <img src="screenshots/038.jpg" alt="Screenshot of Weather Vane — Steer the Standing Wind" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">038</span><span class="fname">038-weather-vane.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="038-weather-vane.html">Weather Vane — Steer the Standing Wind</a></h2>
+          <p>The page should feel like a cold hilltop station at night: a small instrument panel on one side, and the wind itself drawn as moving threads over a dark survey grid.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="038-weather-vane.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="038-weather-vane.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="039 night ferry — bridge orders on a moonlit crossing it should feel like standing at a cold bridge window at 22:00: instruments warm and small to the right, everything else dark water and one amber hull sliding through it. 039-night-ferry.html">
+        <a class="shot" target="_blank" rel="noopener" href="039-night-ferry.html" aria-label="Open Night Ferry — Bridge Orders on a Moonlit Crossing">
+          <img src="screenshots/039.jpg" alt="Screenshot of Night Ferry — Bridge Orders on a Moonlit Crossing" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">039</span><span class="fname">039-night-ferry.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="039-night-ferry.html">Night Ferry — Bridge Orders on a Moonlit Crossing</a></h2>
+          <p>It should feel like standing at a cold bridge window at 22:00: instruments warm and small to the right, everything else dark water and one amber hull sliding through it.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="039-night-ferry.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="039-night-ferry.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="040 ticket stub — box office roll with perforated stubs the page should feel like the glass counter of an old box office — cream stock, black rules, a serial number nobody questions, and a perforation you can almost hear. 040-ticket-stub.html">
+        <a class="shot" target="_blank" rel="noopener" href="040-ticket-stub.html" aria-label="Open Ticket Stub — Box Office Roll with Perforated Stubs">
+          <img src="screenshots/040.jpg" alt="Screenshot of Ticket Stub — Box Office Roll with Perforated Stubs" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">040</span><span class="fname">040-ticket-stub.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="040-ticket-stub.html">Ticket Stub — Box Office Roll with Perforated Stubs</a></h2>
+          <p>The page should feel like the glass counter of an old box office — cream stock, black rules, a serial number nobody questions, and a perforation you can almost hear.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="040-ticket-stub.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="040-ticket-stub.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="041 seismograph roll — drum recorder trace it should feel like a strip-chart drum in a mountain hut: paper turning under a pen that never lifts, writing the whole day whether anything happens or not. 041-seismograph-roll.html">
+        <a class="shot" target="_blank" rel="noopener" href="041-seismograph-roll.html" aria-label="Open Seismograph Roll — Drum Recorder Trace">
+          <img src="screenshots/041.jpg" alt="Screenshot of Seismograph Roll — Drum Recorder Trace" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">041</span><span class="fname">041-seismograph-roll.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="041-seismograph-roll.html">Seismograph Roll — Drum Recorder Trace</a></h2>
+          <p>It should feel like a strip-chart drum in a mountain hut: paper turning under a pen that never lifts, writing the whole day whether anything happens or not.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="041-seismograph-roll.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="041-seismograph-roll.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="042 pinball table — three-ball cabinet with real physics it should read as a slightly tired arcade cabinet photographed head-on: felt worn smooth, chrome rails, one steel ball, and numbers that only matter for the length of a ball. 042-pinball-table.html">
+        <a class="shot" target="_blank" rel="noopener" href="042-pinball-table.html" aria-label="Open Pinball Table — Three-Ball Cabinet with Real Physics">
+          <img src="screenshots/042.jpg" alt="Screenshot of Pinball Table — Three-Ball Cabinet with Real Physics" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">042</span><span class="fname">042-pinball-table.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="042-pinball-table.html">Pinball Table — Three-Ball Cabinet with Real Physics</a></h2>
+          <p>It should read as a slightly tired arcade cabinet photographed head-on: felt worn smooth, chrome rails, one steel ball, and numbers that only matter for the length of a ball.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="042-pinball-table.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="042-pinball-table.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="043 morse key — field set with inked tape and sidetone it should feel like a 1940s field set on a hut table: brass knob heavy under the fingers, a lamp that tells you the circuit is closed, and cream tape crawling out with the message on it. 043-morse-key.html">
+        <a class="shot" target="_blank" rel="noopener" href="043-morse-key.html" aria-label="Open Morse Key — Field Set with Inked Tape and Sidetone">
+          <img src="screenshots/043.jpg" alt="Screenshot of Morse Key — Field Set with Inked Tape and Sidetone" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">043</span><span class="fname">043-morse-key.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="043-morse-key.html">Morse Key — Field Set with Inked Tape and Sidetone</a></h2>
+          <p>It should feel like a 1940s field set on a hut table: brass knob heavy under the fingers, a lamp that tells you the circuit is closed, and cream tape crawling out with the message on it.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="043-morse-key.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="043-morse-key.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="044 kelp aquarium — torchlit temperate tank it should feel like leaning against the front glass of a public aquarium after closing: dark room, one held torch, and everything green moving in a current you can feel. 044-kelp-aquarium.html">
+        <a class="shot" target="_blank" rel="noopener" href="044-kelp-aquarium.html" aria-label="Open Kelp Aquarium — Torchlit Temperate Tank">
+          <img src="screenshots/044.jpg" alt="Screenshot of Kelp Aquarium — Torchlit Temperate Tank" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">044</span><span class="fname">044-kelp-aquarium.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="044-kelp-aquarium.html">Kelp Aquarium — Torchlit Temperate Tank</a></h2>
+          <p>It should feel like leaning against the front glass of a public aquarium after closing: dark room, one held torch, and everything green moving in a current you can feel.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="044-kelp-aquarium.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="044-kelp-aquarium.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="045 sudoku sheet — nine-by-nine worksheet with solver it should read like a photocopied newspaper puzzle sheet on a kitchen table — heavy rules, generous margins, and numbers that look stamped rather than typed. 045-sudoku-sheet.html">
+        <a class="shot" target="_blank" rel="noopener" href="045-sudoku-sheet.html" aria-label="Open Sudoku Sheet — Nine-by-Nine Worksheet with Solver">
+          <img src="screenshots/045.jpg" alt="Screenshot of Sudoku Sheet — Nine-by-Nine Worksheet with Solver" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">045</span><span class="fname">045-sudoku-sheet.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="045-sudoku-sheet.html">Sudoku Sheet — Nine-by-Nine Worksheet with Solver</a></h2>
+          <p>It should read like a photocopied newspaper puzzle sheet on a kitchen table — heavy rules, generous margins, and numbers that look stamped rather than typed.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="045-sudoku-sheet.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="045-sudoku-sheet.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="046 candlelit choir — six voices in the stalls it should feel like standing at the back of a cold chapel where the only light is the candles the singers are holding, and every face is lit from underneath. 046-candlelit-choir.html">
+        <a class="shot" target="_blank" rel="noopener" href="046-candlelit-choir.html" aria-label="Open Candlelit Choir — Six Voices in the Stalls">
+          <img src="screenshots/046.jpg" alt="Screenshot of Candlelit Choir — Six Voices in the Stalls" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">046</span><span class="fname">046-candlelit-choir.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="046-candlelit-choir.html">Candlelit Choir — Six Voices in the Stalls</a></h2>
+          <p>It should feel like standing at the back of a cold chapel where the only light is the candles the singers are holding, and every face is lit from underneath.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="046-candlelit-choir.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="046-candlelit-choir.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="047 constellation compass — a draggable celestial rose it should feel like brass-and-glass navigational equipment — the sky pinned under a ruled ring you can grab and swing, with the readouts ticking as it turns. 047-constellation-compass.html">
+        <a class="shot" target="_blank" rel="noopener" href="047-constellation-compass.html" aria-label="Open Constellation Compass — A Draggable Celestial Rose">
+          <img src="screenshots/047.jpg" alt="Screenshot of Constellation Compass — A Draggable Celestial Rose" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">047</span><span class="fname">047-constellation-compass.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="047-constellation-compass.html">Constellation Compass — A Draggable Celestial Rose</a></h2>
+          <p>It should feel like brass-and-glass navigational equipment — the sky pinned under a ruled ring you can grab and swing, with the readouts ticking as it turns.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="047-constellation-compass.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="047-constellation-compass.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="048 cartographer&#x27;s fold — a map you fold by hand it should feel like folding a real survey sheet by hand on a lamplit desk — the geography vanishing strip by strip until only hatched paper remains. 048-cartographers-fold.html">
+        <a class="shot" target="_blank" rel="noopener" href="048-cartographers-fold.html" aria-label="Open Cartographer&#x27;s Fold — A Map You Fold By Hand">
+          <img src="screenshots/048.jpg" alt="Screenshot of Cartographer&#x27;s Fold — A Map You Fold By Hand" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">048</span><span class="fname">048-cartographers-fold.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="048-cartographers-fold.html">Cartographer&#x27;s Fold — A Map You Fold By Hand</a></h2>
+          <p>It should feel like folding a real survey sheet by hand on a lamplit desk — the geography vanishing strip by strip until only hatched paper remains.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="048-cartographers-fold.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="048-cartographers-fold.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="049 torque bench — a beam balance you load by hand it should feel like a physics lab demonstration bench: heavy, warm and mechanical, with the beam visibly hunting for level and the numbers proving why. 049-torque-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="049-torque-bench.html" aria-label="Open Torque Bench — A Beam Balance You Load By Hand">
+          <img src="screenshots/049.jpg" alt="Screenshot of Torque Bench — A Beam Balance You Load By Hand" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">049</span><span class="fname">049-torque-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="049-torque-bench.html">Torque Bench — A Beam Balance You Load By Hand</a></h2>
+          <p>It should feel like a physics lab demonstration bench: heavy, warm and mechanical, with the beam visibly hunting for level and the numbers proving why.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="049-torque-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="049-torque-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="050 ant colony — pheromone trails on living soil it should look like watching a real ant nest from above: pheromone routes brightening where they pay off and evaporating where they do not, with the colony visibly finding and exhausting food. 050-ant-colony.html">
+        <a class="shot" target="_blank" rel="noopener" href="050-ant-colony.html" aria-label="Open Ant Colony — Pheromone Trails on Living Soil">
+          <img src="screenshots/050.jpg" alt="Screenshot of Ant Colony — Pheromone Trails on Living Soil" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">050</span><span class="fname">050-ant-colony.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="050-ant-colony.html">Ant Colony — Pheromone Trails on Living Soil</a></h2>
+          <p>It should look like watching a real ant nest from above: pheromone routes brightening where they pay off and evaporating where they do not, with the colony visibly finding and exhausting food.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="050-ant-colony.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="050-ant-colony.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="051 metaball garden the page is a dark laboratory window onto a single luminous liquid organism that stretches, splits and merges as its hidden cells wander. cold obsidian space and a faintly glassy control panel frame the bright contour glow so the traced shape reads like a long-exposure photograph of bioluminescent jellyfish. the readout panel reinforces the instrument-slab feeling: the picture is also data, and the millisecond counter quietly proves it is being computed live rather than played back. 051-metaball-garden.html">
+        <a class="shot" target="_blank" rel="noopener" href="051-metaball-garden.html" aria-label="Open Metaball Garden">
+          <img src="screenshots/051.jpg" alt="Screenshot of Metaball Garden" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">051</span><span class="fname">051-metaball-garden.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="051-metaball-garden.html">Metaball Garden</a></h2>
+          <p>The page is a dark laboratory window onto a single luminous liquid organism that stretches, splits and merges as its hidden cells wander. Cold obsidian space and a faintly glassy control panel frame the bright contour glow so the traced shape reads like a long-exposure photograph of bioluminescent jellyfish. The readout panel reinforces the instrument-slab feeling: the picture is also data, and the millisecond counter quietly proves it is being computed live rather than played back.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="051-metaball-garden.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="051-metaball-garden.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="052 neon sign repair the page feels like standing in an alley at 2 a.m. in front of a half-dead motel sign someone is patiently bringing back to life. the matte brick and dark metal frame swallow light, so the stacked pink and cyan bloom of the lit letters spills convincingly onto everything, and every tube that dies visibly drains warmth from the whole composition. the failing flicker, the multi-pulse strike of a repaired tube, and the voltage slider&#x27;s live dimming make the sign behave like a real gas-discharge object rather than a picture of one. 052-neon-sign-repair.html">
+        <a class="shot" target="_blank" rel="noopener" href="052-neon-sign-repair.html" aria-label="Open Neon Sign Repair">
+          <img src="screenshots/052.jpg" alt="Screenshot of Neon Sign Repair" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">052</span><span class="fname">052-neon-sign-repair.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="052-neon-sign-repair.html">Neon Sign Repair</a></h2>
+          <p>The page feels like standing in an alley at 2 a.m. in front of a half-dead motel sign someone is patiently bringing back to life. The matte brick and dark metal frame swallow light, so the stacked pink and cyan bloom of the lit letters spills convincingly onto everything, and every tube that dies visibly drains warmth from the whole composition. The failing flicker, the multi-pulse strike of a repaired tube, and the voltage slider&#x27;s live dimming make the sign behave like a real gas-discharge object rather than a picture of one.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="052-neon-sign-repair.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="052-neon-sign-repair.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="053 fraction foundry the page reads like a beautifully printed arithmetic workbook from an old technical school: warm ivory paper, ruled ink borders, serif numerals and monospace marginalia. the violence of arithmetic is turned into physical measurement — bars of counted cells and pie rings that sweep open — so a sum feels poured rather than computed. the tick layers that slide in on &quot;align grids&quot; are the emotional peak: two mismatched rulers suddenly agreeing on a shared unit. 053-fraction-foundry.html">
+        <a class="shot" target="_blank" rel="noopener" href="053-fraction-foundry.html" aria-label="Open Fraction Foundry">
+          <img src="screenshots/053.jpg" alt="Screenshot of Fraction Foundry" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">053</span><span class="fname">053-fraction-foundry.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="053-fraction-foundry.html">Fraction Foundry</a></h2>
+          <p>The page reads like a beautifully printed arithmetic workbook from an old technical school: warm ivory paper, ruled ink borders, serif numerals and monospace marginalia. The violence of arithmetic is turned into physical measurement — bars of counted cells and pie rings that sweep open — so a sum feels poured rather than computed. The tick layers that slide in on &quot;align grids&quot; are the emotional peak: two mismatched rulers suddenly agreeing on a shared unit.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="053-fraction-foundry.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="053-fraction-foundry.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="054 traffic junction the page is a traffic engineer&#x27;s monitor at dusk: matte asphalt, muted paint, warm amber title lettering and clinical monospace telemetry. the intersection behaves like a real signalized junction — queues form on the heavy approaches, spill back during red phases, and drain in a visible shockwave when the lamp changes — so the rhythm of the cycle becomes the page&#x27;s pulse. the instrument panels frame it as a controlled study rather than a game. 054-traffic-junction.html">
+        <a class="shot" target="_blank" rel="noopener" href="054-traffic-junction.html" aria-label="Open Traffic Junction">
+          <img src="screenshots/054.jpg" alt="Screenshot of Traffic Junction" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">054</span><span class="fname">054-traffic-junction.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="054-traffic-junction.html">Traffic Junction</a></h2>
+          <p>The page is a traffic engineer&#x27;s monitor at dusk: matte asphalt, muted paint, warm amber title lettering and clinical monospace telemetry. The intersection behaves like a real signalized junction — queues form on the heavy approaches, spill back during red phases, and drain in a visible shockwave when the lamp changes — so the rhythm of the cycle becomes the page&#x27;s pulse. The instrument panels frame it as a controlled study rather than a game.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="054-traffic-junction.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="054-traffic-junction.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="055 sundial gnomon the page is a brass-and-parchment scientific instrument: ivory plate, sepia engraving, ochre gold accents and monospace field notes. as the sun slider advances, the shadow creeps around the dial like a slow hand on a clock while the elevation view shows the same moment from the side, making the geometry legible in both projections at once. changing latitude visibly re-cuts the whole hour layout, which sells the dial as a machined object rather than a static diagram. 055-sundial-gnomon.html">
+        <a class="shot" target="_blank" rel="noopener" href="055-sundial-gnomon.html" aria-label="Open Sundial Gnomon">
+          <img src="screenshots/055.jpg" alt="Screenshot of Sundial Gnomon" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">055</span><span class="fname">055-sundial-gnomon.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="055-sundial-gnomon.html">Sundial Gnomon</a></h2>
+          <p>The page is a brass-and-parchment scientific instrument: ivory plate, sepia engraving, ochre gold accents and monospace field notes. As the sun slider advances, the shadow creeps around the dial like a slow hand on a clock while the elevation view shows the same moment from the side, making the geometry legible in both projections at once. Changing latitude visibly re-cuts the whole hour layout, which sells the dial as a machined object rather than a static diagram.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="055-sundial-gnomon.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="055-sundial-gnomon.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="056 vending machine the page is a late-night corner-shop appliance rendered entirely in css: deep enamel red, cool glass, warm cream lettering and a single mint-green led. the machine&#x27;s weight comes from layered gradients, borders and shadows rather than photos, while the vend moment — winding coil, dropping product, flapping door — supplies the tactility. the credit panel and status line make it behave like a real purchase rather than a click toy. 056-vending-machine.html">
+        <a class="shot" target="_blank" rel="noopener" href="056-vending-machine.html" aria-label="Open Vending Machine">
+          <img src="screenshots/056.jpg" alt="Screenshot of Vending Machine" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">056</span><span class="fname">056-vending-machine.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="056-vending-machine.html">Vending Machine</a></h2>
+          <p>The page is a late-night corner-shop appliance rendered entirely in CSS: deep enamel red, cool glass, warm cream lettering and a single mint-green LED. The machine&#x27;s weight comes from layered gradients, borders and shadows rather than photos, while the vend moment — winding coil, dropping product, flapping door — supplies the tactility. The credit panel and status line make it behave like a real purchase rather than a click toy.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="056-vending-machine.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="056-vending-machine.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="057 ripple tank the page is a physics lab&#x27;s ripple tank photographed from above in a dark room: cold teal water, amber dipper heads, monospace instrument labels. the interference pattern is the whole point — hyperbolic fringes that visibly slide when a source is dragged and lock into standing nodal spokes when toggled — making abstract wave addition into something you steer with your hands. 057-ripple-tank.html">
+        <a class="shot" target="_blank" rel="noopener" href="057-ripple-tank.html" aria-label="Open Ripple Tank">
+          <img src="screenshots/057.jpg" alt="Screenshot of Ripple Tank" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">057</span><span class="fname">057-ripple-tank.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="057-ripple-tank.html">Ripple Tank</a></h2>
+          <p>The page is a physics lab&#x27;s ripple tank photographed from above in a dark room: cold teal water, amber dipper heads, monospace instrument labels. The interference pattern is the whole point — hyperbolic fringes that visibly slide when a source is dragged and lock into standing nodal spokes when toggled — making abstract wave addition into something you steer with your hands.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="057-ripple-tank.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="057-ripple-tank.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="058 lunar phase wheel the page is an almanac plate printed in gold on night sky: one luminous moon, engraved tick ring, quiet serif titling and monospace ephemeris numbers. the terminator path is the craft here — the crescent&#x27;s concave arc and the gibbous&#x27;s bulge are computed, not faked, so the moon slides through its whole cycle smoothly as the slider or clock moves. the strip of thirty miniature phases underneath makes the same geometry legible at a glance. 058-lunar-phase-wheel.html">
+        <a class="shot" target="_blank" rel="noopener" href="058-lunar-phase-wheel.html" aria-label="Open Lunar Phase Wheel">
+          <img src="screenshots/058.jpg" alt="Screenshot of Lunar Phase Wheel" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">058</span><span class="fname">058-lunar-phase-wheel.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="058-lunar-phase-wheel.html">Lunar Phase Wheel</a></h2>
+          <p>The page is an almanac plate printed in gold on night sky: one luminous moon, engraved tick ring, quiet serif titling and monospace ephemeris numbers. The terminator path is the craft here — the crescent&#x27;s concave arc and the gibbous&#x27;s bulge are computed, not faked, so the moon slides through its whole cycle smoothly as the slider or clock moves. The strip of thirty miniature phases underneath makes the same geometry legible at a glance.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="058-lunar-phase-wheel.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="058-lunar-phase-wheel.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="059 domino rally the page reads like a tabletop rally photographed from the side: ivory dominoes on a warm paper grid, sepia ink labels, one bold shove and then the wave. the craft is in the pivot-rotation animation — dominoes arc over with a shared fall curve and hand off to their neighbour at the tipping point — and in the honest reach rule, which makes the layout itself the puzzle rather than decoration. 059-domino-rally.html">
+        <a class="shot" target="_blank" rel="noopener" href="059-domino-rally.html" aria-label="Open Domino Rally">
+          <img src="screenshots/059.jpg" alt="Screenshot of Domino Rally" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">059</span><span class="fname">059-domino-rally.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="059-domino-rally.html">Domino Rally</a></h2>
+          <p>The page reads like a tabletop rally photographed from the side: ivory dominoes on a warm paper grid, sepia ink labels, one bold shove and then the wave. The craft is in the pivot-rotation animation — dominoes arc over with a shared fall curve and hand off to their neighbour at the tipping point — and in the honest reach rule, which makes the layout itself the puzzle rather than decoration.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="059-domino-rally.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="059-domino-rally.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="060 radio dial the page is a 1950s receiver photographed in a dim room: walnut grain, cream celluloid dial, oxblood needle, phosphor-green monitor. the pleasure is the hunt — sweeping the needle across the band and watching snow resolve into a clean waveform, the vu needle kicking up, the preset button lighting as it locks. every station having its own waveform signature makes each one recognizable by eye, not just by label. 060-radio-dial.html">
+        <a class="shot" target="_blank" rel="noopener" href="060-radio-dial.html" aria-label="Open Radio Dial">
+          <img src="screenshots/060.jpg" alt="Screenshot of Radio Dial" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">060</span><span class="fname">060-radio-dial.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="060-radio-dial.html">Radio Dial</a></h2>
+          <p>The page is a 1950s receiver photographed in a dim room: walnut grain, cream celluloid dial, oxblood needle, phosphor-green monitor. The pleasure is the hunt — sweeping the needle across the band and watching snow resolve into a clean waveform, the VU needle kicking up, the preset button lighting as it locks. Every station having its own waveform signature makes each one recognizable by eye, not just by label.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="060-radio-dial.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="060-radio-dial.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="061 logic gate bench the page is a lab bench seen from above at night: slate grid, teal pin markers, wires in instrument blue that glide with the gates as you rearrange them. the craft is making the circuit honestly editable — real pin-level rewiring and deletion with live re-evaluation — and making cycles a visible, named outcome rather than a frozen page. flipping a/b/c and watching values ripple gate by gate to x and y is the whole experience. 061-logic-gate-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="061-logic-gate-bench.html" aria-label="Open Logic Gate Bench">
+          <img src="screenshots/061.jpg" alt="Screenshot of Logic Gate Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">061</span><span class="fname">061-logic-gate-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="061-logic-gate-bench.html">Logic Gate Bench</a></h2>
+          <p>The page is a lab bench seen from above at night: slate grid, teal pin markers, wires in instrument blue that glide with the gates as you rearrange them. The craft is making the circuit honestly editable — real pin-level rewiring and deletion with live re-evaluation — and making cycles a visible, named outcome rather than a frozen page. Flipping A/B/C and watching values ripple gate by gate to X and Y is the whole experience.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="061-logic-gate-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="061-logic-gate-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="062 sorting bench the page is a bench-top instrument for comparing algorithms, not a demo bar chart: dark steel background, phosphor-teal &quot;settled&quot; fill creeping across the field, gold and red flashing on the exact pair under the needle. precomputing the trace makes the playback honest — comparisons and writes are exactly what the algorithm performed, step advances literally one operation, and speed only changes playback, never the work counted. 062-sorting-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="062-sorting-bench.html" aria-label="Open Sorting Bench">
+          <img src="screenshots/062.jpg" alt="Screenshot of Sorting Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">062</span><span class="fname">062-sorting-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="062-sorting-bench.html">Sorting Bench</a></h2>
+          <p>The page is a bench-top instrument for comparing algorithms, not a demo bar chart: dark steel background, phosphor-teal &quot;settled&quot; fill creeping across the field, gold and red flashing on the exact pair under the needle. Precomputing the trace makes the playback honest — comparisons and writes are exactly what the algorithm performed, STEP advances literally one operation, and speed only changes playback, never the work counted.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="062-sorting-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="062-sorting-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="063 crate yard — sokoban shift the page is a night shift clipboard in a lumber yard: moss-dark greens, safety-orange headings, crates that look lifted from a hardware catalogue. the craft is honest puzzle engineering — six levels that were verified solvable by a search algorithm before shipping, dead-corner consequences, and an undo that makes experimentation free. 063-crate-yard.html">
+        <a class="shot" target="_blank" rel="noopener" href="063-crate-yard.html" aria-label="Open Crate Yard — Sokoban Shift">
+          <img src="screenshots/063.jpg" alt="Screenshot of Crate Yard — Sokoban Shift" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">063</span><span class="fname">063-crate-yard.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="063-crate-yard.html">Crate Yard — Sokoban Shift</a></h2>
+          <p>The page is a night shift clipboard in a lumber yard: moss-dark greens, safety-orange headings, crates that look lifted from a hardware catalogue. The craft is honest puzzle engineering — six levels that were verified solvable by a search algorithm before shipping, dead-corner consequences, and an undo that makes experimentation free.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="063-crate-yard.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="063-crate-yard.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="064 launch sequence — pad 39b countdown console the page is a phosphor-and-steel launch control room: deep navy panels, amber countdown glow, small-caps telemetry labels and a camera feed that shakes with the engines. the craft is in the timing — a checklist that ticks itself off in real time, a thrust curve that starts the plume three seconds before motion, and a camera rig that transitions from a fixed pad shot to a following shot without a cut. 064-launch-sequence.html">
+        <a class="shot" target="_blank" rel="noopener" href="064-launch-sequence.html" aria-label="Open Launch Sequence — Pad 39B Countdown Console">
+          <img src="screenshots/064.jpg" alt="Screenshot of Launch Sequence — Pad 39B Countdown Console" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">064</span><span class="fname">064-launch-sequence.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="064-launch-sequence.html">Launch Sequence — Pad 39B Countdown Console</a></h2>
+          <p>The page is a phosphor-and-steel launch control room: deep navy panels, amber countdown glow, small-caps telemetry labels and a camera feed that shakes with the engines. The craft is in the timing — a checklist that ticks itself off in real time, a thrust curve that starts the plume three seconds before motion, and a camera rig that transitions from a fixed pad shot to a following shot without a cut.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="064-launch-sequence.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="064-launch-sequence.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="065 flapboard — split-flap departures the page is a concourse board photographed at dusk: near-black cabinet, warm amber characters, matte cards with a real seam line and a soft shadow under each lip. the craft is in the motion — a two-phase flap animation with landing finality, staggered like a real board waking up, plus colors that only appear after a cell has finished its run so the board always reads as mechanical rather than digital. 065-flapboard-departures.html">
+        <a class="shot" target="_blank" rel="noopener" href="065-flapboard-departures.html" aria-label="Open Flapboard — Split-Flap Departures">
+          <img src="screenshots/065.jpg" alt="Screenshot of Flapboard — Split-Flap Departures" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">065</span><span class="fname">065-flapboard-departures.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="065-flapboard-departures.html">Flapboard — Split-Flap Departures</a></h2>
+          <p>The page is a concourse board photographed at dusk: near-black cabinet, warm amber characters, matte cards with a real seam line and a soft shadow under each lip. The craft is in the motion — a two-phase flap animation with landing finality, staggered like a real board waking up, plus colors that only appear after a cell has finished its run so the board always reads as mechanical rather than digital.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="065-flapboard-departures.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="065-flapboard-departures.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="066 twist cube — 3×3 pocket cube bench the page is a dark plum studio with a single object floating under a soft radial spotlight: saturated stickers, thick black plastic gaps, violet controls that match the rim light. the craft is mathematical honesty — the cube is not a picture of a cube; every click runs the same rodrigues rotation on positions and orientation matrices that the css animation draws, which is why a scramble can always be walked back to a truly solved state. 066-twist-cube.html">
+        <a class="shot" target="_blank" rel="noopener" href="066-twist-cube.html" aria-label="Open Twist Cube — 3×3 Pocket Cube Bench">
+          <img src="screenshots/066.jpg" alt="Screenshot of Twist Cube — 3×3 Pocket Cube Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">066</span><span class="fname">066-twist-cube.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="066-twist-cube.html">Twist Cube — 3×3 Pocket Cube Bench</a></h2>
+          <p>The page is a dark plum studio with a single object floating under a soft radial spotlight: saturated stickers, thick black plastic gaps, violet controls that match the rim light. The craft is mathematical honesty — the cube is not a picture of a cube; every click runs the same Rodrigues rotation on positions and orientation matrices that the CSS animation draws, which is why a scramble can always be walked back to a truly solved state.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="066-twist-cube.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="066-twist-cube.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="067 waveform mixer — oscilloscope bench the page is a lab bench at night: near-black instrument faces, hairline graticules, phosphor-green sum trace with a soft bloom, and three candy-colored partials stacked like channel lanes on a mixer. the craft is in making an honest visual synthesizer — real waveshape math (normalized saw, half-wave square, walsh triangle), an auto-triggered timebase and peak measurement, so the display behaves like an instrument instead of a decoration. 067-waveform-mixer.html">
+        <a class="shot" target="_blank" rel="noopener" href="067-waveform-mixer.html" aria-label="Open Waveform Mixer — Oscilloscope Bench">
+          <img src="screenshots/067.jpg" alt="Screenshot of Waveform Mixer — Oscilloscope Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">067</span><span class="fname">067-waveform-mixer.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="067-waveform-mixer.html">Waveform Mixer — Oscilloscope Bench</a></h2>
+          <p>The page is a lab bench at night: near-black instrument faces, hairline graticules, phosphor-green sum trace with a soft bloom, and three candy-colored partials stacked like channel lanes on a mixer. The craft is in making an honest visual synthesizer — real waveshape math (normalized saw, half-wave square, Walsh triangle), an auto-triggered timebase and peak measurement, so the display behaves like an instrument instead of a decoration.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="067-waveform-mixer.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="067-waveform-mixer.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="068 string art loom — chords of a word the page is a craft bench: a deep navy board under a soft radial spotlight, a ring of small amber nails where every tenth nail is larger, and thread laid at low alpha so overlaps build photographic density out of pure straight lines. the craft is the solver — an honest coverage-greedy algorithm whose convergence (chords drying up before the budget) is part of the aesthetic, reported honestly in the status line. 068-string-art-loom.html">
+        <a class="shot" target="_blank" rel="noopener" href="068-string-art-loom.html" aria-label="Open String Art Loom — Chords of a Word">
+          <img src="screenshots/068.jpg" alt="Screenshot of String Art Loom — Chords of a Word" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">068</span><span class="fname">068-string-art-loom.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="068-string-art-loom.html">String Art Loom — Chords of a Word</a></h2>
+          <p>The page is a craft bench: a deep navy board under a soft radial spotlight, a ring of small amber nails where every tenth nail is larger, and thread laid at low alpha so overlaps build photographic density out of pure straight lines. The craft is the solver — an honest coverage-greedy algorithm whose convergence (chords drying up before the budget) is part of the aesthetic, reported honestly in the status line.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="068-string-art-loom.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="068-string-art-loom.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="069 constellation drafting table — draft lines on a live sky the page is an astronomer&#x27;s drafting desk drawn in code: ink-navy sky, violet and teal nebulae, gold constellation lines with a soft bloom, and pale-blue inspection chrome. the craft is the layering — atmosphere, graticule, line work, twinkling stars and hover reticles all composite in one raf loop, while every interaction feeds a small document model (stars + lines) that can be snapshotted, reloaded and edited like a real star chart. 069-constellation-drafting-table.html">
+        <a class="shot" target="_blank" rel="noopener" href="069-constellation-drafting-table.html" aria-label="Open Constellation Drafting Table — Draft Lines on a Live Sky">
+          <img src="screenshots/069.jpg" alt="Screenshot of Constellation Drafting Table — Draft Lines on a Live Sky" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">069</span><span class="fname">069-constellation-drafting-table.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="069-constellation-drafting-table.html">Constellation Drafting Table — Draft Lines on a Live Sky</a></h2>
+          <p>The page is an astronomer&#x27;s drafting desk drawn in code: ink-navy sky, violet and teal nebulae, gold constellation lines with a soft bloom, and pale-blue inspection chrome. The craft is the layering — atmosphere, graticule, line work, twinkling stars and hover reticles all composite in one rAF loop, while every interaction feeds a small document model (stars + lines) that can be snapshotted, reloaded and edited like a real star chart.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="069-constellation-drafting-table.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="069-constellation-drafting-table.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="070 mimical engine № 70 — brass gear train the page is a museum plate of a victorian mill engine rendered in code: a machined grid backdrop, riveted base plate, engraved brass nameplate, trapezoidal gear teeth cut from radial brass gradients, steel rods and a piston band, with amber instrumentation chrome beneath. the craft is mechanical honesty — gear phases, crank-slider math and bell timing are all derived, not faked, so any throttle or ratio change keeps every mesh, rod and strike physically consistent. 070-mimical-engine.html">
+        <a class="shot" target="_blank" rel="noopener" href="070-mimical-engine.html" aria-label="Open Mimical Engine № 70 — Brass Gear Train">
+          <img src="screenshots/070.jpg" alt="Screenshot of Mimical Engine № 70 — Brass Gear Train" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">070</span><span class="fname">070-mimical-engine.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="070-mimical-engine.html">Mimical Engine № 70 — Brass Gear Train</a></h2>
+          <p>The page is a museum plate of a Victorian mill engine rendered in code: a machined grid backdrop, riveted base plate, engraved brass nameplate, trapezoidal gear teeth cut from radial brass gradients, steel rods and a piston band, with amber instrumentation chrome beneath. The craft is mechanical honesty — gear phases, crank-slider math and bell timing are all derived, not faked, so any throttle or ratio change keeps every mesh, rod and strike physically consistent.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="070-mimical-engine.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="070-mimical-engine.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="071 lissajous plotter model 71 — xy phosphor scope the page is a laboratory instrument: near-black case, phosphor-green graticule, magenta beam accent, engraved micro-caps labels and a machined phase knob. its craft is persistence — the trace lives on a separate decaying canvas so figures burn in and melt away exactly like long-persistence phosphor, while the hud canvas stays crisp above it. 071-lissajous-plotter.html">
+        <a class="shot" target="_blank" rel="noopener" href="071-lissajous-plotter.html" aria-label="Open Lissajous Plotter Model 71 — XY Phosphor Scope">
+          <img src="screenshots/071.jpg" alt="Screenshot of Lissajous Plotter Model 71 — XY Phosphor Scope" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">071</span><span class="fname">071-lissajous-plotter.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="071-lissajous-plotter.html">Lissajous Plotter Model 71 — XY Phosphor Scope</a></h2>
+          <p>The page is a laboratory instrument: near-black case, phosphor-green graticule, magenta beam accent, engraved micro-caps labels and a machined phase knob. Its craft is persistence — the trace lives on a separate decaying canvas so figures burn in and melt away exactly like long-persistence phosphor, while the HUD canvas stays crisp above it.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="071-lissajous-plotter.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="071-lissajous-plotter.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="072 origami studio — paper crane in six creases a warm craft table: walnut desk stripes, lamp-glow radial highlight, bone-white paper with fine woven grain, burnt-orange accent for the active crease. the design&#x27;s honesty is in the folding mechanics — clip-path flaps rotating on true hinge axes with backface shading, so every step reads as paper physically turning over rather than a slide transition. 072-origami-studio.html">
+        <a class="shot" target="_blank" rel="noopener" href="072-origami-studio.html" aria-label="Open Origami Studio — Paper Crane in Six Creases">
+          <img src="screenshots/072.jpg" alt="Screenshot of Origami Studio — Paper Crane in Six Creases" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">072</span><span class="fname">072-origami-studio.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="072-origami-studio.html">Origami Studio — Paper Crane in Six Creases</a></h2>
+          <p>A warm craft table: walnut desk stripes, lamp-glow radial highlight, bone-white paper with fine woven grain, burnt-orange accent for the active crease. The design&#x27;s honesty is in the folding mechanics — clip-path flaps rotating on true hinge axes with backface shading, so every step reads as paper physically turning over rather than a slide transition.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="072-origami-studio.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="072-origami-studio.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="073 harbour depot — sokoban berths a night shift at a small freight quay: warm plank tones, amber cargo, sea-teal accents and engraved cargo-manifest labels. the craft is in the separation of logical grid state from rendered pixel state — every object glides while the rules stay discrete, which makes hard sokoban moves readable instead of jumpy. 073-harbour-depot.html">
+        <a class="shot" target="_blank" rel="noopener" href="073-harbour-depot.html" aria-label="Open Harbour Depot — Sokoban Berths">
+          <img src="screenshots/073.jpg" alt="Screenshot of Harbour Depot — Sokoban Berths" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">073</span><span class="fname">073-harbour-depot.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="073-harbour-depot.html">Harbour Depot — Sokoban Berths</a></h2>
+          <p>A night shift at a small freight quay: warm plank tones, amber cargo, sea-teal accents and engraved cargo-manifest labels. The craft is in the separation of logical grid state from rendered pixel state — every object glides while the rules stay discrete, which makes hard sokoban moves readable instead of jumpy.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="073-harbour-depot.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="073-harbour-depot.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="074 horizon almanac — one day scrubbed an observatory instrument: deep slate chrome, serif-adjacent tabular clock over the live sky, thin rails and engraved labels; the scene itself carries all colour. the craft is one variable — solar altitude — driving every layer at once (sky, star alpha, sun/moon placement, window lights, lamp glow) so the whole page behaves like a single coherent sky rather than separate effects. 074-horizon-almanac.html">
+        <a class="shot" target="_blank" rel="noopener" href="074-horizon-almanac.html" aria-label="Open Horizon Almanac — One Day Scrubbed">
+          <img src="screenshots/074.jpg" alt="Screenshot of Horizon Almanac — One Day Scrubbed" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">074</span><span class="fname">074-horizon-almanac.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="074-horizon-almanac.html">Horizon Almanac — One Day Scrubbed</a></h2>
+          <p>An observatory instrument: deep slate chrome, serif-adjacent tabular clock over the live sky, thin rails and engraved labels; the scene itself carries all colour. The craft is one variable — solar altitude — driving every layer at once (sky, star alpha, sun/moon placement, window lights, lamp glow) so the whole page behaves like a single coherent sky rather than separate effects.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="074-horizon-almanac.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="074-horizon-almanac.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="075 loom hall — tartan weave bench a weaver&#x27;s bench: oiled-dark workshop chrome around one luminous square of cloth; the cloth is the only saturated thing on screen. the craft is honest structure — nothing is painted &quot;to look woven&quot;, every visible segment is placed by the interlace rule, so changing the draft changes the fabric&#x27;s geometry, not a texture. 075-loom-tartan.html">
+        <a class="shot" target="_blank" rel="noopener" href="075-loom-tartan.html" aria-label="Open Loom Hall — Tartan Weave Bench">
+          <img src="screenshots/075.jpg" alt="Screenshot of Loom Hall — Tartan Weave Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">075</span><span class="fname">075-loom-tartan.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="075-loom-tartan.html">Loom Hall — Tartan Weave Bench</a></h2>
+          <p>A weaver&#x27;s bench: oiled-dark workshop chrome around one luminous square of cloth; the cloth is the only saturated thing on screen. The craft is honest structure — nothing is painted &quot;to look woven&quot;, every visible segment is placed by the interlace rule, so changing the draft changes the fabric&#x27;s geometry, not a texture.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="075-loom-tartan.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="075-loom-tartan.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="076 paperwork — six-fold snowflake bench glacier-blue paper on ink: a cold laboratory bench where the cut geometry is visible at both scales at once — the single wedge you work in and the twelve-fold object it produces. the craft is symmetry as a rendering primitive: never draw the flake&#x27;s detail, draw one fundamental domain and let d6 do the composition. 076-snowflake-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="076-snowflake-bench.html" aria-label="Open Paperwork — Six-Fold Snowflake Bench">
+          <img src="screenshots/076.jpg" alt="Screenshot of Paperwork — Six-Fold Snowflake Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">076</span><span class="fname">076-snowflake-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="076-snowflake-bench.html">Paperwork — Six-Fold Snowflake Bench</a></h2>
+          <p>Glacier-blue paper on ink: a cold laboratory bench where the cut geometry is visible at both scales at once — the single wedge you work in and the twelve-fold object it produces. The craft is symmetry as a rendering primitive: never draw the flake&#x27;s detail, draw one fundamental domain and let D6 do the composition.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="076-snowflake-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="076-snowflake-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="077 vellum — handwriting practice slate a scriptorium bench: cream paper inside an oiled wood frame, engraved tabular chrome around it, red/blue rulings doing the structure. the craft is time as material — ink visibly dries, and the ghost letterform underneath turns raw mouse scribble into a legible practice session. 077-vellum-slate.html">
+        <a class="shot" target="_blank" rel="noopener" href="077-vellum-slate.html" aria-label="Open Vellum — Handwriting Practice Slate">
+          <img src="screenshots/077.jpg" alt="Screenshot of Vellum — Handwriting Practice Slate" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">077</span><span class="fname">077-vellum-slate.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="077-vellum-slate.html">Vellum — Handwriting Practice Slate</a></h2>
+          <p>A scriptorium bench: cream paper inside an oiled wood frame, engraved tabular chrome around it, red/blue rulings doing the structure. The craft is time as material — ink visibly dries, and the ghost letterform underneath turns raw mouse scribble into a legible practice session.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="077-vellum-slate.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="077-vellum-slate.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="078 spark line — morse telegraph bench a night-shift telegraph office: warm amber signal light against near-black, cream tape crawling with ink. the craft is protocol made visible — timing itself is the interface; the same unit clock renders sound, light and print at once. 078-spark-line.html">
+        <a class="shot" target="_blank" rel="noopener" href="078-spark-line.html" aria-label="Open Spark Line — Morse Telegraph Bench">
+          <img src="screenshots/078.jpg" alt="Screenshot of Spark Line — Morse Telegraph Bench" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">078</span><span class="fname">078-spark-line.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="078-spark-line.html">Spark Line — Morse Telegraph Bench</a></h2>
+          <p>A night-shift telegraph office: warm amber signal light against near-black, cream tape crawling with ink. The craft is protocol made visible — timing itself is the interface; the same unit clock renders sound, light and print at once.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="078-spark-line.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="078-spark-line.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="079 night reef — diffusion-limited coral garden museum aquarium at night: teal-on-abyss, the colony as a self-similar silhouette that visibly thickens. the craft is an honest growth algorithm — every branch tip is a decision the simulation made, so the picture is a record of stochastic time. 079-night-reef.html">
+        <a class="shot" target="_blank" rel="noopener" href="079-night-reef.html" aria-label="Open Night Reef — Diffusion-Limited Coral Garden">
+          <img src="screenshots/079.jpg" alt="Screenshot of Night Reef — Diffusion-Limited Coral Garden" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">079</span><span class="fname">079-night-reef.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="079-night-reef.html">Night Reef — Diffusion-Limited Coral Garden</a></h2>
+          <p>Museum aquarium at night: teal-on-abyss, the colony as a self-similar silhouette that visibly thickens. The craft is an honest growth algorithm — every branch tip is a decision the simulation made, so the picture is a record of stochastic time.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="079-night-reef.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="079-night-reef.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="080 watershed — river delta carver a surveyor&#x27;s hydrology table: green highlands bleeding braided cyan channels toward a dark sea. the craft is emergence — no river is drawn; thousands of stupid falling drops negotiate one into existence. 080-watershed-carver.html">
+        <a class="shot" target="_blank" rel="noopener" href="080-watershed-carver.html" aria-label="Open Watershed — River Delta Carver">
+          <img src="screenshots/080.jpg" alt="Screenshot of Watershed — River Delta Carver" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">080</span><span class="fname">080-watershed-carver.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="080-watershed-carver.html">Watershed — River Delta Carver</a></h2>
+          <p>A surveyor&#x27;s hydrology table: green highlands bleeding braided cyan channels toward a dark sea. The craft is emergence — no river is drawn; thousands of stupid falling drops negotiate one into existence.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="080-watershed-carver.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="080-watershed-carver.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="081 flux bench — iron filings field a physics demonstrator photographed from above: cold grain on blackened steel, red and blue sources as the only colour. the craft is that thousands of independent needles agree — the pattern nobody draws is made entirely of local decisions. 081-flux-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="081-flux-bench.html" aria-label="Open Flux Bench — Iron Filings Field">
+          <img src="screenshots/081.jpg" alt="Screenshot of Flux Bench — Iron Filings Field" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">081</span><span class="fname">081-flux-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="081-flux-bench.html">Flux Bench — Iron Filings Field</a></h2>
+          <p>A physics demonstrator photographed from above: cold grain on blackened steel, red and blue sources as the only colour. The craft is that thousands of independent needles agree — the pattern nobody draws is made entirely of local decisions.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="081-flux-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="081-flux-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="082 rose light — stained glass window cathedral tracery holding coloured light over a dim wall — the craft is transmission physics as composition: one azimuth value rearranges the whole colour balance, and the picture is never twice the same. 082-rose-light.html">
+        <a class="shot" target="_blank" rel="noopener" href="082-rose-light.html" aria-label="Open Rose Light — Stained Glass Window">
+          <img src="screenshots/082.jpg" alt="Screenshot of Rose Light — Stained Glass Window" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">082</span><span class="fname">082-rose-light.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="082-rose-light.html">Rose Light — Stained Glass Window</a></h2>
+          <p>Cathedral tracery holding coloured light over a dim wall — the craft is transmission physics as composition: one azimuth value rearranges the whole colour balance, and the picture is never twice the same.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="082-rose-light.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="082-rose-light.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="083 wet wash — watercolor bleed cold-press paper on a dark table, colour that moves because physics moves it. the craft is separating water from pigment so the famous edge emerges from deposition rather than being drawn. 083-wet-wash.html">
+        <a class="shot" target="_blank" rel="noopener" href="083-wet-wash.html" aria-label="Open Wet Wash — Watercolor Bleed">
+          <img src="screenshots/083.jpg" alt="Screenshot of Wet Wash — Watercolor Bleed" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">083</span><span class="fname">083-wet-wash.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="083-wet-wash.html">Wet Wash — Watercolor Bleed</a></h2>
+          <p>Cold-press paper on a dark table, colour that moves because physics moves it. The craft is separating water from pigment so the famous edge emerges from deposition rather than being drawn.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="083-wet-wash.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="083-wet-wash.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="084 grid &amp; clue — crossword draughtsman a newspaper puzzle page assembling itself under the draughtsman&#x27;s hand — cream stock, black grid, red marginalia. the craft is the placement algorithm performing as theatre: you watch constraints refuse words until one finally fits. 084-grid-clue.html">
+        <a class="shot" target="_blank" rel="noopener" href="084-grid-clue.html" aria-label="Open Grid &amp; Clue — Crossword Draughtsman">
+          <img src="screenshots/084.jpg" alt="Screenshot of Grid &amp; Clue — Crossword Draughtsman" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">084</span><span class="fname">084-grid-clue.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="084-grid-clue.html">Grid &amp; Clue — Crossword Draughtsman</a></h2>
+          <p>A newspaper puzzle page assembling itself under the draughtsman&#x27;s hand — cream stock, black grid, red marginalia. The craft is the placement algorithm performing as theatre: you watch constraints refuse words until one finally fits.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="084-grid-clue.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="084-grid-clue.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="085 mirror tube — kaleidoscope a brass-to-the-eye toy tube: dark glass, coloured chips, and mathematics doing all the drawing. the craft is that the composition is one small asymmetric cluster reflected into perfect order. 085-mirror-tube.html">
+        <a class="shot" target="_blank" rel="noopener" href="085-mirror-tube.html" aria-label="Open Mirror Tube — Kaleidoscope">
+          <img src="screenshots/085.jpg" alt="Screenshot of Mirror Tube — Kaleidoscope" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">085</span><span class="fname">085-mirror-tube.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="085-mirror-tube.html">Mirror Tube — Kaleidoscope</a></h2>
+          <p>A brass-to-the-eye toy tube: dark glass, coloured chips, and mathematics doing all the drawing. The craft is that the composition is one small asymmetric cluster reflected into perfect order.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="085-mirror-tube.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="085-mirror-tube.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="086 brass heavens — mechanical orrery a museum vitrine of a clockwork solar system: dark walnut-dark plate, gold engraving, enamel beads. the craft is honest period arithmetic — nothing is faked, every wheel turns at its ratio. 086-brass-heavens.html">
+        <a class="shot" target="_blank" rel="noopener" href="086-brass-heavens.html" aria-label="Open Brass Heavens — Mechanical Orrery">
+          <img src="screenshots/086.jpg" alt="Screenshot of Brass Heavens — Mechanical Orrery" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">086</span><span class="fname">086-brass-heavens.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="086-brass-heavens.html">Brass Heavens — Mechanical Orrery</a></h2>
+          <p>A museum vitrine of a clockwork solar system: dark walnut-dark plate, gold engraving, enamel beads. The craft is honest period arithmetic — nothing is faked, every wheel turns at its ratio.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="086-brass-heavens.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="086-brass-heavens.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="087 sand on steel — chladni plate a dark lab bench with one steel plate and one bow: the pattern is never drawn, it is where the sand refuses to be shaken. the craft is making an invisible vibration field legible through accumulation. 087-sand-on-steel.html">
+        <a class="shot" target="_blank" rel="noopener" href="087-sand-on-steel.html" aria-label="Open Sand on Steel — Chladni Plate">
+          <img src="screenshots/087.jpg" alt="Screenshot of Sand on Steel — Chladni Plate" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">087</span><span class="fname">087-sand-on-steel.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="087-sand-on-steel.html">Sand on Steel — Chladni Plate</a></h2>
+          <p>A dark lab bench with one steel plate and one bow: the pattern is never drawn, it is where the sand refuses to be shaken. The craft is making an invisible vibration field legible through accumulation.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="087-sand-on-steel.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="087-sand-on-steel.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="088 wheel &amp; clay — thrown vessel a dim studio, one stool, one spinning wheel: the pot is a column of numbers you feel with your hand. the craft is making an abstract profile array read as wet clay — sheen, ridges, and the honest weight of a rim. 088-wheel-and-clay.html">
+        <a class="shot" target="_blank" rel="noopener" href="088-wheel-and-clay.html" aria-label="Open Wheel &amp; Clay — Thrown Vessel">
+          <img src="screenshots/088.jpg" alt="Screenshot of Wheel &amp; Clay — Thrown Vessel" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">088</span><span class="fname">088-wheel-and-clay.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="088-wheel-and-clay.html">Wheel &amp; Clay — Thrown Vessel</a></h2>
+          <p>A dim studio, one stool, one spinning wheel: the pot is a column of numbers you feel with your hand. The craft is making an abstract profile array read as wet clay — sheen, ridges, and the honest weight of a rim.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="088-wheel-and-clay.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="088-wheel-and-clay.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="089 kintsugi bench — mending with gold a dim carpenter&#x27;s bench with a shattered celadon bowl: the repair is the art, and gold only appears where two broken edges agree. the craft is making a procedural crack partition read as a once-whole object. 089-kintsugi-bench.html">
+        <a class="shot" target="_blank" rel="noopener" href="089-kintsugi-bench.html" aria-label="Open Kintsugi Bench — Mending With Gold">
+          <img src="screenshots/089.jpg" alt="Screenshot of Kintsugi Bench — Mending With Gold" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">089</span><span class="fname">089-kintsugi-bench.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="089-kintsugi-bench.html">Kintsugi Bench — Mending With Gold</a></h2>
+          <p>A dim carpenter&#x27;s bench with a shattered celadon bowl: the repair is the art, and gold only appears where two broken edges agree. The craft is making a procedural crack partition read as a once-whole object.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="089-kintsugi-bench.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="089-kintsugi-bench.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="090 strike anywhere — one match&#x27;s life a dark bench, one strip of glass grit, one match: the whole page is a single finite event with a beginning you cause and an end you can only watch. the craft is spending all the drama in four seconds honestly. 090-strike-anywhere.html">
+        <a class="shot" target="_blank" rel="noopener" href="090-strike-anywhere.html" aria-label="Open Strike Anywhere — One Match&#x27;s Life">
+          <img src="screenshots/090.jpg" alt="Screenshot of Strike Anywhere — One Match&#x27;s Life" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">090</span><span class="fname">090-strike-anywhere.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="090-strike-anywhere.html">Strike Anywhere — One Match&#x27;s Life</a></h2>
+          <p>A dark bench, one strip of glass grit, one match: the whole page is a single finite event with a beginning you cause and an end you can only watch. The craft is spending all the drama in four seconds honestly.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="090-strike-anywhere.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="090-strike-anywhere.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="091 galton board — falling into the curve a dark instrument board where individual randomness is invisible and collective order is unmistakable — the bell curve emerges from twelve coin flips per bead with no curve ever drawn by hand. 091-galton-board.html">
+        <a class="shot" target="_blank" rel="noopener" href="091-galton-board.html" aria-label="Open Galton Board — Falling Into The Curve">
+          <img src="screenshots/091.jpg" alt="Screenshot of Galton Board — Falling Into The Curve" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">091</span><span class="fname">091-galton-board.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="091-galton-board.html">Galton Board — Falling Into The Curve</a></h2>
+          <p>A dark instrument board where individual randomness is invisible and collective order is unmistakable — the bell curve emerges from twelve coin flips per bead with no curve ever drawn by hand.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="091-galton-board.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="091-galton-board.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="092 knotwork — over, under, over a woven emblem on dark vellum where every crossing obeys the alternating rule until you deliberately break one — the page is both the ornament and the rule-checker. 092-knotwork-weave.html">
+        <a class="shot" target="_blank" rel="noopener" href="092-knotwork-weave.html" aria-label="Open Knotwork — Over, Under, Over">
+          <img src="screenshots/092.jpg" alt="Screenshot of Knotwork — Over, Under, Over" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">092</span><span class="fname">092-knotwork-weave.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="092-knotwork-weave.html">Knotwork — Over, Under, Over</a></h2>
+          <p>A woven emblem on dark vellum where every crossing obeys the alternating rule until you deliberately break one — the page is both the ornament and the rule-checker.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="092-knotwork-weave.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="092-knotwork-weave.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="093 hourglass — thirty quiet seconds a dark shelf holding a working hourglass — the pleasure is granular honesty: sand threads down, piles up, and obeys repose and glass limits rather than a fake progress bar. 093-hourglass.html">
+        <a class="shot" target="_blank" rel="noopener" href="093-hourglass.html" aria-label="Open Hourglass — Thirty Quiet Seconds">
+          <img src="screenshots/093.jpg" alt="Screenshot of Hourglass — Thirty Quiet Seconds" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">093</span><span class="fname">093-hourglass.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="093-hourglass.html">Hourglass — Thirty Quiet Seconds</a></h2>
+          <p>A dark shelf holding a working hourglass — the pleasure is granular honesty: sand threads down, piles up, and obeys repose and glass limits rather than a fake progress bar.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="093-hourglass.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="093-hourglass.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="094 piano roll — the perforated tune a dark workshop with a mechanical roll winding past the play-line — the tune exists as physical holes before it exists as sound, and the keys answer the paper. 094-piano-roll.html">
+        <a class="shot" target="_blank" rel="noopener" href="094-piano-roll.html" aria-label="Open Piano Roll — The Perforated Tune">
+          <img src="screenshots/094.jpg" alt="Screenshot of Piano Roll — The Perforated Tune" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">094</span><span class="fname">094-piano-roll.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="094-piano-roll.html">Piano Roll — The Perforated Tune</a></h2>
+          <p>A dark workshop with a mechanical roll winding past the play-line — the tune exists as physical holes before it exists as sound, and the keys answer the paper.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="094-piano-roll.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="094-piano-roll.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="095 newton&#x27;s cradle — conservation, repeated a dark bench with five mirror-polished bobs — motion is invisible until momentum makes it travel: the middle three stay still while the ends trade swings. 095-newtons-cradle.html">
+        <a class="shot" target="_blank" rel="noopener" href="095-newtons-cradle.html" aria-label="Open Newton&#x27;s Cradle — Conservation, Repeated">
+          <img src="screenshots/095.jpg" alt="Screenshot of Newton&#x27;s Cradle — Conservation, Repeated" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">095</span><span class="fname">095-newtons-cradle.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="095-newtons-cradle.html">Newton&#x27;s Cradle — Conservation, Repeated</a></h2>
+          <p>A dark bench with five mirror-polished bobs — motion is invisible until momentum makes it travel: the middle three stay still while the ends trade swings.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="095-newtons-cradle.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="095-newtons-cradle.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="096 enigma — field cipher machine a dark bakelite cipher box that actually encrypts — letters you type roll through three visible rotors, the lampboard flashes the scrambled output, and the notch flag warns you the next keypress will drag two rotors at once. 096-enigma-cipher.html">
+        <a class="shot" target="_blank" rel="noopener" href="096-enigma-cipher.html" aria-label="Open Enigma — Field Cipher Machine">
+          <img src="screenshots/096.jpg" alt="Screenshot of Enigma — Field Cipher Machine" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">096</span><span class="fname">096-enigma-cipher.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="096-enigma-cipher.html">Enigma — Field Cipher Machine</a></h2>
+          <p>A dark bakelite cipher box that actually encrypts — letters you type roll through three visible rotors, the lampboard flashes the scrambled output, and the notch flag warns you the next keypress will drag two rotors at once.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="096-enigma-cipher.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="096-enigma-cipher.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="097 veil — fog-of-war maze a pitch-black labyrinth where the map you have is the map you have earned — only the corridor your lantern touches exists; everything else is rumor, a hint of gold where the exit beats like a slow heart. 097-fog-maze.html">
+        <a class="shot" target="_blank" rel="noopener" href="097-fog-maze.html" aria-label="Open Veil — Fog-of-War Maze">
+          <img src="screenshots/097.jpg" alt="Screenshot of Veil — Fog-of-War Maze" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">097</span><span class="fname">097-fog-maze.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="097-fog-maze.html">Veil — Fog-of-War Maze</a></h2>
+          <p>A pitch-black labyrinth where the map you have is the map you have earned — only the corridor your lantern touches exists; everything else is rumor, a hint of gold where the exit beats like a slow heart.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="097-fog-maze.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="097-fog-maze.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="098 neon alley — pocket pinball a compact neon table seen from above: cyan rails, hot-pink bumpers that flare when hit, steel flippers you actually have to time, and one honest silver ball with a comet tail. 098-pinball.html">
+        <a class="shot" target="_blank" rel="noopener" href="098-pinball.html" aria-label="Open Neon Alley — Pocket Pinball">
+          <img src="screenshots/098.jpg" alt="Screenshot of Neon Alley — Pocket Pinball" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">098</span><span class="fname">098-pinball.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="098-pinball.html">Neon Alley — Pocket Pinball</a></h2>
+          <p>A compact neon table seen from above: cyan rails, hot-pink bumpers that flare when hit, steel flippers you actually have to time, and one honest silver ball with a comet tail.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="098-pinball.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="098-pinball.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="099 domino line — wave &amp; gaps a warm ivory line of tiles snaking across dark wood — a wave of falling paper-cream slabs that accelerates along the curve, halts raggedly at blue dashed gaps, and only completes when you personally bridge them. 099-domino-wave.html">
+        <a class="shot" target="_blank" rel="noopener" href="099-domino-wave.html" aria-label="Open Domino Line — Wave &amp; Gaps">
+          <img src="screenshots/099.jpg" alt="Screenshot of Domino Line — Wave &amp; Gaps" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">099</span><span class="fname">099-domino-wave.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="099-domino-wave.html">Domino Line — Wave &amp; Gaps</a></h2>
+          <p>A warm ivory line of tiles snaking across dark wood — a wave of falling paper-cream slabs that accelerates along the curve, halts raggedly at blue dashed gaps, and only completes when you personally bridge them.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="099-domino-wave.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="099-domino-wave.txt">Prompt</a></div>
+        </div>
+      </article>
+      <article class="card" data-search="100 grand finale — one hundred shells a midnight harbor finale where every click sends up a shell and the very last volley assembles four hundred sparks into the number 100 itself — a curtain call written in burning magnesium. 100-grand-finale.html">
+        <a class="shot" target="_blank" rel="noopener" href="100-grand-finale.html" aria-label="Open Grand Finale — One Hundred Shells">
+          <img src="screenshots/100.jpg" alt="Screenshot of Grand Finale — One Hundred Shells" width="1280" height="800" loading="lazy" decoding="async">
+        </a>
+        <div class="body">
+          <div class="meta"><span class="num">100</span><span class="fname">100-grand-finale.html</span></div>
+          <h2><a target="_blank" rel="noopener" href="100-grand-finale.html">Grand Finale — One Hundred Shells</a></h2>
+          <p>A midnight harbor finale where every click sends up a shell and the very last volley assembles four hundred sparks into the number 100 itself — a curtain call written in burning magnesium.</p>
+          <div class="links"><a class="open" target="_blank" rel="noopener" href="100-grand-finale.html">Open &#8599;</a><a class="prompt" target="_blank" rel="noopener" href="100-grand-finale.txt">Prompt</a></div>
+        </div>
+      </article>
+  </main>
+  <footer>
+    <span>MiMo-V2.6-Pro &middot; 100 HTML files &middot; screenshots captured at 1280&times;800</span>
+    <span><a target="_blank" rel="noopener" href="https://miaai-lab.github.io/" style="color:var(--dim)">MiaAI Lab</a></span>
+  </footer>
+</div>
+<script>
+(function () {
+  var input = document.getElementById('filter');
+  var count = document.getElementById('count');
+  var cards = Array.prototype.slice.call(document.querySelectorAll('.card'));
+  input.addEventListener('input', function () {
+    var q = input.value.trim().toLowerCase(), shown = 0;
+    cards.forEach(function (c) {
+      var hit = !q || c.getAttribute('data-search').indexOf(q) !== -1;
+      c.classList.toggle('hide', !hit);
+      if (hit) shown++;
+    });
+    count.textContent = shown + ' / ' + cards.length;
+  });
+})();
+</script>
+</body>
+</html>

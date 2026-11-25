@@ -1,0 +1,492 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>045 · Sudoku Sheet</title>
+<style>
+:root{--bg:#f4f1ea;--paper:#fffdf8;--ink:#1d2430;--mute:#7c8493;--line:#d8d3c7;
+  --blue:#2d5bd7;--red:#d1442f;--grid:#3a4251;--hl:#eef2ff;--warm:#fff3d6}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(760px 420px at 50% -6%,#ffffff,transparent),
+  var(--bg);color:var(--ink);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:2px solid var(--grid)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:26px;font-weight:300}
+h1 b{font-weight:700;color:var(--red)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:var(--red);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:minmax(0,560px) minmax(0,1fr);gap:26px;padding:20px 28px 0}
+@media(max-width:900px){.stage{grid-template-columns:1fr}}
+.sheet{background:var(--paper);border:1px solid var(--line);border-radius:4px;
+  box-shadow:0 14px 32px rgba(30,36,48,.13);padding:18px}
+.masthead{display:flex;justify-content:space-between;align-items:baseline;
+  border-bottom:2px solid var(--grid);padding-bottom:9px;margin-bottom:14px}
+.masthead .puz{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.masthead .dif{font-size:12px;font-weight:700;letter-spacing:.2em;text-transform:uppercase;color:var(--red)}
+
+.board{display:grid;grid-template-columns:repeat(9,1fr);border:2.5px solid var(--grid);
+  border-radius:2px;overflow:hidden;user-select:none}
+.cell{position:relative;aspect-ratio:1;display:grid;place-items:center;
+  font:700 20px/1 "Courier New",monospace;color:var(--ink);
+  border-right:1px solid var(--line);border-bottom:1px solid var(--line);
+  cursor:pointer;background:#fff;transition:background .12s}
+.cell:nth-child(9n){border-right:none}
+.cell:nth-child(n+73){border-bottom:none}
+.cell.bx{border-right:2.5px solid var(--grid)}
+.cell.bxr{border-right:none}
+.cell.by{border-bottom:2.5px solid var(--grid)}
+.cell.given{color:#59616f;background:#f7f5ef}
+.cell.hin{background:var(--hl)}
+.cell.peer{background:var(--warm)}
+.cell.sel{background:var(--blue)!important;color:#fff;box-shadow:inset 0 0 0 2px var(--blue)}
+.cell.sel.given{color:#fff}
+.cell.err{color:var(--red);background:#fdece9!important}
+.cell.same{color:var(--blue)}
+.cell.ok{animation:stamp .4s ease}
+@keyframes stamp{0%{transform:scale(1)}40%{transform:scale(1.28)}100%{transform:scale(1)}}
+.cell .pn{position:absolute;inset:3px;display:grid;grid-template-columns:repeat(3,1fr);
+  font:400 8.5px/1 "Courier New",monospace;color:var(--mute);pointer-events:none}
+.cell .pn span{display:grid;place-items:center}
+
+.pad{display:grid;grid-template-columns:repeat(5,1fr);gap:8px;margin-top:14px}
+.n{font:700 17px/1 "Courier New",monospace;padding:13px 0;border:1.5px solid var(--line);
+  background:#fff;border-radius:9px;cursor:pointer;transition:.12s;color:var(--ink)}
+.n:hover{transform:translateY(-2px);border-color:var(--blue);color:var(--blue)}
+.n.used{opacity:.35;cursor:default}
+.n.used:hover{transform:none;border-color:var(--line);color:var(--ink)}
+.n.wide{grid-column:span 2;font:700 11px/1 "Segoe UI",sans-serif;letter-spacing:.16em;
+  text-transform:uppercase}
+.n.red{border-color:var(--red);color:var(--red)}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:#fff;border:1px solid var(--line);border-radius:12px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.stat{display:flex;justify-content:space-between;font-size:12px;padding:7px 0;
+  border-bottom:1px dotted var(--line)}
+.stat:last-child{border-bottom:none}
+.stat b{font-variant-numeric:tabular-nums}
+.stat b.ok{color:#1d7a4f}
+.stat b.no{color:var(--red)}
+.btns{display:flex;gap:9px}
+.b{flex:1;font:inherit;font-size:11px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  padding:12px 7px;border-radius:9px;border:1.5px solid var(--line);background:#fff;
+  color:var(--ink);cursor:pointer;transition:.13s}
+.b:hover{transform:translateY(-2px);border-color:var(--blue);color:var(--blue)}
+.b.go{background:var(--blue);border-color:var(--blue);color:#fff}
+.b.red{border-color:var(--red);color:var(--red)}
+.msg{font-size:12px;line-height:1.7;color:var(--mute);margin:10px 0 0;min-height:38px}
+.msg b{color:var(--ink)}
+.howto{font-size:11.5px;line-height:1.75;color:var(--mute);margin:0;padding-left:18px}
+.howto b{color:var(--ink)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">worksheet 45 · classic nine-by-nine</span>
+  <h1>Sudoku <b>Sheet</b></h1>
+  <span class="meta">time <b id="timeOut">00:00</b> · errors <b id="errOut">0</b></span>
+</header>
+
+<div class="stage">
+  <div class="sheet">
+    <div class="masthead">
+      <span class="puz" id="puzName">puzzle no. 1 · pencil first</span>
+      <span class="dif" id="difOut">medium</span>
+    </div>
+    <div class="board" id="board"></div>
+    <div class="pad" id="pad"></div>
+  </div>
+
+  <aside class="rig">
+    <section class="card">
+      <h2>Session</h2>
+      <div class="stat"><span>filled</span><b id="sFilled">0 / 81</b></div>
+      <div class="stat"><span>errors found</span><b id="sErr">0</b></div>
+      <div class="stat"><span>pencil marks</span><b id="sNotes">0</b></div>
+      <div class="stat"><span>elapsed</span><b id="sTime">00:00</b></div>
+      <div class="btns" style="margin-top:12px">
+        <button class="b go" id="check" type="button">check</button>
+        <button class="b red" id="reset" type="button">reset</button>
+      </div>
+      <div class="btns" style="margin-top:9px">
+        <button class="b" id="reveal" type="button">reveal one</button>
+        <button class="b" id="next" type="button">new puzzle</button>
+      </div>
+      <p class="msg" id="msg">Select a cell, then press a number.</p>
+    </section>
+
+    <section class="card">
+      <h2>How this sheet works</h2>
+      <ol class="howto">
+        <li>Click a cell to select it — its row, column and box tint.</li>
+        <li>Press <b>1–9</b> to fill, or <b>0</b> to erase.</li>
+        <li>Hold <b>N</b> while pressing a number to scribble <b>pencil marks</b> in the corners.</li>
+        <li><b>Check</b> marks wrong entries in red; <b>Reveal one</b> writes in the true value.</li>
+        <li>Arrow keys walk the grid. The timer runs until you reset.</li>
+      </ol>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:19px 28px 0;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)">
+  <span>backtracking solver · peer highlighting · corner pencil marks</span><span>045 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+
+  var PUZZLES=[
+    {name:"puzzle no. 1 · pencil first",dif:"medium",
+     g:"53..7....6..195....98....6.8...6...34..8.3..17...2...6.6....28....419..5....8..79"},
+    {name:"puzzle no. 2 · the long one",dif:"hard",
+     g:"..3.2.6..9..3.5..1..18.64....81.29..7.......8..67.82....26.95..8..2.3..9..5.1.3.."},
+    {name:"puzzle no. 3 · newspaper cut",dif:"easy",
+     g:".2.6.8...8..2.4...3......1..4.9.6..1.....5...5.....2...4......9..5.3..7...7.3.4.2"}
+  ];
+  var puzIdx=0;
+  var solution=null;   /* array of 81 ints */
+  var givens=null;     /* boolean 81 */
+  var board=new Array(81).fill(0);
+  var notes=makeNotes();
+  var sel=0, errors=0, checking=false;
+  var startedAt=0, elapsed=0, timerId=null;
+
+  function makeNotes(){
+    var a=[];
+    for(var i=0;i<81;i++) a.push([0,0,0,0,0,0,0,0,0]);
+    return a;
+  }
+
+  function idx(r,c){ return r*9+c; }
+
+  function candidates(grid,pos){
+    var r=Math.floor(pos/9), c=pos%9;
+    var used={};
+    for(var k=0;k<9;k++){
+      used[grid[idx(r,k)]]=1;
+      used[grid[idx(k,c)]]=1;
+    }
+    var br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+    for(var i=0;i<3;i++) for(var j=0;j<3;j++) used[grid[idx(br+i,bc+j)]]=1;
+    var out=[];
+    for(var n=1;n<=9;n++) if(!used[n]) out.push(n);
+    return out;
+  }
+
+  function solve(grid){
+    var best=-1, bestC=null;
+    for(var i=0;i<81;i++){
+      if(grid[i]===0){
+        var c=candidates(grid,i);
+        if(!c.length) return false;
+        if(!bestC || c.length<bestC.length){ best=i; bestC=c; }
+      }
+    }
+    if(best<0) return true;
+    for(var t=0;t<bestC.length;t++){
+      grid[best]=bestC[t];
+      if(solve(grid)) return true;
+    }
+    grid[best]=0;
+    return false;
+  }
+
+  function load(n){
+    puzIdx=(n+PUZZLES.length)%PUZZLES.length;
+    var p=PUZZLES[puzIdx];
+    givens=[];
+    board=[];
+    for(var i=0;i<81;i++){
+      var ch=p.g[i];
+      var v=ch==="."?0:parseInt(ch,10);
+      givens.push(v!==0);
+      board.push(v);
+    }
+    solution=board.slice();
+    solve(solution);
+    notes=makeNotes();
+    errors=0; checking=false; sel=-1;
+    G("errOut").textContent="0";
+    G("sErr").textContent="0";
+    G("puzName").textContent=p.name;
+    G("difOut").textContent=p.dif;
+    G("msg").innerHTML="Select a cell, then press a number.";
+    resetTimer();
+    render();
+    updateStats();
+  }
+
+  /* ---- DOM board ---- */
+  var boardEl=G("board");
+  var cells=[];
+  function buildBoard(){
+    boardEl.innerHTML="";
+    cells=[];
+    for(var i=0;i<81;i++){
+      var d=document.createElement("div");
+      d.className="cell";
+      d.dataset.i=i;
+      var r=Math.floor(i/9), c=i%9;
+      if(c%3===2 && c!==8) d.classList.add("bx");
+      if(c===8) d.classList.add("bxr");
+      if(r%3===2 && r!==8) d.classList.add("by");
+      boardEl.appendChild(d);
+      cells.push(d);
+      d.addEventListener("click",function(){
+        sel=parseInt(this.dataset.i,10);
+        checking=false;
+        render();
+      });
+    }
+  }
+
+  function peersOf(i){
+    var out={};
+    var r=Math.floor(i/9), c=i%9;
+    for(var k=0;k<9;k++){ out[idx(r,k)]=1; out[idx(k,c)]=1; }
+    var br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+    for(var a=0;a<3;a++) for(var b=0;b<3;b++) out[idx(br+a,bc+b)]=1;
+    return out;
+  }
+
+  function render(){
+    var peers=sel>=0?peersOf(sel):{};
+    var selVal=sel>=0?board[sel]:0;
+    for(var i=0;i<81;i++){
+      var el=cells[i];
+      var v=board[i];
+      el.className="cell";
+      var r=Math.floor(i/9), c=i%9;
+      if(c%3===2 && c!==8) el.classList.add("bx");
+      if(c===8) el.classList.add("bxr");
+      if(r%3===2 && r!==8) el.classList.add("by");
+      if(givens[i]) el.classList.add("given");
+      if(i===sel) el.classList.add("sel");
+      else if(peers[i]) el.classList.add("peer");
+      else if(selVal && v===selVal) el.classList.add("same");
+
+      if(v){
+        el.textContent=v;
+        if(checking && !givens[i] && v!==solution[i]) el.classList.add("err");
+      }else{
+        el.textContent="";
+        var pn=notes[i];
+        var any=pn.some(function(x){return x;});
+        if(any){
+          var wrap=document.createElement("span");
+          wrap.className="pn";
+          for(var n=0;n<9;n++){
+            var s=document.createElement("span");
+            s.textContent=pn[n]?String(n+1):"";
+            wrap.appendChild(s);
+          }
+          el.appendChild(wrap);
+        }
+      }
+    }
+  }
+
+  function updateStats(){
+    var filled=0, notec=0;
+    for(var i=0;i<81;i++){
+      if(board[i]) filled++;
+      else notec+=notes[i].filter(Boolean).length;
+    }
+    G("sFilled").textContent=filled+" / 81";
+    G("sNotes").textContent=notec;
+    G("sErr").textContent=errors;
+  }
+
+  /* ---- timer ---- */
+  function fmt(sec){
+    var m=Math.floor(sec/60), s=sec%60;
+    return (m<10?"0":"")+m+":"+(s<10?"0":"")+s;
+  }
+  function resetTimer(){
+    elapsed=0;
+    if(timerId) clearInterval(timerId);
+    startedAt=Date.now();
+    G("sTime").textContent="00:00";
+    G("timeOut").textContent="00:00";
+    if(!reduce){
+      timerId=setInterval(function(){
+        elapsed=Math.floor((Date.now()-startedAt)/1000);
+        G("sTime").textContent=fmt(elapsed);
+        G("timeOut").textContent=fmt(elapsed);
+      },1000);
+    }
+  }
+
+  /* ---- pad ---- */
+  function buildPad(){
+    var pad=G("pad");
+    pad.innerHTML="";
+    for(var n=1;n<=9;n++){
+      var b=document.createElement("button");
+      b.type="button"; b.className="n"; b.textContent=n;
+      b.dataset.n=n;
+      b.addEventListener("click",function(){
+        enter(parseInt(this.dataset.n,10), false);
+      });
+      pad.appendChild(b);
+    }
+    var er=document.createElement("button");
+    er.type="button"; er.className="n wide"; er.textContent="erase";
+    er.addEventListener("click",function(){ enter(0,false); });
+    pad.appendChild(er);
+    var nt=document.createElement("button");
+    nt.type="button"; nt.className="n wide red"; nt.textContent="pencil marks";
+    nt.addEventListener("click",function(){
+      pencilMode=!pencilMode;
+      nt.style.background=pencilMode?"#fdece9":"#fff";
+      G("msg").innerHTML=pencilMode?"<b>Pencil mode on</b> — numbers now write small."
+        :"Pencil mode off.";
+    });
+    pad.appendChild(nt);
+    nt.id="pencilBtn";
+  }
+  var pencilMode=false;
+
+  function enter(n,asNote){
+    if(sel<0){ G("msg").innerHTML="Select a cell first."; return; }
+    if(givens[sel]){ G("msg").innerHTML="That cell is a <b>given</b> — it cannot be edited."; return; }
+    if(asNote||pencilMode){
+      if(n===0){ notes[sel]=notes[sel].map(function(){return 0;}); }
+      else notes[sel][n-1]=notes[sel][n-1]?0:1;
+      board[sel]=0;
+    }else{
+      board[sel]=n;
+      if(n!==0 && n!==solution[sel] && checking===false){
+        /* silent until checked */
+      }
+      if(n!==0 && n===solution[sel]){
+        var el=cells[sel];
+        el.classList.remove("ok");
+        void el.offsetWidth;
+        if(!reduce) el.classList.add("ok");
+        /* clear pencil marks in peers */
+        peersList(sel).forEach(function(p){ notes[p][n-1]=0; });
+        checkFull();
+      }
+    }
+    render();
+    updateStats();
+    refreshPad();
+  }
+
+  function peersList(i){
+    var out=[];
+    var r=Math.floor(i/9), c=i%9;
+    for(var k=0;k<9;k++){ if(k!==c) out.push(idx(r,k)); if(k!==r) out.push(idx(k,c)); }
+    var br=Math.floor(r/3)*3, bc=Math.floor(c/3)*3;
+    for(var a=0;a<3;a++) for(var b=0;b<3;b++){
+      var p=idx(br+a,bc+b);
+      if(p!==i && out.indexOf(p)<0) out.push(p);
+    }
+    return out;
+  }
+
+  function refreshPad(){
+    var counts=new Array(10).fill(0);
+    for(var i=0;i<81;i++) if(board[i]) counts[board[i]]++;
+    var btns=G("pad").querySelectorAll(".n[data-n]");
+    Array.prototype.forEach.call(btns,function(b){
+      var n=parseInt(b.dataset.n,10);
+      b.classList.toggle("used", counts[n]>=9);
+    });
+  }
+
+  function checkFull(){
+    var done=true;
+    for(var i=0;i<81;i++) if(board[i]!==solution[i]) done=false;
+    if(done){
+      if(timerId) clearInterval(timerId);
+      G("msg").innerHTML="<b>Solved in "+fmt(elapsed)+"</b> — every cell correct.";
+    }
+  }
+
+  /* ---- buttons ---- */
+  G("check").addEventListener("click",function(){
+    checking=true;
+    var wrong=0;
+    for(var i=0;i<81;i++){
+      if(!givens[i] && board[i] && board[i]!==solution[i]) wrong++;
+    }
+    errors+=wrong;
+    G("errOut").textContent=errors;
+    G("msg").innerHTML=wrong
+      ? "<b>"+wrong+" wrong "+(wrong===1?"entry":"entries")+"</b> marked in red."
+      : "No mistakes so far. Keep going.";
+    render();
+    updateStats();
+  });
+  G("reset").addEventListener("click",function(){
+    load(puzIdx);
+    G("msg").innerHTML="Sheet wiped back to the printed givens.";
+  });
+  G("next").addEventListener("click",function(){
+    load(puzIdx+1);
+  });
+  G("reveal").addEventListener("click",function(){
+    var hidden=[];
+    for(var i=0;i<81;i++) if(!givens[i] && board[i]!==solution[i]) hidden.push(i);
+    if(!hidden.length){
+      G("msg").innerHTML="Nothing left to reveal.";
+      return;
+    }
+    var target=(sel>=0 && hidden.indexOf(sel)>=0)?sel:hidden[Math.floor(Math.random()*hidden.length)];
+    board[target]=solution[target];
+    notes[target]=notes[target].map(function(){return 0;});
+    sel=target;
+    checking=false;
+    render(); updateStats(); refreshPad();
+    var el=cells[target];
+    el.classList.remove("ok"); void el.offsetWidth;
+    if(!reduce) el.classList.add("ok");
+    G("msg").innerHTML="One cell written in for you.";
+    checkFull();
+  });
+
+  /* ---- keyboard ---- */
+  window.addEventListener("keydown",function(e){
+    if(e.target && e.target.tagName==="INPUT") return;
+    if(e.key>="1" && e.key<="9"){
+      enter(parseInt(e.key,10), e.key!=="0" && (e.ctrlKey||e.metaKey));
+      if(e.ctrlKey||e.metaKey) e.preventDefault();
+    }else if(e.key==="0" || e.key==="Backspace" || e.key==="Delete"){
+      enter(0,false); e.preventDefault();
+    }else if(e.key.indexOf("Arrow")===0 && sel>=0){
+      var r=Math.floor(sel/9), c=sel%9;
+      if(e.key==="ArrowUp") r=(r+8)%9;
+      if(e.key==="ArrowDown") r=(r+1)%9;
+      if(e.key==="ArrowLeft") c=(c+8)%9;
+      if(e.key==="ArrowRight") c=(c+1)%9;
+      sel=idx(r,c);
+      render();
+      e.preventDefault();
+    }else if(e.key==="n"||e.key==="N"){
+      pencilMode=!pencilMode;
+      var pb=G("pencilBtn");
+      if(pb) pb.style.background=pencilMode?"#fdece9":"#fff";
+      G("msg").innerHTML=pencilMode?"<b>Pencil mode on.</b>":"Pencil mode off.";
+    }
+  });
+
+  buildBoard();
+  buildPad();
+  load(0);
+})();
+</script>
+</body>
+</html>

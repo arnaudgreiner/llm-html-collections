@@ -1,0 +1,18 @@
+TITLE: Horizon Almanac — One Day Scrubbed
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Horizon Almanac: One Day Scrubbed". Render a 1060×420 continuous panorama of one city day driven by a time-of-day value J (0–1440 minutes): an HSL-composed sky gradient that blends through night, dawn, golden hour, day and dusk; 180 twinkle-phased stars with a crescent moon that fade with solar altitude; a sun (and night moon) travelling an arc from horizon to horizon with glow flares that warm at sunset; a procedurally generated skyline of 30–100 px buildings with per-window lattice lights that switch on warm or cool after dusk; ground band, street lamps with light cones, and a horizon glow that intensifies at sunset. Scrubbing is via a labelled hour-slot rail with a draggable glowing handle, quick-jump buttons (NOON / SUNSET / MIDNIGHT), and a PLAY DAY toggle running 120× per second. Readouts: tabular clock, phase name, solar altitude and compass azimuth, a fake cloud percentage, plus STARS and LAMPS toggles. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+An observatory instrument: deep slate chrome, serif-adjacent tabular clock over the live sky, thin rails and engraved labels; the scene itself carries all colour. The craft is one variable — solar altitude — driving every layer at once (sky, star alpha, sun/moon placement, window lights, lamp glow) so the whole page behaves like a single coherent sky rather than separate effects.
+
+MAJOR VISUAL TECHNIQUES:
+- Single-state sky model: day/night/sunset blend factors driving all layers
+- HSL gradient stops interpolated toward sunset orange as sun nears horizon
+- Deterministic skyline generator storing per-window lit-seed and warm/cool bias
+- Star twinkle via sine phase per star; crescent moon via sky-coloured overdraw circle
+- Parabolic sun/moon arc with shadowBlur glow, glow colour shifting at sunset
+- Pointer-driven scrub on a labelled rail with live numeric readouts
+
+INTENDED INTERACTION MODEL:
+Drag the time handle or click an hour label to scrub, hit PLAY DAY to watch the full cycle, jump to noon/sunset/midnight instantly, toggle stars and city lamps, and read solar altitude/azimuth as the scene changes.

@@ -1,0 +1,17 @@
+TITLE: Cartographer's Fold — A Map You Fold By Hand
+
+FULL PROMPT:
+Build one self-contained HTML page, "Cartographer's Fold", with no external resources. Survey-office palette: warm desk dark, aged-paper page with a wax-red route and hickory-brown ink; header with kicker, serif title with italic accent, and progress/sheet counters. Stage: a perspective container holding a 760×470 paper sheet split into six vertical .strip panels, each with a front face (a slice of one shared 760×470 map SVG, offset with negative left inside overflow:hidden) and a back face showing a hatched paper stock with an "ARCHIVE · SHEET 7 OF 7" mark; transform-origin alternates left/right so the panels roll over each other, and both faces are backface-visibility:hidden. Right rail: fold-state table, a progress slider plus fold-all/unfold/turn-over/shuffle-fold buttons, and a legend card. Footer line credits the technique.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like folding a real survey sheet by hand on a lamplit desk — the geography vanishing strip by strip until only hatched paper remains.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS perspective + preserve-3d with per-strip rotateY and alternating transform-origin
+- backface-hidden front/back face pairs so only the correct side shows during a 180° turn
+- One shared map SVG rendered six times with different viewBox offsets for a continuous image
+- Per-strip transition-delay so folds cascade like a hand moving across the sheet
+- Live derived readouts: stacked-sheet thickness, footprint width and obverse/reverse state
+
+INTENDED INTERACTION MODEL:
+Drag sideways anywhere on the desk to run the fold by hand (pointer capture, 70px per strip) or drive the same value with the slider; fold all, unfold, shuffle fold and turn over (rotateY 180° on the whole sheet) buttons give one-click states. Every change rewrites the four readouts and the state line. Reduced motion drops all transitions but keeps every value change instant and correct.

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Grid & Clue — Crossword Draughtsman</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#efe7d6;color:#211d17;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;gap:16px;padding:26px 16px}
+h1{font-size:13px;letter-spacing:.34em;text-transform:uppercase;color:#5d5346}
+h1 b{color:#9c3b28}
+.rule{width:100%;max-width:1020px;height:2px;background:#211d17}
+.head{display:flex;gap:18px;align-items:baseline;flex-wrap:wrap;justify-content:center;font-size:11px;letter-spacing:.18em;color:#6b6154}
+.head b{color:#9c3b28}
+#board{display:grid;background:#211d17;gap:2px;padding:2px;box-shadow:0 10px 30px rgba(33,29,23,.28)}
+.cell{background:#fbf6ea;width:34px;height:34px;position:relative;display:flex;align-items:center;justify-content:center;font-size:19px;transition:.18s}
+.cell.blk{background:#211d17}
+.cell .num{position:absolute;top:1px;left:2px;font-size:8px;color:#9c3b28;font-family:ui-monospace,monospace}
+.cell.lit{background:#f2dfa8}
+.cell.cur{background:#e9c96a}
+.cell.fill{animation:pop .3s ease}
+@keyframes pop{0%{transform:scale(.4);opacity:0}100%{transform:scale(1);opacity:1}}
+.cols{display:flex;gap:26px;width:100%;max-width:1020px;justify-content:center;flex-wrap:wrap}
+.col{flex:1;min-width:280px;max-width:460px}
+.col h2{font-size:10.5px;letter-spacing:.3em;border-bottom:2px solid #211d17;padding-bottom:5px;margin-bottom:8px}
+.clue{font-size:12.5px;line-height:1.65;padding:3px 5px;cursor:pointer;border-radius:3px;display:flex;gap:8px}
+.clue:hover{background:#e6dcc6}
+.clue.on{background:#e9c96a}
+.clue i{font-style:normal;color:#9c3b28;font-family:ui-monospace,monospace;font-size:10.5px;min-width:22px}
+.clue.done{color:#7a7264;text-decoration:line-through;text-decoration-color:#9c3b28}
+.bar{display:flex;gap:8px;flex-wrap:wrap;justify-content:center}
+button{background:#fbf6ea;border:1.5px solid #211d17;color:#211d17;font-family:ui-monospace,monospace;font-size:10px;padding:9px 14px;border-radius:3px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{background:#211d17;color:#fbf6ea}
+button.on{background:#9c3b28;border-color:#9c3b28;color:#fff}
+.stat{font-family:ui-monospace,monospace;font-size:10px;letter-spacing:.16em;color:#6b6154}
+.stat b{color:#9c3b28}
+.hint{font-family:ui-monospace,monospace;font-size:9.5px;letter-spacing:.12em;color:#8a8072;max-width:900px;text-align:center;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Grid &amp; Clue <b>M84</b> · crossword draughtsman</h1>
+<div class="head"><span>edition <b id="mEd">1</b></span><span>placed <b id="mP">0</b> words</span><span>filled <b id="mF">0%</b></span><span>selected <b id="mSel">—</b></span></div>
+<div class="rule"></div>
+<div id="board"></div>
+<div class="bar">
+  <button id="bNew">✎ NEW DRAUGHT</button>
+  <button id="bReveal">▣ REVEAL WORD</button>
+  <button id="bAll">▤ SOLVE ALL</button>
+  <button id="bClear">⌫ CLEAR FILLS</button>
+  <span class="stat">crossings <b id="mX">0</b> · grid <b id="mG">13×13</b></span>
+</div>
+<div class="cols">
+  <div class="col"><h2>Across</h2><div id="across"></div></div>
+  <div class="col"><h2>Down</h2><div id="down"></div></div>
+</div>
+<div class="rule"></div>
+<div class="hint">a draughtsman builds the puzzle in front of you: every word is laid only where it can share letters with what is already on the board · click a clue to light its slots · REVEAL types the answer one letter at a time</div>
+<script>
+(function(){
+"use strict";
+var WORDS=[
+["ALPACA","Woolly Peruvian"],["ANVIL","Blacksmith's block"],["ARCH","Curved structure"],["ASPIC","Jellied consommé"],
+["ASTROLABE","Ancient sky tool"],["AUBERGINE","Purple fruit"],["BADGER","Striped digger"],["BALLET","Pointed-toe art"],
+["BASIL","Pesto herb"],["BEACON","Hilltop fire"],["BISON","Prairie rumbling"],["BLANKET","Bed warmer"],
+["BRIAR","Thorny hedge"],["BROOM","Sweeping tool"],["CANYON","River gorge"],["CARAT","Gem weight"],
+["CEDAR","Aromatic wood"],["CELLO","Bowed bass"],["CHALK","White cliff stone"],["CHASM","Deep cleft"],
+["CIDER","Apple brew"],["CIPHER","Secret code"],["COMET","Tailed visitor"],["CORAL","Sea reef builder"],
+["CRANE","Long-necked bird"],["CREPE","Thin pancake"],["DAGGER","Short blade"],["DELTA","River mouth"],
+["DOSER","Sleeper"],["EAGLE","High bird"],["EBONY","Dark wood"],["ELBOW","Hinged joint"],
+["EMBER","Dying fire"],["ENVOY","Diplomat"],["FJORD","Steep inlet"],["FLINT","Spark stone"],
+["GAZEBO","Garden pavilion"],["GEYSER","Hot plume"],["GLYPH","Carved symbol"],["GRIST","Grain to mill"],
+["HARPY","Mythical bird"],["HAVEN","Safe port"],["HELM","Ship's wheel"],["HYENA","Laughing beast"],
+["IGUANA","Tropical lizard"],["IVORY","Tusk cream"],["JAGUAR","Spotted cat"],["JASPER","Red stone"],
+["KEEL","Hull spine"],["KIOSK","Small pavilion"],["KOALA","Gum-leaf sleepy"],["LARCH","Needle cone tree"],
+["LLAMA","Pack animal"],["LYNX","Tufted-eared cat"],["MARSH","Boggy ground"],["MEDAL","Ribbon award"],
+["MIMIC","Copycat"],["MOOR","Heathland"],["NEXUS","Linking hub"],["OASIS","Desert spring"],["OBOE","Double reed"],
+["OCHRE","Earth pigment"],["OSPREY","Fish hawk"],["OTTER","River playful"],["PADDLE","Rowing blade"],
+["PASTEL","Soft chalk"],["PELT","Fur hide"],["PIANO","Eighty-eight keys"],["PLAZA","Town square"],
+["QUAIL","Small game bird"],["QUILL","Porcupine spine"],["RAVEN","Bird of lore"],["RIDGE","Long summit"],
+["RIPPLE","Small wave"],["SAFFRON","Golden spice"],["SCARF","Neck warmer"],["SHALE","Layered rock"],
+["SOLAR","Sun related"],["SONAR","Echo location"],["SPINE","Backbones"],["SUMAC","Red-leaf shrub"],
+["SWIFT","Fast flier"],["THORN","Sharp plant"],["TOAD","Warty pouncer"],["TULIP","Dutch flower"],
+["VAULT","Arched roof"],["VELVET","Soft fabric"],["WALTZ","Triple time"],["WIDGEON","Dabbling duck"],
+["WILLOW","Weeping tree"],["YACHT","Pleasure boat"],["ZEBRA","Striped horse"]
+];
+var N=13;
+var board,numb,entries,selected,edition=0;
+var boardEl=document.getElementById("board");
+function shuffle(a){
+  for(var i=a.length-1;i>0;i--){var j=Math.floor(Math.random()*(i+1));var t=a[i];a[i]=a[j];a[j]=t;}
+  return a;
+}
+function blank(){
+  board=[];numb=[];
+  for(var y=0;y<N;y++){
+    board.push(new Array(N).fill(null));
+    numb.push(new Array(N).fill(0));
+  }
+}
+function canPlace(word,x,y,dir){
+  var len=word.length;
+  var dx=dir==="across"?1:0,dy=dir==="down"?1:0;
+  var ex=x+dx*(len-1),ey=y+dy*(len-1);
+  if(x<0||y<0||ex>=N||ey>=N)return false;
+  var crossings=0;
+  for(var i=0;i<len;i++){
+    var cx=x+dx*i,cy=y+dy*i;
+    var cur=board[cy][cx];
+    if(cur){
+      if(cur!==word[i])return false;
+      crossings++;
+    }else{
+      // cells beside the letter must be empty (except behind/ahead of the word)
+      var sdx=dy,sdy=dx;
+      var ax2=cx-sdx,ay2=cy-sdy,bx2=cx+sdx,by2=cy+sdy;
+      if(ax2>=0&&ay2>=0&&ax2<N&&ay2<N&&board[ay2][ax2]!==null)return false;
+      if(bx2>=0&&by2>=0&&bx2<N&&by2<N&&board[by2][bx2]!==null)return false;
+    }
+  }
+  // ends must be open
+  if(x-dx>=0&&y-dy>=0&&board[y-dy][x-dx])return false;
+  if(ex+dx<N&&ey+dy<N&&board[ey+dy][ex+dx])return false;
+  return crossings>0||entries.length===0;
+}
+function place(word,x,y,dir,clue){
+  var dx=dir==="across"?1:0,dy=dir==="down"?1:0;
+  for(var i=0;i<word.length;i++){
+    board[y+dy*i][x+dx*i]=word[i];
+  }
+  entries.push({word:word,dir:dir,x:x,y:y,clue:clue,filled:0});
+}
+function build(){
+  blank();entries=[];edition++;
+  var pool=shuffle(WORDS.slice()).map(function(a){return{word:a[0],clue:a[1]};});
+  // first word centred across
+  var first=pool[0];
+  var y=Math.floor(N/2),x=Math.floor((N-first.word.length)/2);
+  place(first.word,x,y,"across",first.clue);
+  for(var pi=1;pi<pool.length;pi++){
+    var w=pool[pi];
+    var placed=false;
+    var tries=shuffle(w.word.split("").map(function(_,i){return i;}));
+    for(var a=0;a<w.word.length&&!placed;a++){
+      var li=tries[a];
+      for(var ei=0;ei<entries.length&&!placed;ei++){
+        var e=entries[ei];
+        for(var ej=0;ej<e.word.length;ej++){
+          if(e.word[ej]!==w.word[li])continue;
+          var px,py,pd;
+          if(e.dir==="across"){
+            px=e.x+ej;py=e.y-li;pd="down";
+          }else{
+            px=e.x-li;py=e.y+ej;pd="across";
+          }
+          if(canPlace(w.word,px,py,pd)){
+            place(w.word,px,py,pd,w.clue);
+            placed=true;break;
+          }
+        }
+      }
+    }
+  }
+  // numbering + reveal animation state
+  numb=[];
+  for(var yy=0;yy<N;yy++)numb.push(new Array(N).fill(0));
+  var num=0;
+  for(var yy2=0;yy2<N;yy2++)for(var xx2=0;xx2<N;xx2++){
+    if(!board[yy2][xx2])continue;
+    var startsA=entries.some(function(e){return e.dir==="across"&&e.x===xx2&&e.y===yy2;});
+    var startsD=entries.some(function(e){return e.dir==="down"&&e.x===xx2&&e.y===yy2;});
+    if(startsA||startsD){num++;numb[yy2][xx2]=num;}
+  }
+  selected=entries[0]?{i:0}:null;
+  paintBoard();
+  paintClues();
+  document.getElementById("mEd").textContent=edition;
+  document.getElementById("mP").textContent=entries.length;
+  document.getElementById("mX").textContent=crossCount();
+  document.getElementById("mG").textContent=N+"×"+N;
+  updateFill();
+}
+function crossCount(){
+  var c=0;
+  entries.forEach(function(e){
+    var dx=e.dir==="across"?1:0,dy=e.dir==="down"?1:0;
+    for(var i=0;i<e.word.length;i++){
+      var other=e.dir==="across"?"down":"across";
+      if(entries.some(function(o){return o.dir===other&&o.x===e.x+dx*i&&o.y===e.y+dy*i;}))c++;
+    }
+  });
+  return c;
+}
+function paintBoard(){
+  boardEl.style.gridTemplateColumns="repeat("+N+",34px)";
+  boardEl.innerHTML="";
+  var sel=selected?entries[selected.i]:null;
+  var selCells={};
+  if(sel){
+    var dx=sel.dir==="across"?1:0,dy=sel.dir==="down"?1:0;
+    for(var i=0;i<sel.word.length;i++)selCells[(sel.y+dy*i)+"_"+(sel.x+dx*i)]=1;
+  }
+  for(var y=0;y<N;y++)for(var x=0;x<N;x++){
+    var d=document.createElement("div");
+    d.className="cell"+(board[y][x]?"":" blk");
+    if(selCells[y+"_"+x])d.className+=" lit";
+    if(filled[y]&&filled[y][x])d.textContent=filled[y][x];
+    if(numb[y][x]){var s=document.createElement("span");s.className="num";s.textContent=numb[y][x];d.appendChild(s);}
+    boardEl.appendChild(d);
+  }
+}
+function paintClues(){
+  ["across","down"].forEach(function(dir){
+    var box=document.getElementById(dir);
+    box.innerHTML="";
+    entries.forEach(function(e,i){
+      if(e.dir!==dir)return;
+      var el=document.createElement("div");
+      el.className="clue"+(selected&&selected.i===i?" on":"")+(e.filled===e.word.length?" done":"");
+      var n=0;
+      for(var y=0;y<N;y++)for(var x=0;x<N;x++)if(numb[y][x]&&x===e.x&&y===e.y)n=numb[y][x];
+      el.innerHTML="<i>"+n+"</i><span>"+e.clue+" ("+e.word.length+")</span>";
+      el.addEventListener("click",function(){
+        selected={i:i};paintBoard();paintClues();
+        document.getElementById("mSel").textContent=e.word;
+      });
+      box.appendChild(el);
+    });
+  });
+}
+var filled=[];
+function clearFills(){
+  filled=[];
+  for(var y=0;y<N;y++)filled.push(new Array(N).fill(null));
+  entries.forEach(function(e){e.filled=0;});
+  paintBoard();paintClues();updateFill();
+}
+function updateFill(){
+  var done=0,tot=0;
+  entries.forEach(function(e){tot+=e.word.length;done+=e.filled;});
+  document.getElementById("mF").textContent=Math.round(done/tot*100)+"%";
+}
+function revealWord(){
+  if(!selected)return;
+  var e=entries[selected.i];
+  var dx=e.dir==="across"?1:0,dy=e.dir==="down"?1:0;
+  var i=0;
+  var iv=setInterval(function(){
+    if(i>=e.word.length){
+      clearInterval(iv);paintClues();updateFill();return;
+    }
+    var cx=e.x+dx*i,cy=e.y+dy*i;
+    if(filled[cy][cx]!==e.word[i]){
+      filled[cy][cx]=e.word[i];
+      e.filled++;
+    }
+    paintBoard();
+    i++;
+  },70);
+}
+function solveAll(){
+  var list=entries.slice();
+  var k=0;
+  var iv=setInterval(function(){
+    if(k>=list.length){clearInterval(iv);updateFill();return;}
+    selected={i:entries.indexOf(list[k])};
+    var e=list[k];
+    var dx=e.dir==="across"?1:0,dy=e.dir==="down"?1:0;
+    for(var i=0;i<e.word.length;i++){
+      var cx=e.x+dx*i,cy=e.y+dy*i;
+      if(filled[cy][cx]!==e.word[i]){filled[cy][cx]=e.word[i];e.filled++;}
+    }
+    paintBoard();paintClues();
+    k++;
+  },90);
+}
+document.getElementById("bNew").addEventListener("click",function(){build();clearFills();});
+document.getElementById("bReveal").addEventListener("click",revealWord);
+document.getElementById("bAll").addEventListener("click",solveAll);
+document.getElementById("bClear").addEventListener("click",clearFills);
+build();
+clearFills();
+})();
+</script>
+</body>
+</html>

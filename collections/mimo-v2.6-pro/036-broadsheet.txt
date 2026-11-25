@@ -1,0 +1,18 @@
+TITLE: Broadsheet — The Eastgate Broadsheet Front Page
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Broadsheet", with no external resources. A dark backdrop holds a centred cream newsprint sheet (subtle dot-grain background, heavy drop shadow). Structure: masthead block with dateline row (live date, paper name, issue number, page count), a 64px small-caps nameplate with the red "Broadsheet" wordmark, a second strapline row; a marquee ticker strip (duplicate item list so the translateX(-100%) loop is seamless, hover or button pauses via animation-play-state); then a three-column top grid split by 1px rules — lead story (red kicker, 40px headline, italic standfirst, two-column justified body with a 52px drop cap, two clickable secondary stories), a middle column of feature stories each with meta, dek and a red "Continue reading", and a right rail of double-ruled boxes: weather with a hand-written SVG sun+cloud, markets list, a monospace crossword grid in a dashed box with a clue, and a notices box. Bottom toolbar: Late edition / New forecast / Pause ticker. A fixed reading overlay (dark backdrop, cream card, rise animation, close button, Escape or backdrop click) renders any story's full paragraphs.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read as a folded broadsheet laid on a dark table: rules and columns doing all the work, no photographs, red used exactly three times per page, and type set tight enough that you lean in.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS multi-column justified text with hyphenation and a ::first-letter drop cap
+- Seamless marquee via padded inline block translating to -100%, paused by animation-play-state
+- Double borders and 1px column rules to build newspaper structure without images
+- Hand-authored inline SVG weather icon; monospace crossword block using ■ glyphs
+- Overlay dialog pattern: display swap + rise keyframe, Escape/backdrop/button close
+- Late-edition regeneration: headline, standfirst, issue number, ticker and markets all re-rolled in one handler with a brightness flash
+
+INTENDED INTERACTION MODEL:
+Click any story (including the lead body) to open the reader overlay with the full text; Escape, the close button or a backdrop click dismisses. Hovering the ticker pauses it; the toolbar button does the same persistently. "Late edition" replaces the lead headline and standfirst, bumps the issue number, stamps a new wire time and re-rolls ticker and market numbers. "New forecast" swaps the weather box. Under reduced motion the ticker and overlay animation are disabled; all controls still work.

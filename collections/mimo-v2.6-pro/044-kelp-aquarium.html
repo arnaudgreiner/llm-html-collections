@@ -1,0 +1,441 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>044 · Kelp Aquarium</title>
+<style>
+:root{--bg:#04121b;--panel:#0a1e29;--line:#153442;--ink:#d9f0ef;--mute:#6f99a4;
+  --aqua:#57e0c8;--coral:#ff7f6b;--gold:#ffd166}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(900px 460px at 50% -10%,#073245,transparent),
+  var(--bg);color:var(--ink);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:26px;font-weight:300}
+h1 b{font-weight:700;color:var(--aqua)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:var(--aqua);font-variant-numeric:tabular-nums}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:24px;padding:20px 28px 0}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+.tank{position:relative;border:8px solid #12303c;border-radius:18px;overflow:hidden;
+  background:linear-gradient(180deg,#0a3548 0%,#062434 55%,#041a26 100%);
+  box-shadow:inset 0 0 60px rgba(0,0,0,.6),0 16px 40px rgba(0,0,0,.5)}
+canvas{display:block;width:100%;height:auto;cursor:none}
+.glass{position:absolute;inset:0;pointer-events:none;
+  background:linear-gradient(112deg,rgba(255,255,255,.10) 0 18%,transparent 19% 100%)}
+.hud{position:absolute;left:15px;top:13px;display:flex;gap:15px;flex-wrap:wrap;font-size:9.5px;
+  letter-spacing:.2em;text-transform:uppercase;color:#8fb6bf;pointer-events:none}
+.hud b{color:var(--gold);font-variant-numeric:tabular-nums}
+.hint{position:absolute;right:15px;bottom:13px;font-size:9.5px;letter-spacing:.2em;
+  text-transform:uppercase;color:#78a2ac;pointer-events:none}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.slab{display:flex;align-items:center;gap:9px;margin-bottom:11px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.slab input{flex:1;accent-color:var(--aqua)}
+.slab b{color:var(--ink);width:58px;text-align:right;font-variant-numeric:tabular-nums}
+.btns{display:flex;gap:9px}
+.b{flex:1;font:inherit;font-size:10.5px;letter-spacing:.16em;text-transform:uppercase;font-weight:700;
+  padding:12px 7px;border-radius:9px;border:1px solid var(--line);background:#0f2a36;
+  color:var(--ink);cursor:pointer;transition:.14s}
+.b:hover{transform:translateY(-2px);border-color:var(--aqua);color:var(--aqua)}
+.b.warn{border-color:var(--coral);color:var(--coral)}
+.stat{display:flex;justify-content:space-between;font-size:11.5px;padding:7px 0;
+  border-bottom:1px dotted var(--line);color:#a7c6cd}
+.stat:last-child{border-bottom:none}
+.stat b{color:var(--gold);font-variant-numeric:tabular-nums}
+.note{font-size:11px;line-height:1.7;color:var(--mute);margin:10px 0 0}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">tank 44 · temperate shelf</span>
+  <h1>Kelp <b>Aquarium</b></h1>
+  <span class="meta">specimens <b id="fishOut">9</b> · fed <b id="fedOut">0</b></span>
+</header>
+
+<div class="stage">
+  <main class="tank" id="tank">
+    <canvas id="view" width="780" height="470"></canvas>
+    <div class="glass" aria-hidden="true"></div>
+    <div class="hud">
+      <span>temp <b id="hTemp">14.0°C</b></span>
+      <span>torch <b id="hTorch">70%</b></span>
+      <span>current <b id="hCur">0.5</b></span>
+      <span>food <b id="hFood">18</b></span>
+    </div>
+    <div class="hint">move the pointer — the torch follows</div>
+  </main>
+
+  <aside class="rig">
+    <section class="card">
+      <h2>Tank controls</h2>
+      <label class="slab">water temp <input id="temp" type="range" min="80" max="220" value="140"><b id="tempOut">14.0°C</b></label>
+      <label class="slab">torch <input id="torch" type="range" min="0" max="100" value="70"><b id="torchOut">70%</b></label>
+      <label class="slab">current <input id="cur" type="range" min="0" max="100" value="50"><b id="curOut">0.5</b></label>
+      <div class="btns" style="margin-top:6px">
+        <button class="b" id="feed" type="button">feed</button>
+        <button class="b warn" id="tap" type="button">tap glass</button>
+      </div>
+      <p class="note">Fish accelerate with temperature, kelp bends with current, and the torch
+        is the only light you control.</p>
+    </section>
+
+    <section class="card">
+      <h2>Readings</h2>
+      <div class="stat"><span>fish in tank</span><b id="rFish">9</b></div>
+      <div class="stat"><span>food remaining</span><b id="rFood">18</b></div>
+      <div class="stat"><span>bubbles risen</span><b id="rBub">0</b></div>
+      <div class="stat"><span>mean speed</span><b id="rSpd">0.42</b></div>
+    </section>
+
+    <section class="card">
+      <h2>Stock list</h2>
+      <div class="stat"><span>greenlace wrasse ×4</span><b>graze</b></div>
+      <div class="stat"><span>two-spotted goby ×3</span><b>hover</b></div>
+      <div class="stat"><span>sandeel ×2</span><b>dart</b></div>
+      <p class="note">Food sinks; anything hungry within a screen-width will turn for it.</p>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:19px 28px 0;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)">
+  <span>bezier kelp · steering agents · torch as radial light</span><span>044 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var cv=G("view"), ctx=cv.getContext("2d");
+  var W=cv.width, H=cv.height, FLOOR=H-58;
+
+  var temp=14, torch=70, current=0.5;
+  var foodLeft=18, fedCount=0, bubblesRisen=0;
+  var mouse={x:W*0.5,y:H*0.4,in:false};
+
+  var strands=[];
+  for(var s=0;s<11;s++){
+    strands.push({
+      x:28+s*((W-56)/10)+(Math.random()*22-11),
+      h:150+Math.random()*180,
+      seg:6+Math.floor(Math.random()*3),
+      phase:Math.random()*6.28,
+      hue:95+Math.random()*35
+    });
+  }
+
+  var fish=[];
+  function makeFish(i){
+    var kinds=["wrasse","goby","sandeel"];
+    var k=kinds[i%3];
+    return {
+      x:60+Math.random()*(W-120),
+      y:80+Math.random()*(FLOOR-140),
+      vx:(Math.random()<0.5?-1:1)*(0.6+Math.random()*0.6),
+      vy:(Math.random()-0.5)*0.3,
+      k:k,
+      size:k==="wrasse"?13:(k==="goby"?10:8),
+      wig:Math.random()*6.28,
+      hungry:Math.random()<0.7,
+      col:k==="wrasse"?"#57e0c8":(k==="goby"?"#ffd166":"#b9d8e8")
+    };
+  }
+  for(var f=0;f<9;f++) fish.push(makeFish(f));
+
+  var food=[];
+  var bubbles=[];
+  var motes=[];
+
+  function drawFrame(t){
+    ctx.clearRect(0,0,W,H);
+
+    /* light shafts from above */
+    ctx.globalCompositeOperation="lighter";
+    for(var i=0;i<4;i++){
+      var sx=(i*210+Math.sin(t/2600+i)*40);
+      var g=ctx.createLinearGradient(sx,0,sx+120,H);
+      g.addColorStop(0,"rgba(120,220,255,.10)");
+      g.addColorStop(1,"rgba(120,220,255,0)");
+      ctx.fillStyle=g;
+      ctx.beginPath();
+      ctx.moveTo(sx-30,0); ctx.lineTo(sx+70,0);
+      ctx.lineTo(sx+150,H); ctx.lineTo(sx+40,H);
+      ctx.closePath(); ctx.fill();
+    }
+    ctx.globalCompositeOperation="source-over";
+
+    /* sandy floor */
+    ctx.fillStyle="#0b2b33";
+    ctx.beginPath();
+    ctx.moveTo(0,FLOOR);
+    for(var x=0;x<=W;x+=24){
+      ctx.lineTo(x, FLOOR+Math.sin(x/58)*6);
+    }
+    ctx.lineTo(W,H); ctx.lineTo(0,H); ctx.closePath(); ctx.fill();
+
+    /* stones */
+    ctx.fillStyle="rgba(20,60,66,.9)";
+    [[90,10],[210,16],[330,9],[470,14],[600,11],[700,15]].forEach(function(st){
+      ctx.beginPath();
+      ctx.ellipse(st[0],FLOOR+8,st[1],st[1]*0.6,0,0,Math.PI*2);
+      ctx.fill();
+    });
+
+    /* kelp */
+    strands.forEach(function(k){
+      ctx.beginPath();
+      var px=k.x, py=FLOOR+6;
+      ctx.moveTo(px,py);
+      var pts=[];
+      for(var seg=1;seg<=k.seg;seg++){
+        var fr=seg/k.seg;
+        var sway=Math.sin(t/900*current*2 + k.phase + fr*2.4)*(26*current+6)*fr;
+        var nx=k.x+sway;
+        var ny=FLOOR+6-(k.h*fr);
+        pts.push([nx,ny]);
+        ctx.lineTo(nx,ny);
+      }
+      ctx.strokeStyle="hsl("+k.hue+",52%,34%)";
+      ctx.lineWidth=7;
+      ctx.lineCap="round";
+      ctx.stroke();
+      ctx.strokeStyle="hsl("+k.hue+",60%,46%)";
+      ctx.lineWidth=2.4;
+      ctx.stroke();
+      /* blades */
+      pts.forEach(function(p,idx){
+        if(idx===0) return;
+        var dir=(idx%2===0)?1:-1;
+        ctx.fillStyle="hsl("+k.hue+",58%,40%)";
+        ctx.beginPath();
+        ctx.ellipse(p[0]+dir*11,p[1],15,4.6,dir*0.5,0,Math.PI*2);
+        ctx.fill();
+      });
+    });
+
+    /* food */
+    ctx.fillStyle="#ffd8a8";
+    food.forEach(function(fd){
+      ctx.fillRect(fd.x,fd.y,4,4);
+    });
+
+    /* fish */
+    fish.forEach(function(fi){
+      var ang=Math.atan2(fi.vy,fi.vx);
+      ctx.save();
+      ctx.translate(fi.x,fi.y);
+      ctx.rotate(ang);
+      var wob=Math.sin(fi.wig)*0.5;
+      /* body */
+      ctx.fillStyle=fi.col;
+      ctx.beginPath();
+      ctx.moveTo(fi.size,0);
+      ctx.quadraticCurveTo(0,-fi.size*0.7+wob*3,-fi.size, wob*4);
+      ctx.quadraticCurveTo(0,fi.size*0.7+wob*3, fi.size,0);
+      ctx.fill();
+      /* tail */
+      ctx.fillStyle="rgba(255,255,255,.35)";
+      ctx.beginPath();
+      ctx.moveTo(-fi.size+2,0);
+      ctx.lineTo(-fi.size-8, wob*7-6);
+      ctx.lineTo(-fi.size-8, wob*7+6);
+      ctx.closePath(); ctx.fill();
+      /* eye */
+      ctx.fillStyle="#04121b";
+      ctx.beginPath(); ctx.arc(fi.size*0.5,-fi.size*0.16,1.8,0,Math.PI*2); ctx.fill();
+      ctx.restore();
+    });
+
+    /* bubbles */
+    ctx.strokeStyle="rgba(200,240,255,.5)";
+    ctx.lineWidth=1;
+    bubbles.forEach(function(b){
+      ctx.beginPath(); ctx.arc(b.x,b.y,b.r,0,Math.PI*2); ctx.stroke();
+      ctx.fillStyle="rgba(255,255,255,.28)";
+      ctx.beginPath(); ctx.arc(b.x-b.r*0.3,b.y-b.r*0.3,b.r*0.3,0,Math.PI*2); ctx.fill();
+    });
+
+    /* motes */
+    ctx.fillStyle="rgba(190,230,240,.35)";
+    motes.forEach(function(m){
+      ctx.fillRect(m.x,m.y,2,2);
+    });
+
+    /* torch */
+    if(mouse.in && torch>0){
+      ctx.globalCompositeOperation="lighter";
+      var lg=ctx.createRadialGradient(mouse.x,mouse.y,6,mouse.x,mouse.y,150*(torch/100)+40);
+      lg.addColorStop(0,"rgba(255,238,190,"+(torch/100*0.55).toFixed(2)+")");
+      lg.addColorStop(1,"rgba(255,238,190,0)");
+      ctx.fillStyle=lg;
+      ctx.beginPath(); ctx.arc(mouse.x,mouse.y,150*(torch/100)+40,0,Math.PI*2); ctx.fill();
+      ctx.globalCompositeOperation="source-over";
+      ctx.strokeStyle="rgba(255,238,190,.65)";
+      ctx.lineWidth=1.4;
+      ctx.beginPath(); ctx.arc(mouse.x,mouse.y,17,0,Math.PI*2); ctx.stroke();
+    }
+  }
+
+  var bubCount=0;
+  function step(t){
+    /* spawning */
+    if(Math.random()<0.05) bubbles.push({x:W*0.16+(Math.random()*40-20),y:FLOOR,r:2+Math.random()*4,vy:0.7+Math.random()*0.8});
+    if(Math.random()<0.05) bubbles.push({x:W*0.84+(Math.random()*40-20),y:FLOOR,r:2+Math.random()*4,vy:0.7+Math.random()*0.8});
+    bubbles.forEach(function(b){ b.y-=b.y*0.004+b.vy; b.x+=Math.sin(t/500+b.r)*0.4; });
+    bubbles=bubbles.filter(function(b){ if(b.y>-10) return true; bubblesRisen++; return false; });
+
+    if(motes.length<60 && Math.random()<0.4){
+      motes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.2});
+    }
+    motes.forEach(function(m){
+      m.x+=m.vx+current*0.5; m.y+=m.vy;
+      if(m.x>W) m.x=0; if(m.x<0) m.x=W;
+      if(m.y>H) m.y=0; if(m.y<0) m.y=H;
+    });
+
+    /* food falls */
+    food.forEach(function(fd){ fd.y+=0.55; fd.x+=Math.sin(t/600+fd.x)*0.2; });
+    food=food.filter(function(fd){ return fd.y<FLOOR+6; });
+
+    /* fish */
+    fish.forEach(function(fi){
+      var speedBase=(fi.k==="sandeel"?1.35:1)*(0.55+(temp-8)*0.05);
+      /* flee the torch */
+      var dmx=fi.x-mouse.x, dmy=fi.y-mouse.y;
+      var d=Math.sqrt(dmx*dmx+dmy*dmy);
+      if(mouse.in && d<130){
+        fi.vx+=(dmx/d)*0.22; fi.vy+=(dmy/d)*0.22;
+      }
+      /* go for food */
+      if(fi.hungry && food.length){
+        var best=null,bd=1e9;
+        food.forEach(function(fd){
+          var dd=(fd.x-fi.x)*(fd.x-fi.x)+(fd.y-fi.y)*(fd.y-fi.y);
+          if(dd<bd){ bd=dd; best=fd; }
+        });
+        if(best && bd<36000){
+          fi.vx+=((best.x-fi.x)/Math.sqrt(bd))*0.18;
+          fi.vy+=((best.y-fi.y)/Math.sqrt(bd))*0.18;
+          if(bd<120){
+            food.splice(food.indexOf(best),1);
+            fi.hungry=false;
+            setTimeout(function(){ fi.hungry=true; },4000);
+          }
+        }
+      }
+      /* wander */
+      fi.vx+=(Math.random()-0.5)*0.09;
+      fi.vy+=(Math.random()-0.5)*0.09;
+      fi.vx+=current*0.03;
+      /* clamp speed */
+      var sp=Math.sqrt(fi.vx*fi.vx+fi.vy*fi.vy);
+      var max=speedBase*1.9;
+      if(sp>max){ fi.vx=fi.vx/sp*max; fi.vy=fi.vy/sp*max; }
+      if(sp<0.25){ fi.vx*=1.4; fi.vy*=1.4; }
+      fi.x+=fi.vx; fi.y+=fi.vy;
+      fi.wig+=0.35+sp*0.2;
+      /* bounds */
+      if(fi.x<W+20) fi.x=W+20;
+      if(fi.x>W-20){ fi.x=W-20; fi.vx=-Math.abs(fi.vx); }
+      if(fi.x<20){ fi.x=20; fi.vx=Math.abs(fi.vx); }
+      if(fi.y<40){ fi.y=40; fi.vy=Math.abs(fi.vy); }
+      if(fi.y>FLOOR-6){ fi.y=FLOOR-6; fi.vy=-Math.abs(fi.vy); }
+    });
+
+  }
+
+  var lastStats=0;
+  function stats(t){
+    if(t-lastStats<400) return;
+    lastStats=t;
+    G("rBub").textContent=bubblesRisen;
+    G("rFood").textContent=foodLeft;
+    G("rFish").textContent=fish.length;
+    var sum=0;
+    fish.forEach(function(fi){ sum+=Math.sqrt(fi.vx*fi.vx+fi.vy*fi.vy); });
+    G("rSpd").textContent=(fish.length?(sum/fish.length):0).toFixed(2);
+  }
+
+  function loop(t){
+    step(t);
+    drawFrame(t);
+    stats(t);
+    requestAnimationFrame(loop);
+  }
+
+  /* pointer */
+  var tank=G("tank");
+  tank.addEventListener("pointermove",function(e){
+    var r=cv.getBoundingClientRect();
+    mouse.x=(e.clientX-r.left)*W/r.width;
+    mouse.y=(e.clientY-r.top)*H/r.height;
+    mouse.in=true;
+    if(reduce) drawFrame(performance.now());
+  });
+  tank.addEventListener("pointerleave",function(){
+    mouse.in=false;
+    if(reduce) drawFrame(performance.now());
+  });
+
+  /* controls */
+  G("temp").addEventListener("input",function(){
+    temp=parseInt(this.value,10)/10;
+    G("tempOut").textContent=temp.toFixed(1)+"°C";
+    G("hTemp").textContent=temp.toFixed(1)+"°C";
+    if(reduce) drawFrame(performance.now());
+  });
+  G("torch").addEventListener("input",function(){
+    torch=parseInt(this.value,10);
+    G("torchOut").textContent=torch+"%";
+    G("hTorch").textContent=torch+"%";
+    if(reduce) drawFrame(performance.now());
+  });
+  G("cur").addEventListener("input",function(){
+    current=parseInt(this.value,10)/100;
+    G("curOut").textContent=current.toFixed(1);
+    G("hCur").textContent=current.toFixed(1);
+    if(reduce) drawFrame(performance.now());
+  });
+  G("feed").addEventListener("click",function(){
+    if(foodLeft<=0) return;
+    var n=Math.min(6,foodLeft);
+    for(var i=0;i<n;i++){
+      food.push({x:W*0.35+Math.random()*W*0.3,y:20+Math.random()*30});
+    }
+    foodLeft-=n; fedCount+=n;
+    G("fedOut").textContent=fedCount;
+    G("hFood").textContent=foodLeft;
+    G("rFood").textContent=foodLeft;
+    if(reduce){ for(var k=0;k<80;k++) step(performance.now()); drawFrame(performance.now()); }
+  });
+  G("tap").addEventListener("click",function(){
+    fish.forEach(function(fi){
+      fi.vx=(Math.random()<0.5?-1:1)*(1.4+Math.random());
+      fi.vy=(Math.random()-0.5)*1.6;
+    });
+    if(reduce) drawFrame(performance.now());
+  });
+
+  /* seed a few motes and one bubble batch */
+  for(var m0=0;m0<40;m0++){
+    motes.push({x:Math.random()*W,y:Math.random()*H,vx:(Math.random()-0.5)*0.3,vy:(Math.random()-0.5)*0.2});
+  }
+
+  drawFrame(0);
+  if(!reduce) requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

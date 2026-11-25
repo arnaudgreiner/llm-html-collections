@@ -1,0 +1,233 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Vellum — Handwriting Practice Slate</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#171410;color:#b8ab97;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e8c98a;text-transform:uppercase}
+h1 i{font-style:normal;color:#9ec9a8}
+#board{background:#1e1a15;border:1px solid #322b22;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:8px;background:#f3ead8;cursor:crosshair;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:960px}
+button{background:#241f19;border:1px solid #3a332a;color:#c9bda9;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e8c98a;color:#ffeccb}
+button.on{background:#e8c98a;border-color:#e8c98a;color:#1c1610;font-weight:700}
+.ghost{font-size:9.5px;letter-spacing:.16em;color:#6d6455;background:#1e1a15;border:1px solid #322b22;padding:8px 12px;border-radius:7px}
+.ghost b{color:#e8c98a}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#6d6455}
+.stat b{color:#9ec9a8}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#4e463c;text-align:center;max-width:900px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Vellum <i>M77</i> · handwriting practice slate</h1>
+<div id="board"><canvas id="cv" width="960" height="430"></canvas></div>
+<div class="bar">
+  <button id="bGuide" class="on">GUIDES</button>
+  <button id="bTrace" class="on">TRACE GHOST</button>
+  <button id="bInk" class="on">WET INK</button>
+  <div class="ghost">font: <b id="fName">ITALIC HAND</b></div>
+  <button data-f="-1">◀ STYLE</button>
+  <button data-f="1">STYLE ▶</button>
+  <button id="bClear">CLEAR SLATE</button>
+  <button id="bSave">▤ KEEP SPECIMEN</button>
+  <span class="stat">strokes <b id="mS">0</b> · ink time <b id="mT">0.0s</b> · specimens <b id="mK">0</b></span>
+</div>
+<div class="hint">write with the mouse or finger — strokes dry from wet gloss to matte · the ghost shows the model hand underneath · KEEp pins a small copy of the slate in the shelf below</div>
+<div class="bar" id="shelf"></div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=960,H=430;
+var guides=true,ghostOn=true,wet=true;
+var strokes=[],cur=null,lastT=0,inkTime=0;
+var FONTS=[
+  {n:"ITALIC HAND",font:"italic 96px Georgia, 'Times New Roman', serif",slant:0.16,lh:132,y0:118},
+  {n:"MONO UPRIGHT",font:"bold 84px ui-monospace, Menlo, monospace",slant:0,lh:120,y0:124},
+  {n:"SCRIPT SWASH",font:"italic 92px 'Palatino Linotype', Palatino, serif",slant:0.24,lh:136,y0:116},
+  {n:"BLOCK RUBRIC",font:"900 80px 'Arial Black', Arial, sans-serif",slant:0,lh:118,y0:126}
+];
+var fIdx=0;
+var WORDS=["vellum","hand &amp; rule","quiet ink","marginalia"];
+var wordI=0;
+function modelText(){return WORDS[wordI%WORDS.length];}
+function drawGuides(){
+  var F=FONTS[fIdx];
+  ax.save();
+  for(var b=0;b<3;b++){
+    var top=F.y0-60+F.lh*b;
+    ax.strokeStyle="rgba(180,60,60,"+(b===0?0.30:0.18)+")";
+    ax.lineWidth=1;
+    ax.beginPath();ax.moveTo(0,top);ax.lineTo(W,top);ax.stroke();
+    ax.strokeStyle="rgba(60,110,180,.22)";
+    ax.beginPath();ax.moveTo(0,top+58);ax.lineTo(W,top+58);ax.stroke();
+    ax.setLineDash([5,7]);
+    ax.strokeStyle="rgba(60,110,180,.16)";
+    var xh=top+34;
+    ax.beginPath();ax.moveTo(0,xh);ax.lineTo(W,xh);ax.stroke();
+    ax.setLineDash([]);
+  }
+  ax.restore();
+}
+function drawGhost(){
+  var F=FONTS[fIdx];
+  ax.save();
+  ax.font=F.font;
+  ax.textBaseline="alphabetic";
+  var txt=modelText().replace("&amp;","&");
+  ax.fillStyle="rgba(40,34,26,.10)";
+  var x=40;
+  for(var i=0;i<txt.length;i++){
+    ax.save();
+    ax.translate(x,F.y0+58);
+    ax.transform(1,0,-F.slant,1,0,0);
+    ax.fillText(txt[i],0,0);
+    ax.restore();
+    x+=ax.measureText(txt[i]).width+6;
+  }
+  ax.restore();
+}
+function strokeStyle(s,alpha){
+  if(!wet)return "rgba(32,26,20,"+alpha+")";
+  var age=performance.now()-s.birth;
+  var dry=Math.min(1,age/6000);
+  var a=(0.92-0.18*dry)*alpha;
+  var sheen=0.55-0.35*dry;
+  return {wet:true,a:a,sheen:sheen};
+}
+function paintStroke(s,alpha){
+  var st=strokeStyle(s,alpha);
+  ax.save();
+  ax.lineCap="round";ax.lineJoin="round";
+  var pts=s.pts;
+  for(var pass=0;pass<2;pass++){
+    if(pass===0){
+      ax.strokeStyle=typeof st==="string"?st:"rgba(34,28,22,"+st.a+")";
+      ax.lineWidth=3.4+s.w;
+    }else{
+      ax.strokeStyle=typeof st==="string"?"rgba(120,150,190,0)":"rgba(255,255,255,"+(st.sheen*0.5)+")";
+      ax.lineWidth=1.1;
+      if(!wet)continue;
+    }
+    ax.beginPath();
+    for(var i=0;i<pts.length;i++){
+      var p=pts[i];
+      if(i===0){ax.moveTo(p.x,p.y);}
+      else{
+        var q=pts[i-1];
+        ax.quadraticCurveTo(q.x,q.y,(q.x+p.x)/2,(q.y+p.y)/2);
+      }
+    }
+    ax.stroke();
+  }
+  if(pts.length===1){
+    ax.fillStyle=typeof st==="string"?st:"rgba(34,28,22,"+st.a+")";
+    ax.beginPath();ax.arc(pts[0].x,pts[0].y,2+s.w/2,0,6.2832);ax.fill();
+  }
+  ax.restore();
+}
+function render(){
+  ax.fillStyle="#f3ead8";ax.fillRect(0,0,W,H);
+  var vg=ax.createLinearGradient(0,0,W,H);
+  vg.addColorStop(0,"rgba(255,255,255,.5)");vg.addColorStop(1,"rgba(190,170,130,.35)");
+  ax.fillStyle=vg;ax.fillRect(0,0,W,H);
+  for(var i=0;i<400;i++){
+    ax.fillStyle="rgba(120,100,70,"+(0.03+ (i%7)*0.006)+")";
+    ax.fillRect((i*137)%W,(i*89)%H,1.6,1.6);
+  }
+  if(guides)drawGuides();
+  if(ghostOn)drawGhost();
+  strokes.forEach(function(s){paintStroke(s,1);});
+  if(cur)paintStroke(cur,1);
+}
+function meta(){
+  document.getElementById("mS").textContent=strokes.length;
+  document.getElementById("mT").textContent=(inkTime/1000).toFixed(1)+"s";
+  var F=FONTS[fIdx];
+  document.getElementById("fName").textContent=F.n;
+}
+function pos(e){
+  var r=cv.getBoundingClientRect();
+  return {x:(e.clientX-r.left)*W/r.width,y:(e.clientY-r.top)*H/r.height,t:performance.now()};
+}
+var drawing=false;
+cv.addEventListener("pointerdown",function(e){
+  drawing=true;cv.setPointerCapture(e.pointerId);
+  var p=pos(e);
+  cur={pts:[p],w:Math.random()*1.6+0.4,birth:performance.now(),t0:p.t};
+  lastT=p.t;
+});
+cv.addEventListener("pointermove",function(e){
+  if(!drawing||!cur)return;
+  var p=pos(e);
+  var dx=p.x-cur.pts[cur.pts.length-1].x,dy=p.y-cur.pts[cur.pts.length-1].y;
+  if(dx*dx+dy*dy<4)return;
+  var dt=Math.max(8,p.t-lastT);
+  inkTime+=dt;
+  lastT=p.t;
+  cur.pts.push(p);
+});
+function endStroke(){
+  if(!drawing)return;
+  drawing=false;
+  if(cur&&cur.pts.length){strokes.push(cur);}
+  cur=null;
+  meta();render();
+}
+cv.addEventListener("pointerup",endStroke);
+cv.addEventListener("pointercancel",endStroke);
+cv.addEventListener("pointerleave",endStroke);
+document.getElementById("bGuide").addEventListener("click",function(){
+  guides=!guides;this.className=guides?"on":"";render();
+});
+document.getElementById("bTrace").addEventListener("click",function(){
+  ghostOn=!ghostOn;this.className=ghostOn?"on":"";render();
+});
+document.getElementById("bInk").addEventListener("click",function(){
+  wet=!wet;this.className=wet?"on":"";render();
+});
+document.querySelectorAll("[data-f]").forEach(function(b){
+  b.addEventListener("click",function(){
+    fIdx=(fIdx+Number(b.getAttribute("data-f"))+FONTS.length)%FONTS.length;
+    meta();render();
+  });
+});
+document.getElementById("bClear").addEventListener("click",function(){
+  strokes=[];inkTime=0;meta();render();
+});
+document.getElementById("bSave").addEventListener("click",function(){
+  if(!strokes.length)return;
+  var img=document.createElement("canvas");
+  img.width=240;img.height=108;
+  var g=img.getContext("2d");
+  g.fillStyle="#f3ead8";g.fillRect(0,0,240,108);
+  g.drawImage(cv,0,0,W,H,0,0,240,108);
+  g.fillStyle="rgba(30,24,18,.6)";
+  g.font="9px ui-monospace,monospace";
+  g.fillText(FONTS[fIdx].n+" · "+strokes.length+" strokes",6,102);
+  var wrapEl=document.createElement("canvas");
+  wrapEl.width=240;wrapEl.height=108;
+  wrapEl.style.cssText="width:160px;height:72px;border-radius:6px;border:1px solid #3a332a;cursor:pointer";
+  wrapEl.getContext("2d").drawImage(img,0,0);
+  wrapEl.title="click to remove specimen";
+  wrapEl.addEventListener("click",function(){wrapEl.remove();countK();});
+  document.getElementById("shelf").appendChild(wrapEl);
+  countK();
+});
+function countK(){
+  document.getElementById("mK").textContent=document.getElementById("shelf").children.length;
+}
+function loop(){
+  if(wet&&(strokes.length||cur))render();
+  requestAnimationFrame(loop);
+}
+render();meta();countK();
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+TITLE: Waveform Mixer — Oscilloscope Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Waveform Mixer — Oscilloscope Bench". Design a signal bench with two stacked canvases: a triggered oscilloscope view drawing the sum of three oscillators as a glowing green-white trace over a graticule with fill under the curve, and a partial-stack view showing each layer's raw waveform in its own color on one of three labelled lanes. Below, three layer cards each offer waveform selectors (SIN/SAW/SQR/TRI), range sliders for FREQ (40–660Hz), AMP and PHASE with live value readouts in the layer's color, and a LIVE/MUTED chip. The timebase auto-locks to 2.5 cycles of the highest active frequency, so the trace always reads like a triggered scope, and the PEAK and Σ AMP readouts update continuously. Presets (SINE PAD, RICH SAW, HOLLOW, DISCORD) rewrite all three layers at once, and a big toggle switches between RUNNING (slow phase drift) and PAUSED. Everything inline, no external resources — no WebAudio, purely visual synthesis.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a lab bench at night: near-black instrument faces, hairline graticules, phosphor-green sum trace with a soft bloom, and three candy-colored partials stacked like channel lanes on a mixer. The craft is in making an honest visual synthesizer — real waveshape math (normalized saw, half-wave square, Walsh triangle), an auto-triggered timebase and peak measurement, so the display behaves like an instrument instead of a decoration.
+
+MAJOR VISUAL TECHNIQUES:
+- Two responsive canvases resized to their container width, redrawn every frame from shared waveform math
+- Normalized waveshape functions (saw via wrap-around, triangle via 2·asin(sin)/π) evaluated per pixel column
+- Auto timebase computed from the loudest active frequency, with glow stroke (shadowBlur) and gradient fill under the sum trace
+- Per-lane partial rendering with color-coded strokes, lane labels and muted-lane dimming
+- Range inputs themed per layer with accent-color and a custom webkit/moz thumb
+- Preset system that rewrites state then rebuilds the control cards from data, keeping DOM and state in sync
+
+INTENDED INTERACTION MODEL:
+Flip waveforms, slide frequency/amplitude/phase and watch both scopes respond instantly; mute layers to isolate partials, jump between the four presets to compare timbres, and pause the drift to study a frozen trace. Everything is read-only listening — no wrong moves.

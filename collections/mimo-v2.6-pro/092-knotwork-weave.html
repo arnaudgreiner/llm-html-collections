@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Celtic Knotwork — Over, Under, Over</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0f0e0c;color:#cfc6b4;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:14px;letter-spacing:.3em;color:#d8a94e;text-transform:uppercase}
+h1 i{font-style:normal;color:#87b3a6}
+#rig{background:#16140f;border:1px solid #2e2820;border-radius:12px;padding:15px}
+canvas{display:block;border-radius:8px;box-shadow:0 10px 36px rgba(0,0,0,.55);cursor:pointer}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#1d1a13;border:1px solid #3c3527;color:#cdc2ad;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#d8a94e;color:#fff4dd}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#7e7666}
+.stat b{color:#d8a94e}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#5e574a;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Knotwork <i>M92</i> · over, under, over</h1>
+<div id="rig"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bSp">＋ DENSER</button>
+  <button id="bW">＋ WIDER</button>
+  <button id="bFlip">⇄ FLIP WEAVE</button>
+  <button id="bShape">◈ SHAPE</button>
+  <button id="bPal">◐ PALETTE</button>
+  <span class="stat">crossings <b id="mC">0</b> · <b id="mSh">PANEL</b> · click any crossing to swap its over-strand</span>
+</div>
+<div class="hint">two families of wobbling diagonals interlace so that each strand alternates over and under — click a crossing to break or restore its rule · density, width and emblem shape re-cut the whole knot instantly</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520;
+var p=64,w=26,A=9,flipSeed=0,shapeMode=0,palIdx=0;
+var shapes=["PANEL","ROUND","LOZENGE","GUILD"];
+var pals=[
+  {a:"#d05545",b:"#2e7d8a",bg:"#12100e"},
+  {a:"#d8a94e",b:"#3b4c86",bg:"#0e0f14"},
+  {a:"#7fa86b",b:"#8e4a7d",bg:"#100f11"},
+  {a:"#e0dbc9",b:"#b5643c",bg:"#14120f"}
+];
+var spacingSteps=[48,56,64,76,90],spIdx=2;
+var widthSteps=[16,22,26,32,38],wIdx=2;
+var linesA=[],linesB=[],crossings=[],overrides={};
+var hover=null;
+function pal(){return pals[palIdx];}
+function build(){
+  p=spacingSteps[spIdx];w=widthSteps[wIdx];
+  var step=p*Math.SQRT2;
+  linesA=[];linesB=[];crossings=[];
+  var i=0;
+  for(var b=-W;b<=H+step;b+=step,i++){
+    linesA.push({idx:i,b:b,pts:ptsA(b,i)});
+  }
+  var j=0;
+  for(var a=-100;a<=W+H+100;a+=step,j++){
+    linesB.push({idx:j,a:a,pts:ptsB(a,j)});
+  }
+  for(var x=0;x<linesA.length;x++){
+    for(var y=0;y<linesB.length;y++){
+      var A1=linesA[x].b,B1=linesB[y].a;
+      var cxg=(B1-A1)/2,cyg=(A1+B1)/2;
+      if(cxg<-20||cxg>W+20||cyg<-20||cyg>H+20)continue;
+      crossings.push({x:cxg,y:cyg,i:linesA[x].idx,j:linesB[y].idx,B:linesB[y]});
+    }
+  }
+  document.getElementById("mC").textContent=crossings.length;
+}
+function ptsA(b,i){
+  var pts=[],ph=i*1.7;
+  for(var t=-120;t<=W+120;t+=12){
+    var o=A*Math.sin(t/(p*1.6)*6.2832+ph);
+    pts.push([t+o*0.7071,t+b-o*0.7071]);
+  }
+  return pts;
+}
+function ptsB(a,j){
+  var pts=[],ph=j*2.1;
+  for(var t=-120;t<=W+120;t+=12){
+    var o=A*Math.sin(t/(p*1.6)*6.2832+ph);
+    pts.push([t+o*0.7071,-t+a-o*0.7071]);
+  }
+  return pts;
+}
+function overA(c){
+  var key=c.x.toFixed(0)+","+c.y.toFixed(0);
+  if(key in overrides)return overrides[key];
+  return ((c.i+c.j+flipSeed)%2+2)%2===0;
+}
+function shapePath(){
+  ax.beginPath();
+  var m=shapeMode;
+  if(m===0){
+    ax.moveTo(34,20);ax.lineTo(W-34,20);
+    ax.quadraticCurveTo(W-18,20,W-18,36);
+    ax.lineTo(W-18,H-36);
+    ax.quadraticCurveTo(W-18,H-20,W-34,H-20);
+    ax.lineTo(34,H-20);
+    ax.quadraticCurveTo(18,H-20,18,H-36);
+    ax.lineTo(18,36);
+    ax.quadraticCurveTo(18,20,34,20);
+  }else if(m===1){
+    ax.arc(W/2,H/2,225,0,6.2832);
+  }else if(m===2){
+    ax.moveTo(W/2,16);ax.lineTo(W-46,H/2);ax.lineTo(W/2,H-16);ax.lineTo(46,H/2);ax.closePath();
+  }else{
+    var cxg=W/2,cyg=H/2,arm=90,ext=235;
+    ax.moveTo(cxg-arm,cyg-ext);ax.lineTo(cxg+arm,cyg-ext);
+    ax.lineTo(cxg+arm,cyg-arm);ax.lineTo(cxg+ext,cyg-arm);
+    ax.lineTo(cxg+ext,cyg+arm);ax.lineTo(cxg+arm,cyg+arm);
+    ax.lineTo(cxg+arm,cyg+ext);ax.lineTo(cxg-arm,cyg+ext);
+    ax.lineTo(cxg-arm,cyg+arm);ax.lineTo(cxg-ext,cyg+arm);
+    ax.lineTo(cxg-ext,cyg-arm);ax.lineTo(cxg-arm,cyg-arm);
+    ax.closePath();
+  }
+}
+function strokeAll(lines,color){
+  ax.strokeStyle=color;ax.lineWidth=w;
+  ax.lineJoin="round";ax.lineCap="round";
+  for(var i=0;i<lines.length;i++){
+    var pts=lines[i].pts;
+    ax.beginPath();
+    ax.moveTo(pts[0][0],pts[0][1]);
+    for(var k=1;k<pts.length;k++)ax.lineTo(pts[k][0],pts[k][1]);
+    ax.stroke();
+  }
+}
+function strokePatch(line,cxg,cyg,color){
+  var r=p*0.78,pts=line.pts,seg=[];
+  for(var i=0;i<pts.length;i++){
+    var dx=pts[i][0]-cxg,dy=pts[i][1]-cyg;
+    if(dx*dx+dy*dy<r*r)seg.push(pts[i]);
+  }
+  if(seg.length<2)return;
+  ax.strokeStyle=color;ax.lineWidth=w;ax.lineCap="round";ax.lineJoin="round";
+  ax.beginPath();
+  ax.moveTo(seg[0][0],seg[0][1]);
+  for(var k=1;k<seg.length;k++)ax.lineTo(seg[k][0],seg[k][1]);
+  ax.stroke();
+}
+function render(){
+  var P=pal();
+  ax.fillStyle=P.bg;ax.fillRect(0,0,W,H);
+  // faint vellum texture
+  ax.strokeStyle="rgba(255,255,255,.02)";
+  for(var y=0;y<H;y+=9){ax.beginPath();ax.moveTo(0,y);ax.lineTo(W,y+4);ax.stroke();}
+  ax.save();
+  shapePath();
+  ax.clip();
+  strokeAll(linesB,P.b);
+  strokeAll(linesA,P.a);
+  for(var i=0;i<crossings.length;i++){
+    var c=crossings[i];
+    if(overA(c))continue; // B must pass over here
+    strokePatch(c.B,c.x,c.y,P.b);
+  }
+  ax.restore();
+  // emblem edge
+  shapePath();
+  ax.strokeStyle="#0a0906";ax.lineWidth=6;ax.stroke();
+  ax.strokeStyle="rgba(216,169,78,.55)";ax.lineWidth=1.5;ax.stroke();
+  // hover marker
+  if(hover){
+    ax.strokeStyle="#fff3d6";ax.lineWidth=2;
+    ax.beginPath();ax.arc(hover.x,hover.y,15,0,6.2832);ax.stroke();
+  }
+  ax.fillStyle="rgba(216,169,78,.75)";
+  ax.font="10px Georgia,serif";
+  ax.fillText(overAName(),16,H-8);
+}
+function overAName(){
+  return hover?("crossing "+hover.i+","+hover.j+" — "+(overA(hover)?"STRAND A OVER":"STRAND B OVER")):"";
+}
+function ppos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointermove",function(e){
+  var q=ppos(e);hover=null;
+  for(var i=0;i<crossings.length;i++){
+    var c=crossings[i];
+    if((c.x-q[0])*(c.x-q[0])+(c.y-q[1])*(c.y-q[1])<16*16){hover=c;break;}
+  }
+});
+cv.addEventListener("pointerdown",function(e){
+  var q=ppos(e);
+  for(var i=0;i<crossings.length;i++){
+    var c=crossings[i];
+    if((c.x-q[0])*(c.x-q[0])+(c.y-q[1])*(c.y-q[1])<16*16){
+      var key=c.x.toFixed(0)+","+c.y.toFixed(0);
+      overrides[key]=!overA(c);
+      hover=c;
+      return;
+    }
+  }
+});
+document.getElementById("bSp").addEventListener("click",function(){
+  spIdx=(spIdx+1)%spacingSteps.length;build();
+});
+document.getElementById("bW").addEventListener("click",function(){
+  wIdx=(wIdx+1)%widthSteps.length;build();
+});
+document.getElementById("bFlip").addEventListener("click",function(){
+  flipSeed++;overrides={};
+});
+document.getElementById("bShape").addEventListener("click",function(){
+  shapeMode=(shapeMode+1)%shapes.length;
+  document.getElementById("mSh").textContent=shapes[shapeMode];
+});
+document.getElementById("bPal").addEventListener("click",function(){
+  palIdx=(palIdx+1)%pals.length;
+});
+build();
+function loop(){render();requestAnimationFrame(loop);}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

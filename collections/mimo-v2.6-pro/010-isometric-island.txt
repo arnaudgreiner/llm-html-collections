@@ -1,0 +1,19 @@
+TITLE: Isometric Island — Extruded CSS 3D Diorama
+
+FULL PROMPT:
+Produce exactly one self-contained HTML page named "Isometric Island": an isometric diorama built from extruded boxes with no images, no external fonts and no CDN. Use a sky gradient (day #8fd7f2 → #e9f7ff → #fff9ec) with a night variant on body.night plus a fixed star layer of seven radial-gradient dots. The stage is a bordered panel with perspective:1500px holding a .world div with transform-style:preserve-3d and transform rotateX(58deg) rotateZ(-45deg). Populate it with fourteen blocks generated from a JS data table of x, y, width, depth, elevation, height, colour, name and description; each block is three faces — a top translated to the block height, a south face standing on the footprint's lower edge via transform-origin:top center and rotateX(90deg), and a west face on the left edge via rotateY(90deg) — each face tinted progressively darker with a JS colour-shade function. The model reads as water slab, sand shelf, grass terrace, lighthouse with red lantern cap, boathouse with separate roof, three pines, dock, signal rock, skiff and storehouse. Beside it, a spec panel shows the hovered structure's name, prose description, tag chips and coordinate range.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a bright architectural survey model photographed on a pale studio sweep — flat pastel colour, hard shading faces and no textures, so the geometry itself does all the work. The stage sits centre-left with a small sun disc in its corner; the information column is a thin-ruled panel at the right. Day mode is airy and blue; night mode darkens the sky, raises a star field, slides the sun into a moon and lays a translucent indigo veil over the model so the boxes read as lit-from-within.
+
+MAJOR VISUAL TECHNIQUES:
+- True CSS 3D box construction with preserve-3d and three faces per solid
+- Colour shading by decomposing hex to RGB and scaling channels
+- Continuous rotateZ orbit driven by requestAnimationFrame, pausing while the pointer is on the model
+- A translucent veil layer for night mode rather than a CSS filter, which would flatten the 3D context
+- Pointer-driven selection writing into a static info panel
+- Wireframe mode restoring faces to transparency with a hairline border
+- Reduced-motion handling that locks the orbit at the classic -45° angle
+
+INTENDED INTERACTION MODEL:
+Hovering any block selects it: the name, description, tags and elevation range update in the side panel and the block lifts 16px along the z axis. The Night button swaps sky, stars, sun-to-moon and veil; Orbit toggles the slow rotation (and disables itself under reduced motion, where the model starts static); Wireframe strips the fills to outlines. Pointer position over the model pauses the orbit so a hovered block stays put.

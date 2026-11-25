@@ -1,0 +1,18 @@
+TITLE: Crate Yard — Sokoban Shift
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Crate Yard — Sokoban Shift". Render a Sokoban warehouse puzzle on a canvas sized to the level: beveled concrete walls, checkered floor tiles, dashed amber dock pads, wooden crates drawn with gradients, cross-bracing and drop shadows (glowing amber when they sit on a pad), and a teal worker dot with a facing wedge. Six hand-authored, machine-verified-solvable levels ship with the page — each solvable, none trivial (6 to 28 pushes) — listed in a side shift log with a ★ once cleared, best move count persisted in localStorage. Arrow keys or WASD walk and shove; pushing checks the cell beyond for walls and other crates; the whole state is snapshotted before every move so Z undoes arbitrarily far, R restarts, N/P switch shifts. Player and pushed crate interpolate over ~130ms with eased motion. HUD shows shift name, moves, pushes and best. Clearing every crate onto its pad overlays "SHIFT COMPLETE" with the score. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a night shift clipboard in a lumber yard: moss-dark greens, safety-orange headings, crates that look lifted from a hardware catalogue. The craft is honest puzzle engineering — six levels that were verified solvable by a search algorithm before shipping, dead-corner consequences, and an undo that makes experimentation free.
+
+MAJOR VISUAL TECHNIQUES:
+- Level-driven canvas sizing (tiles × 44px) with per-row parsing of #, ., $, *, @, + glyphs
+- Beveled two-tone wall blocks and alternating floor checker drawn cell by cell
+- Gradient crates with cross-brace strokes, drop shadows and an amber on-pad halo
+- Dashed destination pads under crates and goals
+- Eased tween of player and pushed crate between grid cells (~130ms)
+- Full-state undo stack plus localStorage star/best persistence
+
+INTENDED INTERACTION MODEL:
+Walk with arrows/WASD, shove crates by walking into them, and use undo whenever a crate lands in a corner. Pick any shift from the side log, chase a low move count shown as best, and watch stars accumulate as the yard clears.

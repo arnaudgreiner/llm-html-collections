@@ -1,0 +1,18 @@
+TITLE: Deckhand Terminal — Simulated Flight Console with Command Parser
+
+FULL PROMPT:
+Produce exactly one self-contained HTML page, "Deckhand Terminal", with no external resources. Make it a full-height flex column in monospace on #0a0e0a with a soft green text glow, a fixed scanline overlay of repeating 2px dark bands at mix-blend-mode:multiply, and a fixed vignette radial-gradient. Top bar: a dim uppercase station id with a brightened segment, and chips for link (pulsing red), power, cargo and a live HH:MM:SS clock. The centre is a scrollable output log (role=log, aria-live=polite) whose lines fade in with a transform, plus a scanline-styled block caret. Beneath it, a hint line naming the commands, then a form with the amber prompt "deckhand@kepler:~$", a borderless input with matching glow and a "↵ run" hint. Commands implemented in a dispatch table: help (aligned two-column list), status (ASCII power/cargo bars built from █ and ░), scan (animated dots then random contacts with bearings), manifest (aligned cargo table with a total rule), plot (an ASCII star route with the vector line in amber), fly (a staged ignition sequence gated on reactor ≥ 40%), power n (validated, updates the chip), say, date, clear, whoami. Unknown commands return a red "command not found".
+
+INTENDED DESIGN DESCRIPTION:
+A CRT flight console: phosphor green on near-black, everything drawn with text characters, glow simulated by text-shadow rather than filters.
+
+MAJOR VISUAL TECHNIQUES:
+- Command parsing with split/first-token dispatch and an argument tail
+- Character-cell progress bars computed as repeat counts
+- Typewriter reveal that slices plain text then swaps in final markup
+- Interval-driven staged sequences (scan dots, ignition stages) cleared on completion
+- Line-by-line log insertion with scrollTop clamping and pre-set reveal delays
+- Inline sanitising of `<`/`>` before innerHTML and placeholder text
+
+INTENDED INTERACTION MODEL:
+Type a command and press Enter; ↑/↓ walks history, Ctrl+L clears. click anywhere refocuses the input. scan, fly and say emit asynchronous follow-ups while a busy flag blocks re-entry. power n changes the header chip and can starve the fly burn below 40%. The clock ticks every second and reactor output drifts down by one point occasionally, so status output is never static. Reduced motion collapses every delay to near-zero and skips line animation.

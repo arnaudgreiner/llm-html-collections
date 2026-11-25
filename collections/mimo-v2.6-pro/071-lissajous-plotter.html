@@ -1,0 +1,243 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Lissajous Plotter Model 71</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#07090c;color:#7f9a8d;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#8bffc8;text-transform:uppercase}
+h1 i{font-style:normal;color:#ff6ad5}
+.scope{position:relative;width:100%;max-width:980px;background:#04070a;border:1px solid #16241e;border-radius:14px;overflow:hidden;box-shadow:inset 0 0 60px rgba(0,255,170,.05),0 24px 60px rgba(0,0,0,.6)}
+canvas{display:block;width:100%}
+.led{position:absolute;top:12px;right:14px;font-size:9px;letter-spacing:.2em;color:#8bffc8;display:flex;gap:6px;align-items:center}
+.led b{width:7px;height:7px;border-radius:50%;background:#8bffc8;box-shadow:0 0 8px #8bffc8;animation:bl 2.4s infinite}
+@keyframes bl{0%,100%{opacity:1}50%{opacity:.35}}
+.wrap{display:flex;gap:13px;flex-wrap:wrap;width:100%;max-width:980px}
+.panel{background:#0a0e12;border:1px solid #16241e;border-radius:12px;padding:13px 15px;flex:1;min-width:250px}
+.ph{font-size:9.5px;letter-spacing:.26em;color:#4d6157;margin-bottom:10px;display:flex;justify-content:space-between}
+.ph b{color:#8bffc8}
+.ctl{display:flex;align-items:center;gap:9px;margin-bottom:11px}
+.ctl label{font-size:9.5px;letter-spacing:.16em;color:#61786d;width:64px}
+input[type=range]{flex:1;height:3px;appearance:none;background:#152219;border-radius:3px;outline:none}
+input[type=range]::-webkit-slider-thumb{appearance:none;width:13px;height:13px;border-radius:50%;background:#8bffc8;cursor:pointer;box-shadow:0 0 8px rgba(139,255,200,.6)}
+input[type=range]::-moz-range-thumb{width:13px;height:13px;border:0;border-radius:50%;background:#8bffc8;cursor:pointer}
+.val{font-size:11px;color:#ff6ad5;width:34px;text-align:right}
+.knobrow{display:flex;align-items:center;gap:14px}
+#knob{width:86px;height:86px;border-radius:50%;position:relative;cursor:grab;background:radial-gradient(circle at 34% 30%,#1d2a24,#0a100d 70%);border:1px solid #24392f;box-shadow:0 6px 16px rgba(0,0,0,.55);touch-action:none}
+#knob:active{cursor:grabbing}
+#knob .nd{position:absolute;left:50%;top:50%;width:3px;height:36px;background:linear-gradient(#8bffc8,rgba(139,255,200,0));transform-origin:50% 100%;border-radius:2px;box-shadow:0 0 6px rgba(139,255,200,.8)}
+#knob .ticks{position:absolute;inset:0;border-radius:50%;background:repeating-conic-gradient(from 0deg,rgba(139,255,200,.35) 0deg 1deg,transparent 1deg 15deg);mask:radial-gradient(circle,transparent 62%,#000 63%);-webkit-mask:radial-gradient(circle,transparent 62%,#000 63%)}
+.kmeta{font-size:10px;line-height:1.9;color:#61786d;letter-spacing:.1em}
+.kmeta b{color:#8bffc8}
+.kmeta i{font-style:normal;color:#ff6ad5}
+button{background:#0e151a;border:1px solid #1e322a;color:#7fae9a;font:inherit;font-size:10px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em}
+button:hover{border-color:#376b56;color:#8bffc8}
+button.on{background:#8bffc8;border-color:#8bffc8;color:#04110b;font-weight:700}
+.prow{display:flex;gap:7px;flex-wrap:wrap}
+.reads{display:flex;gap:9px;flex-wrap:wrap;margin-top:2px}
+.rd{flex:1;min-width:110px;background:#070b0e;border:1px solid #16241e;border-radius:9px;padding:9px 11px}
+.rd span{display:block;font-size:8.5px;letter-spacing:.2em;color:#4d6157}
+.rd b{font-size:14px;color:#8bffc8;letter-spacing:.06em}
+.rd i{font-style:normal;color:#ff6ad5}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#3f5148;text-align:center;max-width:980px;line-height:1.8}
+</style>
+</head>
+<body>
+<h1>Lissajous Plotter <i>M71</i> · xy phosphor</h1>
+<div class="scope">
+  <canvas id="cv" width="940" height="440"></canvas>
+  <div class="led"><b></b>BEAM LIVE</div>
+</div>
+<div class="wrap">
+  <div class="panel">
+    <div class="ph"><span>HORIZONTAL / VERTICAL DRIVE</span><b id="ratio">1 : 1</b></div>
+    <div class="ctl"><label>FREQ-X</label><input type="range" id="fx" min="1" max="12" step="1" value="1"><span class="val" id="fxV">1</span></div>
+    <div class="ctl"><label>FREQ-Y</label><input type="range" id="fy" min="1" max="12" step="1" value="2"><span class="val" id="fyV">2</span></div>
+    <div class="ctl"><label>SWEEP</label><input type="range" id="spd" min="10" max="240" value="70"><span class="val" id="spdV">70</span></div>
+    <div class="ctl"><label>PERSIST</label><input type="range" id="per" min="2" max="60" value="16"><span class="val" id="perV">16</span></div>
+    <div class="ph" style="margin-top:4px"><span>FIGURE PRESETS</span></div>
+    <div class="prow">
+      <button data-p="1,1,90">CIRCLE</button>
+      <button data-p="1,2,90">FIG-8</button>
+      <button data-p="3,4,90">WEAVE</button>
+      <button data-p="5,6,45">MESH</button>
+      <button id="dotB">DOT MODE</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph"><span>PHASE SHIFTER δ</span><b id="phV">90°</b></div>
+    <div class="knobrow">
+      <div id="knob"><div class="ticks"></div><div class="nd" id="nd"></div></div>
+      <div class="kmeta">
+        drag the knob to slide the ellipse<br>
+        δ <i id="ph2">90°</i> &nbsp;·&nbsp; state <b id="shape">CIRCLE</b><br>
+        x = A·sin(<b id="kx">1</b>·t + δ)<br>
+        y = A·sin(<b id="ky">2</b>·t)
+      </div>
+    </div>
+    <div class="reads">
+      <div class="rd"><span>BEAM X</span><b id="rx">+0.00</b></div>
+      <div class="rd"><span>BEAM Y</span><b id="ry">+0.00</b></div>
+      <div class="rd"><span>TANGENCY</span><i id="tg">1 : 2</i></div>
+    </div>
+  </div>
+</div>
+<div class="hint">integer frequencies close the figure · phase δ rotates the closed loop from line to circle · persistence is phosphor decay — raise it to burn the whole lattice in</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=940,H=440;
+var trace=document.createElement("canvas");trace.width=W;trace.height=H;
+var tc=trace.getContext("2d");
+var st={a:1,b:2,ph:Math.PI/2,spd:70,per:16,dot:false};
+var t=0,last=performance.now(),head={x:0,y:0};
+function gcd(m,n){while(n){var k=m%n;m=n;n=k;}return m;}
+function shapeName(){
+  var d=gcd(st.a,st.b),a=st.a/d,b=st.b/d;
+  if(a===b)return (st.ph%(2*Math.PI)<0.06||Math.abs(st.ph%(2*Math.PI)-Math.PI)<0.06)?"LINE":"CIRCLE";
+  if((a===1&&b===2)||(a===2&&b===1))return "FIGURE-8";
+  if(a*b>=15)return "MESH";
+  return "LOOP";
+}
+function readouts(){
+  var d=gcd(st.a,st.b);
+  document.getElementById("ratio").textContent=(st.a/d)+" : "+(st.b/d);
+  document.getElementById("kx").textContent=st.a;
+  document.getElementById("ky").textContent=st.b;
+  document.getElementById("tg").textContent=(st.a/d)+" : "+(st.b/d);
+  var deg=Math.round(((st.ph%6.283185307179586)+6.283185307179586)%6.283185307179586*180/Math.PI);
+  document.getElementById("phV").textContent=deg+"°";
+  document.getElementById("ph2").textContent=deg+"°";
+  document.getElementById("nd").style.transform="translate(-50%,-100%) rotate("+deg+"deg)";
+  document.getElementById("shape").textContent=shapeName();
+}
+function px(x){return W/2+x*(W*0.40);}
+function py(y){return H/2-y*(H*0.40);}
+function traceClear(){tc.fillStyle="#04070a";tc.fillRect(0,0,W,H);}
+function step(dt){
+  var span=st.spd*dt;
+  var steps=Math.max(1,Math.ceil(span/0.004));
+  var h=span/steps;
+  tc.fillStyle="rgba(4,7,10,"+(st.per/1000*Math.PI*2)+")";
+  tc.fillRect(0,0,W,H);
+  tc.lineWidth=1.6;
+  tc.lineCap="round";
+  for(var i=0;i<steps;i++){
+    var t0=t,t1=t+h;
+    var x0=Math.sin(st.a*t0+st.ph),y0=Math.sin(st.b*t0);
+    var x1=Math.sin(st.a*t1+st.ph),y1=Math.sin(st.b*t1);
+    if(st.dot){
+      tc.fillStyle="rgba(139,255,200,.55)";
+      tc.fillRect(px(x1)-1.2,py(y1)-1.2,2.4,2.4);
+    }else{
+      var g=tc.createLinearGradient(px(x0),py(y0),px(x1),py(y1));
+      g.addColorStop(0,"rgba(60,220,160,.25)");
+      g.addColorStop(1,"rgba(150,255,205,.7)");
+      tc.strokeStyle=g;
+      tc.beginPath();tc.moveTo(px(x0),py(y0));tc.lineTo(px(x1),py(y1));tc.stroke();
+    }
+    t=t1;
+  }
+  head.x=Math.sin(st.a*t+st.ph);head.y=Math.sin(st.b*t);
+}
+function reticle(){
+  ax.fillStyle="#04070a";ax.fillRect(0,0,W,H);
+  var pad=26;
+  var gw=(W-pad*2)/10,gh=(H-pad*2)/8;
+  ax.strokeStyle="rgba(90,180,140,.10)";ax.lineWidth=1;
+  for(var i=0;i<=10;i++){
+    var x=pad+i*gw;
+    ax.beginPath();ax.moveTo(x,pad);ax.lineTo(x,H-pad);ax.stroke();
+  }
+  for(var j=0;j<=8;j++){
+    var y=pad+j*gh;
+    ax.beginPath();ax.moveTo(pad,y);ax.lineTo(W-pad,y);ax.stroke();
+  }
+  ax.strokeStyle="rgba(120,230,180,.30)";
+  ax.lineWidth=1.4;
+  ax.strokeRect(pad,pad,W-pad*2,H-pad*2);
+  ax.strokeStyle="rgba(140,255,205,.42)";
+  ax.lineWidth=1.2;
+  ax.setLineDash([2,7]);
+  ax.beginPath();ax.moveTo(W/2,pad);ax.lineTo(W/2,H-pad);ax.stroke();
+  ax.beginPath();ax.moveTo(pad,H/2);ax.lineTo(W-pad,H/2);ax.stroke();
+  ax.setLineDash([]);
+  ax.font="9px ui-monospace,Menlo,monospace";
+  ax.fillStyle="rgba(140,200,175,.5)";
+  for(var k=1;k<10;k++){
+    if(k===5)continue;
+    ax.fillText((k<5?k-5:k-5)+"",pad+k*gw-3,H-pad+14);
+  }
+  ax.fillStyle="rgba(255,106,213,.55)";
+  ax.fillText("X",W-pad+6,H/2+3);
+  ax.fillText("Y",W/2+6,pad+10);
+  ax.fillStyle="rgba(140,200,175,.4)";
+  ax.fillText("1.0",pad-22,pad+4);
+  ax.fillText("-1.0",pad-26,H-pad+4);
+}
+function frame(now){
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  step(dt);
+  reticle();
+  ax.drawImage(trace,0,0);
+  var hx=px(head.x),hy=py(head.y);
+  ax.strokeStyle="rgba(255,106,213,.35)";ax.lineWidth=1;
+  ax.setLineDash([3,5]);
+  ax.beginPath();ax.moveTo(hx,26);ax.lineTo(hx,H-26);ax.moveTo(26,hy);ax.lineTo(W-26,hy);ax.stroke();
+  ax.setLineDash([]);
+  ax.fillStyle="#ff6ad5";
+  ax.shadowColor="#ff6ad5";ax.shadowBlur=12;
+  ax.beginPath();ax.arc(hx,hy,4,0,6.2832);ax.fill();
+  ax.shadowBlur=0;
+  document.getElementById("rx").textContent=(head.x>=0?"+":"")+head.x.toFixed(2);
+  document.getElementById("ry").textContent=(head.y>=0?"+":"")+head.y.toFixed(2);
+  requestAnimationFrame(frame);
+}
+function bind(id,vid,key,mul,div){
+  var el=document.getElementById(id);
+  el.addEventListener("input",function(){
+    st[key]=Number(this.value)*(mul||1)/(div||1);
+    document.getElementById(vid).textContent=mul?this.value:this.value;
+    if(key==="a"||key==="b")readouts();
+  });
+}
+bind("fx","fxV","a");
+bind("fy","fyV","b");
+bind("spd","spdV","spd");
+bind("per","perV","per");
+document.querySelectorAll("[data-p]").forEach(function(b){
+  b.addEventListener("click",function(){
+    var p=b.getAttribute("data-p").split(",");
+    st.a=Number(p[0]);st.b=Number(p[1]);st.ph=Number(p[2])*Math.PI/180;
+    document.getElementById("fx").value=st.a;
+    document.getElementById("fy").value=st.b;
+    readouts();traceClear();
+    document.querySelectorAll("[data-p]").forEach(function(o){o.className="";});
+    b.className="on";
+  });
+});
+document.getElementById("dotB").addEventListener("click",function(){
+  st.dot=!st.dot;this.className=st.dot?"on":"";
+  traceClear();
+});
+var knob=document.getElementById("knob"),dragging=false;
+function knobAngle(e){
+  var r=knob.getBoundingClientRect();
+  var dx=e.clientX-(r.left+r.width/2),dy=e.clientY-(r.top+r.height/2);
+  st.ph=Math.atan2(dy,dx)+Math.PI/2;
+  if(st.ph<0)st.ph+=6.283185307179586;
+  readouts();
+}
+knob.addEventListener("pointerdown",function(e){dragging=true;knob.setPointerCapture(e.pointerId);knobAngle(e);});
+knob.addEventListener("pointermove",function(e){if(dragging)knobAngle(e);});
+knob.addEventListener("pointerup",function(){dragging=false;});
+knob.addEventListener("pointercancel",function(){dragging=false;});
+readouts();traceClear();
+requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

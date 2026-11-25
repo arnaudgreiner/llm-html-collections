@@ -1,0 +1,17 @@
+TITLE: Night Reef — Diffusion-Limited Coral Garden
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Night Reef: Diffusion-Limited Coral Garden". Render a 940×520 deep-sea tank where diffusion-limited aggregation grows a coral colony in real time: a single seed cell sits at the tank centre, brownian walkers spawn at the edges, wander with random steps, and freeze into the colony when they land within a stickiness radius of an occupied cell (spatial-hash grid, 4px cells). Four species (STAGHORN, SEA FAN, BRAIN KNOB, WHITE LACE) set step size, stick radius, walker count and a base→tip colour ramp; the newest 60 cells pulse bright with additive shadow glow while the reef interpolates its gradient along growth order. Slow caustic bands drift across the water; a radial vignette sinks the edges. Controls: grow/pause, plant-a-rock mode (click anywhere to seed a new head), reset, a nutrients slider (walkers stepped per frame), and live stats — cells, walkers, attachments per rolling second. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+Museum aquarium at night: teal-on-abyss, the colony as a self-similar silhouette that visibly thickens. The craft is an honest growth algorithm — every branch tip is a decision the simulation made, so the picture is a record of stochastic time.
+
+MAJOR VISUAL TECHNIQUES:
+- Diffusion-limited aggregation on a 4px spatial-hash occupancy grid
+- Per-cell age→colour ramp (base to tip) with pulsing highlight on the newest growth
+- Drifting sine caustics + radial vignette for underwater depth
+- Rolling one-second window buffer for live attachment-rate stat
+- Click-to-plant extra seeds redirecting colony growth
+
+INTENDED INTERACTION MODEL:
+Watch or pause the growth, change species to reshape the morphology, tune nutrient flow, plant rocks by clicking the tank to steer where branches catch, or reset to a single seed; stats quantify the living reef.

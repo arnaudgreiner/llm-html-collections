@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Piano Roll — The Perforated Tune</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#120f0d;color:#cdc3b2;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e2b25a;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fb0a4}
+#rig{background:#17130f;border:1px solid #2c251c;border-radius:12px;padding:15px}
+canvas{display:block;border-radius:8px;box-shadow:0 10px 36px rgba(0,0,0,.55);cursor:pointer}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#1e1913;border:1px solid #3d3426;color:#cdc2ad;font:inherit;font-size:9.5px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e2b25a;color:#fff4dd}
+button.on{background:#e2b25a;border-color:#e2b25a;color:#221703;font-weight:700}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#7d7466}
+.stat b{color:#e2b25a}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#5d564b;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Piano Roll <i>M94</i> · the perforated tune</h1>
+<div id="rig"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bPlay">▶ WIND UP</button>
+  <button id="bRoll" class="on">ROLL A</button>
+  <button id="bTempo">TEMPO 1.0×</button>
+  <span class="stat">notes punched <b id="mN">0</b> · bar <b id="mB">1</b> · loop <b id="mL">A</b></span>
+</div>
+<div class="hint">the paper carries the tune as holes — each perforation that crosses the gold play-line drops a key and sounds its note · swap rolls, wind the tempo, and the sprockets keep the time</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520;
+var LANES=15,LANE_TOP=40,LANE_H=26;
+var PLAY_Y=LANE_TOP+LANES*LANE_H; // 430
+var PPS=74; // pixels per second at 1×
+var rollX0=120,rollX1=W-40;
+var playing=false,now=0,tempo=1,rollIdx=0;
+var fired={},noteCount=0;
+var ctx=null;
+var NOTE_NAMES=["C","C#","D","D#","E","F","F#","G","G#","A","A#","B"];
+function laneFreq(l){
+  var semis=14-l; // lane0 top = highest
+  return 261.63*Math.pow(2,semis/12);
+}
+function laneName(l){
+  var semis=14-l;
+  return NOTE_NAMES[semis%12]+(4+Math.floor(semis/12));
+}
+// ---- tune generation (deterministic) ----
+function genA(){
+  var n=[],mel=[2,4,5,7,9,7,5,4,5,4,2,0,2,4,5,2];
+  for(var t=0;t<16;t++){
+    n.push({lane:mel[t%16],t:t*1.0,d:0.9});
+    if(t%4===0)n.push({lane:13,t:t*1.0,d:1.6});
+    if(t%4===2)n.push({lane:11,t:t*1.0,d:0.8});
+  }
+  return {name:"ROLL A — MINUET IN GREY",dur:16,notes:n};
+}
+function genB(){
+  var n=[],arp=[7,5,3,1,3,5];
+  for(var t=0;t<64;t++){
+    n.push({lane:arp[t%6]+(t%12<6?0:1),t:t*0.25,d:0.22});
+    if(t%8===0)n.push({lane:10,t:t*0.25,d:1.4});
+    if(t%8===4)n.push({lane:12,t:t*0.25,d:1.4});
+  }
+  return {name:"ROLL B — CLOCKMAKER'S ARPEGGIO",dur:16,notes:n};
+}
+function genC(){
+  var n=[],ch=[[14,10,7],[13,9,5],[12,8,4],[14,11,7]];
+  for(var t=0;t<8;t++){
+    var c=ch[t%4];
+    for(var i=0;i<c.length;i++)n.push({lane:c[i],t:t*2,d:2.4});
+    n.push({lane:(t%2)?2:0,t:t*2+1,d:0.9});
+  }
+  return {name:"ROLL C — SLOW SWELL",dur:16,notes:n};
+}
+var rolls=[genA(),genB(),genC()];
+function roll(){return rolls[rollIdx];}
+// ---- audio (created only on user gesture) ----
+function tone(l){
+  if(!ctx)return;
+  var o=ctx.createOscillator(),g=ctx.createGain();
+  o.type="triangle";
+  o.frequency.value=laneFreq(l);
+  g.gain.setValueAtTime(0.0001,ctx.currentTime);
+  g.gain.exponentialRampToValueAtTime(0.16,ctx.currentTime+0.01);
+  g.gain.exponentialRampToValueAtTime(0.0001,ctx.currentTime+0.55);
+  o.connect(g);g.connect(ctx.destination);
+  o.start();
+  o.stop(ctx.currentTime+0.6);
+}
+document.getElementById("bPlay").addEventListener("click",function(){
+  if(!ctx){
+    try{ctx=new (window.AudioContext||window.webkitAudioContext)();}catch(e){ctx=null;}
+  }
+  if(ctx&&ctx.state==="suspended")ctx.resume();
+  playing=!playing;
+  this.className=playing?"on":"";
+  this.textContent=playing?"❚❚ STOPPED":"▶ WIND UP";
+});
+document.getElementById("bRoll").addEventListener("click",function(){
+  rollIdx=(rollIdx+1)%rolls.length;
+  this.textContent="ROLL "+"ABC".charAt(rollIdx);
+  document.getElementById("mL").textContent="ABC".charAt(rollIdx);
+  now=0;fired={};
+});
+var tempos=[1,1.5,0.6],ti=0;
+document.getElementById("bTempo").addEventListener("click",function(){
+  ti=(ti+1)%tempos.length;tempo=tempos[ti];
+  this.textContent="TEMPO "+tempo.toFixed(1)+"×";
+  this.className=tempo!==1?"on":"";
+});
+var keyLit=[];for(var i=0;i<LANES;i++)keyLit.push(0);
+function step(dt){
+  if(!playing)return;
+  now+=dt/1000*tempo;
+  var R=roll();
+  if(now>=R.dur){now-=R.dur;fired={};}
+  for(var i=0;i<R.notes.length;i++){
+    var n=R.notes[i];
+    if(!fired[i]&&now>=n.t&&now<n.t+n.d){
+      fired[i]=true;
+      keyLit[n.lane]=1;
+      noteCount++;
+      tone(n.lane);
+    }
+  }
+  for(var k=0;k<LANES;k++)if(keyLit[k]>0)keyLit[k]-=dt/700;
+}
+function yOf(t){ // paper position of note-time t (future above play line)
+  return PLAY_Y-(t-now)*PPS*tempo;
+}
+function render(nowMs){
+  ax.fillStyle="#100d0b";ax.fillRect(0,0,W,H);
+  // ---- keyboard column ----
+  ax.fillStyle="#1a1611";ax.fillRect(30,LANE_TOP-8,74,LANES*LANE_H+16);
+  for(var l=0;l<LANES;l++){
+    var y=LANE_TOP+l*LANE_H;
+    var lit=Math.max(0,keyLit[l]);
+    var off=lit*7;
+    ax.fillStyle=lit>0?("rgb("+Math.floor(226+29*lit)+","+Math.floor(178-40*lit)+","+Math.floor(90-30*lit)+")"):"#cfc7b6";
+    ax.beginPath();
+    ax.roundRect?ax.roundRect(32+off,y+3,66,LANE_H-6,4):ax.rect(32+off,y+3,66,LANE_H-6);
+    ax.fill();
+    ax.strokeStyle="#3a332a";ax.lineWidth=1.5;ax.stroke();
+    ax.fillStyle=lit>0?"#2a1d05":"#4a4438";
+    ax.font="9px ui-monospace,Menlo,monospace";
+    ax.fillText(laneName(l),38+off,y+16);
+    // lane guide
+    ax.strokeStyle="rgba(255,255,255,.04)";
+    ax.beginPath();ax.moveTo(110,y+LANE_H/2);ax.lineTo(W-30,y+LANE_H/2);ax.stroke();
+  }
+  // ---- paper ----
+  ax.save();
+  ax.beginPath();ax.rect(rollX0,10,rollX1-rollX0,PLAY_Y-10);ax.clip();
+  var pg=ax.createLinearGradient(rollX0,0,rollX1,0);
+  pg.addColorStop(0,"#221c14");pg.addColorStop(0.5,"#2b241a");pg.addColorStop(1,"#221c14");
+  ax.fillStyle=pg;ax.fillRect(rollX0,10,rollX1-rollX0,PLAY_Y-10);
+  // sprocket perforations scrolling with paper
+  ax.fillStyle="#100d0b";
+  var period=20;
+  var scroll=(now*PPS*tempo)%period;
+  for(var py=10-scroll;py<PLAY_Y;py+=period){
+    ax.fillRect(rollX0+8,py,7,9);
+    ax.fillRect(rollX1-15,py,7,9);
+  }
+  // notes = punched holes
+  var R=roll();
+  for(var i=0;i<R.notes.length;i++){
+    var n=R.notes[i];
+    var y0=yOf(n.t),y1=yOf(n.t+n.d);
+    if(y1<4||y0>PLAY_Y+4)continue;
+    // capsule hole along y: earlier time = larger y
+    var hx=(rollX0+rollX1)/2;
+    var topY=Math.min(y0,y1),botY=Math.max(y0,y1);
+    ax.fillStyle="#0b0907";
+    ax.beginPath();
+    ax.moveTo(hx-8,topY);
+    ax.arc(hx,topY+8,8,Math.PI,0);
+    ax.lineTo(hx+8,botY-8);
+    ax.arc(hx,botY-8,8,0,Math.PI);
+    ax.closePath();ax.fill();
+    ax.strokeStyle="rgba(226,178,90,.35)";ax.lineWidth=1;
+    ax.beginPath();ax.moveTo(hx-8,topY+8);ax.lineTo(hx-8,botY-8);
+    ax.moveTo(hx+8,topY+8);ax.lineTo(hx+8,botY-8);ax.stroke();
+    // freshly-crossed glint
+    if(Math.abs(y0-PLAY_Y)<10&&playing){
+      ax.fillStyle="rgba(255,240,200,.9)";
+      ax.beginPath();ax.arc(hx,PLAY_Y,5,0,6.2832);ax.fill();
+    }
+  }
+  ax.restore();
+  // ---- play line ----
+  ax.strokeStyle="#e2b25a";ax.lineWidth=2;
+  ax.beginPath();ax.moveTo(rollX0-6,PLAY_Y);ax.lineTo(rollX1,PLAY_Y);ax.stroke();
+  ax.fillStyle="#e2b25a";
+  ax.font="9px ui-monospace,Menlo,monospace";
+  ax.fillText("▸ PLAY LINE",rollX0-4,PLAY_Y-6);
+  // paper edges
+  ax.strokeStyle="#3a3227";ax.lineWidth=2;
+  ax.strokeRect(rollX0,10,rollX1-rollX0,PLAY_Y-10);
+  // roll label
+  ax.fillStyle="#7d7466";
+  ax.fillText(R.name,rollX0,PLAY_Y+24);
+  ax.fillText(playing?"winding…":"stopped — press WIND UP",rollX0,PLAY_Y+40);
+}
+var last=performance.now(),mAcc=0;
+function loop(nowMs){
+  var dt=nowMs-last;last=nowMs;
+  step(dt);
+  render(nowMs);
+  mAcc+=dt;
+  if(mAcc>350){
+    mAcc=0;
+    document.getElementById("mN").textContent=noteCount;
+    document.getElementById("mB").textContent=Math.floor(now/4)+1;
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

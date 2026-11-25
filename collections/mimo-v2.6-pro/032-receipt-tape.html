@@ -1,0 +1,272 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>032 · Receipt Tape</title>
+<style>
+:root{--wood1:#3d2f26;--wood2:#241b16;--paper:#f7f4ee;--ink:#191713;--mute:#6b675e;
+  --line:#cfc9bd;--acc:#c8412b}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:
+  repeating-linear-gradient(97deg,rgba(0,0,0,.10) 0 3px,transparent 3px 9px),
+  linear-gradient(160deg,var(--wood1),var(--wood2));
+  color:var(--ink);font-family:"Courier New",Courier,monospace;padding:34px 16px 70px}
+.stage{max-width:1060px;margin:0 auto;display:grid;grid-template-columns:1fr 260px;gap:26px;
+  align-items:start}
+@media(max-width:860px){.stage{grid-template-columns:1fr}}
+
+.receipt{position:relative;width:min(400px,100%);margin:0 auto;background:var(--paper);
+  padding:26px 24px 30px;filter:drop-shadow(0 24px 30px rgba(0,0,0,.45));
+  font-size:13.5px;line-height:1.55}
+.receipt::before,.receipt::after{content:"";position:absolute;left:0;right:0;height:10px;
+  background:var(--paper);
+  clip-path:polygon(0 100%,0 0);}
+.paper-edge{position:absolute;left:0;right:0;height:9px;background:var(--paper)}
+.edge-top{top:-9px;clip-path:polygon(0 100%,2.5% 0,5% 100%,7.5% 0,10% 100%,12.5% 0,15% 100%,17.5% 0,20% 100%,22.5% 0,25% 100%,27.5% 0,30% 100%,32.5% 0,35% 100%,37.5% 0,40% 100%,42.5% 0,45% 100%,47.5% 0,50% 100%,52.5% 0,55% 100%,57.5% 0,60% 100%,62.5% 0,65% 100%,67.5% 0,70% 100%,72.5% 0,75% 100%,77.5% 0,80% 100%,82.5% 0,85% 100%,87.5% 0,90% 100%,92.5% 0,95% 100%,97.5% 0,100% 100%)}
+.edge-bot{bottom:-9px;clip-path:polygon(0 0,2.5% 100%,5% 0,7.5% 100%,10% 0,12.5% 100%,15% 0,17.5% 100%,20% 0,22.5% 100%,25% 0,27.5% 100%,30% 0,32.5% 100%,35% 0,37.5% 100%,40% 0,42.5% 100%,45% 0,47.5% 100%,50% 0,52.5% 100%,55% 0,57.5% 100%,60% 0,62.5% 100%,65% 0,67.5% 100%,70% 0,72.5% 100%,75% 0,77.5% 100%,80% 0,82.5% 100%,85% 0,87.5% 100%,90% 0,92.5% 100%,95% 0,97.5% 100%,100% 0)}
+
+.rline{text-align:center;letter-spacing:.06em}
+.store{font-size:20px;font-weight:700;letter-spacing:.14em;margin:0 0 4px}
+.small{font-size:11.5px;color:var(--mute);letter-spacing:.08em}
+.rule{border-top:1px dashed #8d877a;margin:12px 0}
+.rule.solid{border-top:1.5px solid var(--ink)}
+.rows{margin:0}
+.row{display:flex;align-items:baseline;gap:6px;padding:5px 0;cursor:pointer;
+  border-radius:3px;transition:background .16s}
+.row:hover{background:rgba(200,65,43,.09)}
+.row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.row .dots{flex:1;border-bottom:1px dotted #a49d8e;transform:translateY(-4px)}
+.row .qty{color:var(--mute);width:34px;text-align:center}
+.row .amt{width:70px;text-align:right;font-variant-numeric:tabular-nums}
+.row .amt.disc{color:var(--acc)}
+.tot{display:flex;justify-content:space-between;font-size:15px;padding:4px 0}
+.tot.big{font-size:22px;font-weight:700;padding-top:8px}
+.barcode{display:flex;justify-content:center;gap:2px;margin-top:14px;height:46px;align-items:flex-end}
+.barcode i{display:block;background:var(--ink);height:100%}
+.msg{text-align:center;font-size:11.5px;letter-spacing:.16em;color:var(--mute);margin-top:12px}
+.printing .row,.printing .tot{animation:feed .42s cubic-bezier(.2,.8,.3,1) backwards}
+@keyframes feed{from{opacity:0;transform:translateY(-9px)}to{opacity:1;transform:none}}
+
+.rig{background:rgba(247,244,238,.07);border:1px solid rgba(247,244,238,.22);border-radius:14px;
+  padding:16px;color:#efe9dd}
+.rig h2{margin:0 0 12px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.34em;text-transform:uppercase;color:#b9ae9c;font-weight:600}
+.rig p{font-family:"Segoe UI",system-ui,sans-serif;font-size:12.5px;line-height:1.65;color:#cdc3b2}
+.btns{display:flex;flex-direction:column;gap:9px;margin-top:13px}
+.btn{font:inherit;font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:11px 12px;border-radius:8px;cursor:pointer;background:rgba(255,255,255,.07);
+  border:1px solid rgba(255,255,255,.26);color:#efe9dd;transition:.18s}
+.btn:hover{transform:translateY(-2px);border-color:#ffd7a0}
+.btn.accent{background:var(--acc);border-color:var(--acc);color:#fff2ee}
+.btn.on{border-color:#ffd7a0;color:#ffd7a0}
+.meta{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.meta div{background:rgba(0,0,0,.22);border-radius:9px;padding:8px 9px;
+  font-family:"Segoe UI",system-ui,sans-serif}
+.meta span{display:block;font-size:8.5px;letter-spacing:.24em;text-transform:uppercase;color:#a99d89}
+.meta b{font-size:15px;font-variant-numeric:tabular-nums}
+.foot{max-width:1060px;margin:34px auto 0;display:flex;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.3em;text-transform:uppercase;color:#9c917d}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="stage">
+  <main class="receipt" id="receipt" aria-live="polite">
+    <span class="paper-edge edge-top"></span>
+    <span class="paper-edge edge-bot"></span>
+
+    <div class="rline">
+      <p class="store">SALT &amp; EMBER</p>
+      <p class="small">GROCER · EST. 1974</p>
+      <p class="small" id="storeAddr">14 QUARRY ROAD, EASTGATE</p>
+    </div>
+
+    <div class="rule"></div>
+    <div class="small rline"><span id="stamp">—</span></div>
+    <div class="rule"></div>
+
+    <div class="rows" id="rows"></div>
+
+    <div class="rule"></div>
+    <div class="tot"><span>SUBTOTAL</span><span id="sub">$0.00</span></div>
+    <div class="tot"><span id="taxLabel">TAX 8.75%</span><span id="tax">$0.00</span></div>
+    <div class="tot big"><span>TOTAL</span><span id="tot">$0.00</span></div>
+    <div class="rule solid"></div>
+
+    <div class="small rline" id="pay">CARD **** 4417 · APPROVED</div>
+    <div class="barcode" id="barcode" aria-hidden="true"></div>
+    <p class="msg">THANK YOU — SHOP SMALL, SHOP WELL</p>
+    <span class="paper-edge edge-bot" style="bottom:-9px"></span>
+  </main>
+
+  <aside class="rig">
+    <h2>Till controls</h2>
+    <p>Tap any line on the receipt to knock 15% off it — marked lines print in red.
+      Reprint for a fresh basket from the day's stock.</p>
+    <div class="btns">
+      <button class="btn accent" id="print" type="button">Print new receipt</button>
+      <button class="btn on" id="taxBtn" type="button">Tax 8.75% on</button>
+      <button class="btn" id="coupon" type="button">Apply $5 coupon</button>
+      <button class="btn" id="tear" type="button">Tear off</button>
+    </div>
+    <div class="meta">
+      <div><span>lines</span><b id="mLines">0</b></div>
+      <div><span>units</span><b id="mUnits">0</b></div>
+      <div><span>prints</span><b id="mPrints">1</b></div>
+      <div><span>total</span><b id="mTotal">$0.00</b></div>
+    </div>
+  </aside>
+</div>
+
+<footer class="foot"><span>thermal tape · 80 mm · monospace only</span><span>032 / 100</span></footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var STOCK=[
+    ["SOURDOUGH LOAF",3.90],["BUTTER CULTURED 250G",4.65],["EGGS FREE RANGE 6",4.20],
+    ["TOMATOES HERITACY 500G",5.10],["CHEDDAR AGED 12M",6.40],["OLIVE OIL 500ML",11.25],
+    ["ESPRESSO BEANS 250G",9.80],["HONEY WILDFLOWER",6.15],["APPLES COSH 1KG",3.45],
+    ["SOUP OF THE DAY",5.50],["CROISSANT BUTTER",2.75],["YOGHURT GREEK 500G",3.60],
+    ["PASTA BRONZE CUT",3.15],["MUSHROOMS FIELD 400G",4.85],["CHOCOLATE 72% 100G",4.35],
+    ["FLOUR STONEGROUND",2.40],["PICKLES DILL JAR",4.95],["TEA SENCHA 100G",7.20],
+    ["ONIONS RED 500G",2.10],["CHEESECAKE SLICE",4.75]
+  ];
+  var TAX_ON=true, COUPON=false, prints=1, basket=[];
+
+  function pick(){
+    var n=2+Math.floor(Math.random()*4);
+    var used={}, out=[];
+    for(var i=0;i<n;i++){
+      var s=STOCK[Math.floor(Math.random()*STOCK.length)];
+      if(used[s[0]]) continue;
+      used[s[0]]=1;
+      out.push({nm:s[0], price:s[1], qty:1+Math.floor(Math.random()*3), disc:false});
+    }
+    if(!out.length) out.push({nm:STOCK[0][0],price:STOCK[0][1],qty:1,disc:false});
+    return out;
+  }
+
+  function stamp(){
+    var d=new Date();
+    var p=function(v){return (v<10?"0":"")+v;};
+    document.getElementById("stamp").textContent=
+      d.getFullYear()+"-"+p(d.getMonth()+1)+"-"+p(d.getDate())+
+      "  "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+
+      "   REG 02  OP 7";
+  }
+
+  function barcode(){
+    var host=document.getElementById("barcode");
+    host.innerHTML="";
+    for(var i=0;i<58;i++){
+      var b=document.createElement("i");
+      b.style.width=(1+Math.floor(Math.random()*3))+"px";
+      b.style.height=(60+Math.floor(Math.random()*40))+"%";
+      b.style.opacity=Math.random()<0.25?"0.15":"1";
+      host.appendChild(b);
+    }
+  }
+
+  function money(v){ return "$"+v.toFixed(2); }
+
+  function render(){
+    var host=document.getElementById("rows");
+    host.innerHTML="";
+    var sub=0, units=0;
+    basket.forEach(function(it,i){
+      sub+=it.price*it.qty*(it.disc?0.85:1);
+      units+=it.qty;
+      var row=document.createElement("div");
+      row.className="row";
+      row.title="click to toggle 15% off";
+      if(!reduce) row.style.animationDelay=(i*0.06)+"s";
+      row.innerHTML='<span class="nm">'+it.nm+'</span>'+
+        '<span class="dots"></span>'+
+        '<span class="qty">'+it.qty+' ×</span>'+
+        '<span class="amt'+(it.disc?" disc":"")+'">'+
+        (it.disc?"-":"")+money(it.price*it.qty*(it.disc?0.85:1))+'</span>';
+      row.addEventListener("click",function(){
+        it.disc=!it.disc;
+        render();
+      });
+      host.appendChild(row);
+    });
+    if(COUPON){
+      var cr=document.createElement("div");
+      cr.className="row";
+      cr.innerHTML='<span class="nm">COUPON WELCOME −$5</span><span class="dots"></span>'+
+        '<span class="qty"></span><span class="amt disc">-5.00</span>';
+      host.appendChild(cr);
+    }
+    var taxable=sub-(COUPON?5:0);
+    if(taxable<0) taxable=0;
+    var tax=TAX_ON?taxable*0.0875:0;
+    document.getElementById("sub").textContent=money(sub);
+    document.getElementById("taxLabel").textContent=TAX_ON?"TAX 8.75%":"TAX OFF";
+    document.getElementById("tax").textContent=money(tax);
+    var total=taxable+tax;
+    document.getElementById("tot").textContent=money(total);
+    document.getElementById("mLines").textContent=basket.length;
+    document.getElementById("mUnits").textContent=units;
+    document.getElementById("mTotal").textContent=money(total);
+  }
+
+  function printReceipt(animate){
+    basket=pick();
+    stamp(); barcode(); render();
+    if(animate && !reduce){
+      var el=document.getElementById("receipt");
+      el.classList.remove("printing");
+      void el.offsetWidth;
+      el.classList.add("printing");
+    }
+  }
+
+  document.getElementById("print").addEventListener("click",function(){
+    prints++;
+    document.getElementById("mPrints").textContent=prints;
+    printReceipt(true);
+  });
+
+  document.getElementById("taxBtn").addEventListener("click",function(){
+    TAX_ON=!TAX_ON;
+    this.classList.toggle("on",TAX_ON);
+    this.textContent="Tax 8.75% "+(TAX_ON?"on":"off");
+    render();
+  });
+
+  document.getElementById("coupon").addEventListener("click",function(){
+    COUPON=!COUPON;
+    this.classList.toggle("on",COUPON);
+    this.textContent=COUPON?"Coupon −$5 applied":"Apply $5 coupon";
+    render();
+  });
+
+  document.getElementById("tear").addEventListener("click",function(){
+    var el=document.getElementById("receipt");
+    if(reduce){ printReceipt(false); return; }
+    el.style.transition="transform .55s cubic-bezier(.6,0,.9,.4),opacity .55s";
+    el.style.transform="translateY(-115%) rotate(-2.4deg)";
+    el.style.opacity="0";
+    setTimeout(function(){
+      el.style.transition="none";
+      el.style.transform="translateY(60px)";
+      printReceipt(true);
+      requestAnimationFrame(function(){
+        el.style.transition="transform .5s cubic-bezier(.2,.8,.3,1),opacity .5s";
+        el.style.transform="none";
+        el.style.opacity="1";
+      });
+    },560);
+  });
+
+  printReceipt(false);
+})();
+</script>
+</body>
+</html>

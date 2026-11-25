@@ -1,0 +1,262 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>008 · Blueprint Wireframe</title>
+<style>
+:root{--blue:#0d3a63;--blue2:#092a4a;--line:rgba(190,225,255,.55);--dim:rgba(190,225,255,.28);
+  --hot:#ffcf3f;--paper:#dff1ff}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--paper);background-color:var(--blue2);
+  background-image:
+    repeating-linear-gradient(0deg,rgba(190,225,255,.10) 0 1px,transparent 1px 40px),
+    repeating-linear-gradient(90deg,rgba(190,225,255,.10) 0 1px,transparent 1px 40px),
+    repeating-linear-gradient(0deg,rgba(190,225,255,.05) 0 1px,transparent 1px 8px),
+    repeating-linear-gradient(90deg,rgba(190,225,255,.05) 0 1px,transparent 1px 8px),
+    radial-gradient(120% 100% at 30% 10%,rgba(29,96,158,.9),rgba(9,42,74,.95));
+  font-family:"IBM Plex Mono",ui-monospace,"Courier New",monospace}
+body.nogrid{background-image:radial-gradient(120% 100% at 30% 10%,rgba(29,96,158,.9),rgba(9,42,74,.95))}
+.wrap{max-width:1240px;margin:0 auto;padding:26px 24px 40px}
+/* toolbar */
+.bar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;
+  border:1px solid var(--line);padding:12px 14px;background:rgba(6,26,46,.55)}
+.bar h1{margin:0;font-size:13px;letter-spacing:.34em;text-transform:uppercase;font-weight:700}
+.bar h1 b{color:var(--hot)}
+.tools{display:flex;gap:8px;flex-wrap:wrap}
+button{font:inherit;font-size:11px;letter-spacing:.2em;text-transform:uppercase;cursor:pointer;
+  color:var(--paper);background:transparent;border:1px solid var(--line);padding:8px 14px;transition:.2s}
+button:hover{background:rgba(255,207,63,.16);border-color:var(--hot);color:var(--hot)}
+button.on{background:var(--hot);color:#0a1c30;border-color:var(--hot);font-weight:700}
+/* sheet */
+.sheet{margin-top:18px;border:1px solid var(--line);background:rgba(6,26,46,.35);position:relative;
+  display:grid;grid-template-columns:1fr 300px}
+.draw{position:relative;padding:34px;border-right:1px solid var(--line);min-height:520px}
+.draw svg{display:block;width:100%;height:auto}
+.frame{position:absolute;inset:14px;border:1px solid var(--dim);pointer-events:none}
+.frame::before,.frame::after{content:"";position:absolute;background:var(--hot)}
+.frame::before{left:-1px;top:-1px;width:14px;height:3px}
+.frame::after{left:-1px;top:-1px;width:3px;height:14px}
+.tagline{position:absolute;left:34px;top:8px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--dim)}
+/* hotspots */
+.hot{position:absolute;width:24px;height:24px;border-radius:50%;border:1px solid var(--hot);
+  background:rgba(255,207,63,.18);color:var(--hot);font-size:11px;line-height:22px;text-align:center;
+  cursor:pointer;transition:.25s}
+.hot:hover,.hot.on{background:var(--hot);color:#0a1c30;box-shadow:0 0 0 6px rgba(255,207,63,.18)}
+/* side panel */
+.side{padding:22px 20px;font-size:12.5px;line-height:1.7}
+.side h2{margin:0 0 12px;font-size:10.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--hot)}
+#desc{min-height:110px;color:#cfe6fb}
+#desc b{display:block;color:#fff;letter-spacing:.18em;text-transform:uppercase;font-size:12px;margin-bottom:6px}
+.spec{width:100%;border-collapse:collapse;margin-top:16px;font-size:11.5px}
+.spec th,.spec td{border:1px solid var(--dim);padding:7px 8px;text-align:left}
+.spec th{color:var(--hot);font-weight:400;letter-spacing:.16em;text-transform:uppercase;width:44%}
+.spec td{color:#cfe6fb;font-variant-numeric:tabular-nums}
+.coords{margin-top:18px;border-top:1px solid var(--dim);padding-top:12px;font-size:11px;
+  letter-spacing:.2em;color:var(--dim)}
+.coords b{color:var(--hot);font-weight:400}
+/* title block */
+.titleblock{margin-top:18px;border:1px solid var(--line);display:grid;
+  grid-template-columns:2fr 1fr 1fr 1fr;background:rgba(6,26,46,.55)}
+.titleblock div{border-right:1px solid var(--dim);padding:12px 14px;font-size:10.5px;
+  letter-spacing:.24em;text-transform:uppercase;color:var(--dim)}
+.titleblock div:last-child{border-right:0}
+.titleblock strong{display:block;margin-top:6px;color:var(--paper);font-size:13px;letter-spacing:.12em}
+.notes{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:14px;margin-top:18px}
+.notes article{border:1px solid var(--dim);padding:14px 16px;font-size:12px;line-height:1.7;
+  color:#b9d8f2;transition:.25s}
+.notes article:hover{border-color:var(--hot);transform:translateY(-4px);background:rgba(255,207,63,.07)}
+.notes b{display:block;color:var(--hot);font-size:10.5px;letter-spacing:.3em;text-transform:uppercase;
+  margin-bottom:7px}
+/* section hatching pattern visibility */
+#sectionG{display:none}
+body.section #sectionG{display:block}
+body.section #assemblyG{display:none}
+body.nodim .dimG{display:none}
+@media(max-width:860px){.sheet{grid-template-columns:1fr}.draw{border-right:0;border-bottom:1px solid var(--line)}
+  .titleblock{grid-template-columns:1fr 1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <h1>Drawing 08 — <b>Modular Actuator</b></h1>
+    <div class="tools">
+      <button id="bAsm" class="on">Assembly</button>
+      <button id="bSec">Section A–A</button>
+      <button id="bDim" class="on">Dimensions</button>
+      <button id="bGrid" class="on">Grid</button>
+    </div>
+  </div>
+
+  <div class="sheet">
+    <div class="draw" id="draw">
+      <div class="frame"></div>
+      <div class="tagline">Scale 1:2 · third-angle projection · all dims in mm</div>
+
+      <svg viewBox="0 0 720 470" role="img" aria-label="Technical drawing of a modular actuator">
+        <defs>
+          <pattern id="hatch" width="8" height="8" patternTransform="rotate(45)" patternUnits="userSpaceOnUse">
+            <line x1="0" y1="0" x2="0" y2="8" stroke="#dff1ff" stroke-width="1.1"/>
+          </pattern>
+          <marker id="ar" markerWidth="9" markerHeight="9" refX="8" refY="3" orient="auto">
+            <path d="M0,0 L8,3 L0,6 z" fill="#ffcf3f"/>
+          </marker>
+        </defs>
+
+        <g id="assemblyG" fill="none" stroke="#dff1ff" stroke-width="2">
+          <!-- centre lines -->
+          <path d="M40 235 H680" stroke="#ffcf3f" stroke-width="1" stroke-dasharray="26 6 4 6"/>
+          <path d="M360 40 V430" stroke="#ffcf3f" stroke-width="1" stroke-dasharray="26 6 4 6"/>
+          <!-- main housing -->
+          <rect x="150" y="130" width="420" height="210" rx="10"/>
+          <rect x="176" y="156" width="368" height="158" rx="6" stroke-width="1"/>
+          <!-- shaft -->
+          <rect x="40" y="214" width="112" height="42" rx="4"/>
+          <rect x="568" y="222" width="112" height="26" rx="4"/>
+          <!-- bore -->
+          <circle cx="360" cy="235" r="74"/>
+          <circle cx="360" cy="235" r="46" stroke-width="1"/>
+          <circle cx="360" cy="235" r="8" stroke="#ffcf3f"/>
+          <!-- rotor petals -->
+          <path d="M360 161 L386 195 L406 235 L386 275 L360 309 L334 275 L314 235 L334 195 Z" stroke-width="1.4"/>
+          <!-- bolt holes -->
+          <circle cx="196" cy="176" r="12"/><circle cx="524" cy="176" r="12"/>
+          <circle cx="196" cy="294" r="12"/><circle cx="524" cy="294" r="12"/>
+          <!-- cooling fins -->
+          <path d="M230 130 V104 M268 130 V104 M306 130 V104 M414 130 V104 M452 130 V104 M490 130 V104" stroke-width="1"/>
+          <path d="M230 104 H490" stroke-width="1"/>
+          <!-- terminal box -->
+          <rect x="316" y="60" width="88" height="44" rx="4"/>
+          <path d="M338 60 V44 M360 60 V44 M382 60 V44" stroke-width="1.2"/>
+          <!-- feet -->
+          <path d="M180 340 V384 H240 V340 M480 340 V384 H540 V340" stroke-width="2"/>
+        </g>
+
+        <g id="sectionG" fill="none" stroke="#dff1ff" stroke-width="2">
+          <rect x="150" y="130" width="420" height="210" rx="10" fill="url(#hatch)" fill-opacity=".22"/>
+          <rect x="176" y="156" width="368" height="158" rx="6" stroke="#092a4a" stroke-width="3"/>
+          <rect x="40" y="214" width="640" height="42" rx="4" fill="url(#hatch)" fill-opacity=".3"/>
+          <circle cx="360" cy="235" r="74" fill="#092a4a"/>
+          <circle cx="360" cy="235" r="46" stroke="#ffcf3f" stroke-width="2"/>
+          <path d="M286 235 H434 M360 161 V309" stroke="#ffcf3f" stroke-width="1"/>
+          <path d="M150 340 H570" stroke-width="2.4"/>
+        </g>
+
+        <g class="dimG" stroke="#ffcf3f" stroke-width="1.2" fill="none">
+          <path d="M150 400 H570" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <path d="M150 348 V414 M570 348 V414"/>
+          <text x="342" y="424" fill="#ffcf3f" stroke="none" font-size="15" font-family="monospace">420.0</text>
+          <path d="M640 130 V340" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <path d="M578 130 H652 M578 340 H652"/>
+          <text x="656" y="232" fill="#ffcf3f" stroke="none" font-size="15" font-family="monospace"
+            transform="rotate(90 656 232)">210.0</text>
+          <path d="M112 196 H150" marker-start="url(#ar)" marker-end="url(#ar)"/>
+          <text x="72" y="186" fill="#ffcf3f" stroke="none" font-size="13" font-family="monospace">R46</text>
+        </g>
+
+        <g stroke="#dff1ff" stroke-width="1" fill="none">
+          <path d="M424 200 L560 78 H660" />
+          <path d="M196 176 L96 70 H30" />
+        </g>
+        <text x="566" y="70" fill="#dff1ff" font-size="12" font-family="monospace">M8 TAPPED, 4× EQ SP</text>
+        <text x="34" y="62" fill="#dff1ff" font-size="12" font-family="monospace">Ø24 H7 BORE</text>
+      </svg>
+
+      <button class="hot" data-id="1" style="left:24%;top:38%" aria-label="detail 1">1</button>
+      <button class="hot" data-id="2" style="left:50%;top:47%" aria-label="detail 2">2</button>
+      <button class="hot" data-id="3" style="left:70%;top:30%" aria-label="detail 3">3</button>
+      <button class="hot" data-id="4" style="left:46%;top:20%" aria-label="detail 4">4</button>
+    </div>
+
+    <aside class="side">
+      <h2>Callout register</h2>
+      <div id="desc"><b>Select a callout</b>Hover or tap one of the numbered markers on the drawing to
+      read its note. Switching to Section A–A reveals the internal bore and shaft as a cut.</div>
+      <table class="spec">
+        <tr><th>Part no.</th><td>MA-008-B</td></tr>
+        <tr><th>Material</th><td>Al 6061-T6</td></tr>
+        <tr><th>Mass</th><td>1.84 kg</td></tr>
+        <tr><th>Tolerance</th><td>±0.05</td></tr>
+        <tr><th>Revision</th><td>C</td></tr>
+        <tr><th>Status</th><td>Released</td></tr>
+      </table>
+      <div class="coords">CURSOR <b id="cx">000</b> / <b id="cy">000</b></div>
+    </aside>
+  </div>
+
+  <div class="titleblock">
+    <div>Drawing title<strong>Modular Actuator — Base Assembly</strong></div>
+    <div>Drawn by<strong>R. Vasquez</strong></div>
+    <div>Date<strong>2026-09-22</strong></div>
+    <div>Sheet<strong>01 / 04</strong></div>
+  </div>
+
+  <div class="notes">
+    <article><b>Dimension scheme</b>Dimensions are placed outside the outline where possible and tied in
+      with extension lines that stop short of the geometry, as convention requires.</article>
+    <article><b>Projection</b>Third-angle projection: the view to the right of the front elevation is the
+      right-hand side, not the left.</article>
+    <article><b>Hatching</b>The section uses a single 45° hatch at constant pitch, indicating one
+      material throughout the cut.</article>
+    <article><b>Centre lines</b>Chain-dotted axes mark the bore and the overall symmetry, in yellow so
+      they never read as object lines.</article>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var body=document.body;
+  var bAsm=document.getElementById("bAsm"), bSec=document.getElementById("bSec"),
+      bDim=document.getElementById("bDim"), bGrid=document.getElementById("bGrid");
+
+  function setView(sec){
+    body.classList.toggle("section",sec);
+    bAsm.classList.toggle("on",!sec);
+    bSec.classList.toggle("on",sec);
+  }
+  bAsm.addEventListener("click",function(){ setView(false); });
+  bSec.addEventListener("click",function(){ setView(true); });
+  bDim.addEventListener("click",function(){
+    body.classList.toggle("nodim");
+    this.classList.toggle("on",!body.classList.contains("nodim"));
+  });
+  bGrid.addEventListener("click",function(){
+    body.classList.toggle("nogrid");
+    this.classList.toggle("on",!body.classList.contains("nogrid"));
+  });
+
+  var NOTES={
+    "1":{t:"Bore Ø24 H7",d:"The bearing bore is reamed after final assembly so concentricity with the shaft axis is held to 0.02 mm."},
+    "2":{t:"Rotor petals",d:"Eight stamped petals keyed to the hub; index symmetry is verified against the centre cross before welding."},
+    "3":{t:"Bolt circle",d:"Four M8 holes on a 328 mm square pattern, counterbored 6 mm deep on the mounting face only."},
+    "4":{t:"Terminal box",d:"Cast gland box with three M20 entries. Cable entry faces the rear so the drawing's front elevation stays clean."}
+  };
+  var desc=document.getElementById("desc");
+  function show(id){
+    var n=NOTES[id]; if(!n) return;
+    desc.innerHTML="<b>"+n.t+"</b>"+n.d;
+    document.querySelectorAll(".hot").forEach(function(h){
+      h.classList.toggle("on",h.dataset.id===id);
+    });
+  }
+  document.querySelectorAll(".hot").forEach(function(h){
+    h.addEventListener("mouseenter",function(){ show(h.dataset.id); });
+    h.addEventListener("click",function(){ show(h.dataset.id); });
+    h.addEventListener("focus",function(){ show(h.dataset.id); });
+  });
+
+  var draw=document.getElementById("draw"), cx=document.getElementById("cx"), cy=document.getElementById("cy");
+  draw.addEventListener("pointermove",function(e){
+    var r=draw.getBoundingClientRect();
+    cx.textContent=String(Math.round(e.clientX-r.left)).padStart(3,"0");
+    cy.textContent=String(Math.round(e.clientY-r.top)).padStart(3,"0");
+  },{passive:true});
+})();
+</script>
+</body>
+</html>

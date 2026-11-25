@@ -1,0 +1,17 @@
+TITLE: Strike Anywhere — One Match's Life
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Strike Anywhere: One Match's Life". Simulate striking a safety match: drag the match (pointer follows with head at x+90) across a grit-textured striker strip. Scraping inside the strip band with pointer speed >2 px/frame accumulates friction (lastSpeed×2.2, decaying otherwise) and sprays sparks; at friction ≥100% the match ignites. Once lit, life advances at burnRate=0.0016×windFactor×(0.7+flame·0.6) per frame; the ember front sits at headX−life·90, drawing a radial ember glow there, leaving charred stick behind the front and unburnt wood ahead; ember puffs and smoke puffs spawn from the front (wind leans everything left and multiplies burn rate by 1.6). Flame vigor decays 0.0009/frame while lit and 0.02/frame after; flame drawn as quadratic teardrop with flicker noise, white core, and wind lean. When life hits 1 or flame dies, the match is spent until FRESH MATCH re-rolls it. Stats: friction %, life %, strikes, lit count. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark bench, one strip of glass grit, one match: the whole page is a single finite event with a beginning you cause and an end you can only watch. The craft is spending all the drama in four seconds honestly.
+
+MAJOR VISUAL TECHNIQUES:
+- Velocity-accumulated friction threshold with spark bursts
+- Ember front propagation with dual-tone stick rendering
+- Three-family particle system (sparks, embers, smoke) with wind shear
+- Flickering quadratic-flame with core and glow layers
+- Grit texture as deterministic pseudo-random scatter
+
+INTENDED INTERACTION MODEL:
+Scrape hard until friction hits 100%, watch the ember walk off the end, flick to a fresh match; WIND toggles the draught that hastens the burn.

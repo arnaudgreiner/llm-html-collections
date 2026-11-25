@@ -1,0 +1,17 @@
+TITLE: Brass Heavens — Mechanical Orrery
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Brass Heavens: Mechanical Orrery". Render a 940×580 engraved brass plate holding eight planets: each body orbits at its true period ratio (Mercury 88 d … Neptune 60190 d) around a glowing sun, projected on a 0.62 y-squash for tabletop perspective, with selectable slight eccentricity (TRUE ELLIPSE toggle switches to clean circles). A gear train of toothed rings (54/46/20/14 teeth) rotates at fixed ratios beneath, an asteroid belt of 160 specks drifts between Mars and Jupiter, and each planet hangs on a brass arm with counterweight collar (arms toggle). Controls: wound/unwound, rate slider, gear and arm toggles, SET TO TODAY jumps the epoch to the current day so Earth's year-progress arc shows today's fraction. Clicking a planet lights it, dims the rest and prints its museum plate; an engraved epoch-day strip sits at the base. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A museum vitrine of a clockwork solar system: dark walnut-dark plate, gold engraving, enamel beads. The craft is honest period arithmetic — nothing is faked, every wheel turns at its ratio.
+
+MAJOR VISUAL TECHNIQUES:
+- Period-ratio orbital kinematics with eccentricity option and y-projection
+- Procedural gear rings (teeth as radial ticks at fractional phases)
+- Radial-gradient plate lighting and engraved concentric orbits
+- Selection dimming with plate-card readout
+- Live epoch arithmetic (days since epoch, Earth year fraction arc)
+
+INTENDED INTERACTION MODEL:
+Wind the clock at any rate, set it to today, toggle gears and arms, switch orbit style, and click bodies for their engraved spec plates.

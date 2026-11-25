@@ -1,0 +1,18 @@
+TITLE: Fraction Foundry
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Fraction Foundry". Set a cream worksheet sheet — issued "WORKSHEET 12-B" — on a warm paper background, holding two fraction cards (A and B) and a result card called "the pour". Each card shows a stacked fraction (numerator over a ruled denominator) flanked by +/− stepper buttons, a segmented measure bar whose filled cells show the part, a percentage and decimal readout, and a ring pie dial whose colored arc sweeps with a CSS transition. The result card computes the least common denominator of both fractions, draws the common-denominator bar with that many cells, fills the summed cells olive-green, and reports the sum as an improper fraction, a reduced mixed number, and a percentage, with a third pie dial for the sum. An "align grids" button toggles absolutely positioned tick layers over the result bar — part A's grid in orange from the bottom, part B's grid in blue from the top, the common grid in faint black — so the shared-unit alignment is visible; a "random pour" button re-rolls both fractions. Everything inline in one file, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page reads like a beautifully printed arithmetic workbook from an old technical school: warm ivory paper, ruled ink borders, serif numerals and monospace marginalia. The violence of arithmetic is turned into physical measurement — bars of counted cells and pie rings that sweep open — so a sum feels poured rather than computed. The tick layers that slide in on "align grids" are the emotional peak: two mismatched rulers suddenly agreeing on a shared unit.
+
+MAJOR VISUAL TECHNIQUES:
+- Segmented flex measure bars with per-cell borders and animated fill colors
+- SVG ring dials using stroke-dasharray with CSS transitions for sweeping arcs
+- Absolutely positioned tick layers at multiples of 1/d and 1/L for grid alignment
+- Least-common-denominator computation with GCD reduction for mixed numbers
+- Stacked inline fractions with ruled numerator separators
+- Printed-worksheet styling: paper texture, issue stamp, ink borders, serif/mono pairing
+
+INTENDED INTERACTION MODEL:
+Use the +/− steppers around each fraction to change numerators and denominators (numerators clamp to their denominator, denominators run 2–16); every bar, pie, percentage, decimal and the entire result recompute instantly. Press "align grids" to fade in the three tick layers over the common-denominator bar and press again to hide them. Press "random pour" to re-roll both fractions with the grid overlay off. The result card continuously shows the LCM, the summed cell bar, the improper fraction, the reduced mixed number and the percentage of one whole.

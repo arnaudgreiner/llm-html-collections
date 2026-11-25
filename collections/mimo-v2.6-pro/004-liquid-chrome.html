@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>004 · Liquid Chrome</title>
+<style>
+:root{--ink:#e8ecf5;--mut:#8d95ab;--bg1:#14161d;--bg2:#0a0b10;--hot:#ff4fa3;--cool:#4fd8ff}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:radial-gradient(120% 100% at 50% 0%,var(--bg1),var(--bg2) 70%);color:var(--ink);
+  min-height:100vh;overflow-x:hidden;font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;z-index:9;
+  background:repeating-linear-gradient(to bottom,rgba(255,255,255,.035) 0 1px,transparent 1px 3px);opacity:.5}
+svg.filters{position:absolute;width:0;height:0}
+#goo{position:fixed;inset:0;z-index:1;filter:url(#gooey);pointer-events:none;
+  mix-blend-mode:screen;opacity:.9}
+.drop{position:absolute;border-radius:50%;will-change:transform;
+  background:radial-gradient(circle at 34% 30%,#ffffff,#b9c4d8 42%,#5a6478 74%,#2a3040 100%)}
+.d1{width:230px;height:230px}
+.d2{width:150px;height:150px}
+.d3{width:110px;height:110px}
+.d4{width:74px;height:74px}
+.d5{width:190px;height:190px}
+.ui{position:relative;z-index:5;max-width:1080px;margin:0 auto;padding:96px 24px 70px;text-align:center}
+.kicker{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:var(--cool)}
+.chrome{-webkit-background-clip:text;background-clip:text;color:transparent;margin:14px 0 0;
+  font-size:clamp(52px,12vw,150px);line-height:.86;font-weight:900;letter-spacing:-.05em;
+  background-image:linear-gradient(180deg,#ffffff 0%,#d7deea 14%,#8b95a9 30%,#f7fbff 46%,
+    #454e60 54%,#aab4c8 68%,#ffffff 82%,#6d768a 100%);
+  filter:drop-shadow(0 10px 30px rgba(0,0,0,.6))}
+.sub{color:var(--mut);max-width:520px;margin:22px auto 0;line-height:1.75;font-size:15.5px}
+.controls{margin:40px auto 0;max-width:560px;background:rgba(255,255,255,.045);
+  border:1px solid rgba(255,255,255,.10);border-radius:18px;padding:20px 24px;text-align:left;
+  backdrop-filter:blur(12px)}
+.ctl{display:flex;align-items:center;gap:16px;margin:14px 0;font-size:12px;
+  letter-spacing:.2em;text-transform:uppercase;color:var(--mut)}
+.ctl label{width:132px;flex:none}
+.ctl output{width:58px;text-align:right;color:#fff;font-family:"Courier New",monospace}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;
+  background:linear-gradient(90deg,var(--cool),var(--hot));outline:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#fff;border:3px solid #14161d;box-shadow:0 0 14px rgba(79,216,255,.8);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;
+  border:3px solid #14161d;box-shadow:0 0 14px rgba(79,216,255,.8);cursor:pointer}
+.hint{margin-top:16px;font-size:12px;color:#5f677c;letter-spacing:.14em;text-transform:uppercase}
+.tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:16px;margin-top:34px;text-align:left}
+.tile{border-radius:16px;padding:20px;background:rgba(255,255,255,.04);border:1px solid rgba(255,255,255,.09);
+  transition:.45s cubic-bezier(.2,.9,.2,1)}
+.tile:hover{background:rgba(255,255,255,.09);transform:translateY(-6px);border-color:rgba(79,216,255,.5)}
+.tile b{display:block;font-size:13px;letter-spacing:.24em;text-transform:uppercase;color:var(--cool);margin-bottom:8px}
+.tile p{margin:0;color:var(--mut);font-size:14px;line-height:1.65}
+@media(max-width:640px){.drop{transform:scale(.7)}.ctl label{width:104px}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<svg class="filters" aria-hidden="true">
+  <filter id="gooey">
+    <feGaussianBlur in="SourceGraphic" stdDeviation="14" result="blur"/>
+    <feColorMatrix id="gooMat" in="blur" mode="matrix"
+      values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 26 -11" result="goo"/>
+    <feBlend in="SourceGraphic" in2="goo"/>
+  </filter>
+</svg>
+
+<div id="goo" aria-hidden="true">
+  <span class="drop d1" id="p1"></span>
+  <span class="drop d2" id="p2"></span>
+  <span class="drop d3" id="p3"></span>
+  <span class="drop d4" id="p4"></span>
+  <span class="drop d5" id="p5"></span>
+</div>
+
+<main class="ui">
+  <div class="kicker">Specimen 004 · fluid metal</div>
+  <h1 class="chrome">LIQUID<br>CHROME</h1>
+  <p class="sub">Five metal bodies obey a single point of attraction, merging through a Gaussian colour-matrix
+  filter. The headline above is pure gradient clipped to text — no images, no fonts, no network.</p>
+
+  <section class="controls" aria-label="Fluid controls">
+    <div class="ctl"><label for="gooeyness">Gooeyness</label>
+      <input type="range" id="gooeyness" min="8" max="60" value="26"><output id="oG">26</output></div>
+    <div class="ctl"><label for="viscosity">Viscosity</label>
+      <input type="range" id="viscosity" min="2" max="30" value="12"><output id="oV">12</output></div>
+    <div class="ctl"><label for="reach">Reach</label>
+      <input type="range" id="reach" min="40" max="260" value="140"><output id="oR">140</output></div>
+    <div class="hint">move the pointer · the metal follows and fuses</div>
+  </section>
+
+  <div class="tiles">
+    <article class="tile"><b>Colour matrix</b><p>An feColorMatrix pushes the alpha channel to a steep
+      gain, hardening blurred edges into a single liquid silhouette.</p></article>
+    <article class="tile"><b>Sprung follow</b><p>Each body runs its own critically-damped spring toward a
+      staggered offset of the pointer, so they never arrive together.</p></article>
+    <article class="tile"><b>Specular text</b><p>A nine-stop vertical gradient clipped to the glyphs fakes
+      a reflected horizon line across the letterforms.</p></article>
+    <article class="tile"><b>Ambient drift</b><p>With the pointer idle, each body orbits a slow Lissajous
+      path so the composition never freezes.</p></article>
+  </div>
+</main>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var ids=["p1","p2","p3","p4","p5"];
+  var drops=ids.map(function(id,i){
+    return {el:document.getElementById(id), x:innerWidth*(.3+i*.11), y:innerHeight*(.35+i*.07),
+      vx:0, vy:0, ox:(i-2)*46, oy:(i-2)*30, ph:i*1.7, r:[115,75,55,37,95][i]};
+  });
+  var mx=innerWidth/2, my=innerHeight/2, active=false, t=0;
+  document.addEventListener("pointermove",function(e){ mx=e.clientX; my=e.clientY; active=true; },{passive:true});
+
+  var mat=document.getElementById("gooMat");
+  var goo=document.getElementById("gooeyness"), vis=document.getElementById("viscosity"), rch=document.getElementById("reach");
+  var oG=document.getElementById("oG"), oV=document.getElementById("oV"), oR=document.getElementById("oR");
+
+  goo.addEventListener("input",function(){
+    var g=+goo.value; oG.value=g;
+    mat.setAttribute("values","1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  0 0 0 "+g+" "+(-(g-11)));
+  });
+  vis.addEventListener("input",function(){ oV.value=vis.value; });
+  rch.addEventListener("input",function(){ oR.value=rch.value; });
+
+  function frame(){
+    t+=0.016;
+    var idle=!active, reach=+rch.value, k=1/(+vis.value*0.35+2);
+    drops.forEach(function(d,i){
+      var tx,ty;
+      if(idle){
+        tx=innerWidth*.5+Math.cos(t*.5+d.ph)*(150+i*38);
+        ty=innerHeight*.45+Math.sin(t*.37+d.ph)*(90+i*26);
+      }else{
+        tx=mx+d.ox*(reach/140);
+        ty=my+d.oy*(reach/140);
+      }
+      if(reduce){ d.x=tx; d.y=ty; }
+      else{
+        d.vx+=(tx-d.x)*k; d.vy+=(ty-d.y)*k;
+        d.vx*=0.82; d.vy*=0.82;
+        d.x+=d.vx; d.y+=d.vy;
+      }
+      d.el.style.transform="translate3d("+(d.x-d.r)+"px,"+(d.y-d.r)+"px,0)";
+    });
+    requestAnimationFrame(frame);
+  }
+  drops.forEach(function(d){ d.el.style.transform="translate3d("+d.x+"px,"+d.y+"px,0)"; });
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

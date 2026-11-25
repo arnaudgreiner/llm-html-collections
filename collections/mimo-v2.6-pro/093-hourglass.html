@@ -1,0 +1,280 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Hourglass — Thirty Quiet Seconds</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#131009;color:#cfc2a8;font-family:Georgia,'Times New Roman',serif;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:14px;letter-spacing:.3em;color:#e0a94c;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fb3a4}
+#rig{background:#1b1710;border:1px solid #332a1d;border-radius:12px;padding:15px}
+canvas{display:block;border-radius:8px;box-shadow:0 12px 38px rgba(0,0,0,.55);cursor:pointer;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#221c12;border:1px solid #413521;color:#d4c7ae;font:inherit;font-size:9.5px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e0a94c;color:#fff3d9}
+button.on{background:#e0a94c;border-color:#e0a94c;color:#221703;font-weight:700}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#8a7e68}
+.stat b{color:#e0a94c}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#665c4a;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Hourglass <i>M93</i> · thirty quiet seconds</h1>
+<div id="rig"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bFlip">↻ TURN THE GLASS</button>
+  <button id="bPause" class="on">⏸ RUNNING</button>
+  <button id="bSpeed">SPEED ×1</button>
+  <button id="bReset">❖ REFILL</button>
+  <span class="stat">remaining <b id="mT">30</b>s · turns <b id="mF">0</b> · sand home <b id="mV">100</b>%</span>
+</div>
+<div class="hint">click the glass to turn it — mid-rotation the sand leaps from bowl to bowl · grains fall in a thin thread, pile at the angle of repose, and refuse to lean past it · speed the flow and the countdown follows</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520,CX=W/2;
+var NECK_Y=260,TOPY=70,BOTY=450;
+var DUR=30,rem=1,running=true,speedMul=1,turns=0;
+var flipping=false,flipT=0,flipSwapped=false;
+var COLS=45,COLW=4; // pile columns: x from CX-90..CX+90
+var h=[];
+for(var i=0;i<COLS;i++)h.push(0);
+var grains=[];
+for(var g=0;g<20;g++)grains.push({x:CX+(Math.random()-0.5)*6,y:260+Math.random()*180,v:2.6+Math.random()*2.2});
+function hwTop(y){
+  var t=(y-TOPY)/(NECK_Y-TOPY);
+  return 10+80*Math.pow(1-t,0.75);
+}
+function hwBot(y){
+  var t=(y-NECK_Y)/(BOTY-NECK_Y);
+  return 10+80*Math.pow(t,0.75);
+}
+// sand area of a full top bulb (for deposit scale)
+var AREA=0;
+for(var y=TOPY;y<NECK_Y;y++)AREA+=2*hwTop(y);
+function hmaxAt(X){ // tallest pile at column |X| from CX before glass closes in
+  var d=Math.abs(X);
+  for(var y=BOTY;y>NECK_Y;y--){
+    if(hwBot(y)>=d+3)return BOTY-y;
+  }
+  return 0;
+}
+function deposit(amt){ // amt = sand area to add at the neck
+  var per=amt/COLW;
+  h[21]+=per*0.25;h[22]+=per*0.5;h[23]+=per*0.25;
+  relax();
+}
+function relax(){
+  for(var pass=0;pass<8;pass++){
+    for(var i=0;i<COLS-1;i++){
+      var d=h[i]-h[i+1];
+      var lim=4.6;
+      if(d>lim){h[i]-=(d-lim)/2;h[i+1]+=(d-lim)/2;}
+      else if(-d>lim){h[i+1]-=(-d-lim)/2;h[i]+=(-d-lim)/2;}
+    }
+    // clamp to glass
+    for(var k=0;k<COLS;k++){
+      var X=CX+(k-(COLS-1)/2)*COLW-CX;
+      var cap=hmaxAt(X);
+      if(h[k]>cap){var spill=h[k]-cap;h[k]=cap;h[Math.max(0,k-1)]+=spill*0.5;h[Math.min(COLS-1,k+1)]+=spill*0.5;}
+      if(h[k]<0)h[k]=0;
+    }
+  }
+}
+function flip(){
+  if(flipping)return;
+  flipping=true;flipT=0;flipSwapped=false;
+  turns++;
+}
+function resetGlass(){
+  rem=1;h=[];for(var i=0;i<COLS;i++)h.push(0);
+}
+document.getElementById("bFlip").addEventListener("click",flip);
+document.getElementById("bReset").addEventListener("click",function(){rem=1;h=[];for(var i=0;i<COLS;i++)h.push(0);});
+document.getElementById("bPause").addEventListener("click",function(){
+  running=!running;
+  this.className=running?"on":"";
+  this.textContent=running?"⏸ RUNNING":"▶ RUNNING";
+});
+var speeds=[1,2,4],si=0;
+document.getElementById("bSpeed").addEventListener("click",function(){
+  si=(si+1)%speeds.length;speedMul=speeds[si];
+  this.textContent="SPEED ×"+speedMul;
+  this.className=speedMul>1?"on":"";
+});
+cv.addEventListener("pointerdown",function(e){
+  var r=cv.getBoundingClientRect();
+  var x=(e.clientX-r.left)*W/r.width,y=(e.clientY-r.top)*H/r.height;
+  if(Math.abs(x-CX)<140&&y>TOPY&&y<BOTY)flip();
+});
+function step(dt){
+  if(flipping){
+    flipT+=dt/900;
+    if(flipT>=0.5&&!flipSwapped){
+      flipSwapped=true;
+      // bottom pile becomes top sand
+      var pileArea=0;
+      for(var i=0;i<COLS;i++)pileArea+=h[i]*COLW;
+      rem=Math.max(0,Math.min(1,pileArea/AREA)); // top now holds the bottom's amount
+      h=[];for(var k=0;k<COLS;k++)h.push(0);
+    }
+    if(flipT>=1){flipping=false;}
+    return;
+  }
+  if(!running||rem<=0)return;
+  var d=dt/1000*speedMul/DUR;
+  rem=Math.max(0,rem-d);
+  deposit(d*AREA);
+  // decorative stream
+  if(rem>0){
+    for(var g=0;g<grains.length;g++){
+      var p=grains[g];
+      p.y+=p.v*speedMul;
+      var pileTop=BOTY-h[21];
+      if(p.y>pileTop-2){
+        p.x=CX+(Math.random()-0.5)*6;
+        p.y=NECK_Y+4;
+        p.v=2.6+Math.random()*2.2;
+      }
+    }
+  }
+}
+function topLevelY(){
+  // surface of top sand
+  return NECK_Y-(NECK_Y-TOPY)*Math.pow(rem,0.72);
+}
+function drawGlass(){
+  ax.strokeStyle="rgba(210,230,235,.55)";
+  ax.lineWidth=3;
+  ax.beginPath();
+  ax.moveTo(CX-hwTop(TOPY),TOPY);
+  for(var y=TOPY;y<=NECK_Y;y+=6)ax.lineTo(CX-hwTop(y),y);
+  for(var y2=NECK_Y;y2<=BOTY;y2+=6)ax.lineTo(CX-hwBot(y2),y2);
+  ax.moveTo(CX+hwTop(TOPY),TOPY);
+  for(var y3=TOPY;y3<=NECK_Y;y3+=6)ax.lineTo(CX+hwTop(y3),y3);
+  for(var y4=NECK_Y;y4<=BOTY;y4+=6)ax.lineTo(CX+hwBot(y4),y4);
+  ax.stroke();
+  ax.strokeStyle="rgba(210,230,235,.25)";
+  ax.lineWidth=1;
+  ax.beginPath();
+  for(var y5=TOPY;y5<=NECK_Y;y5+=6)ax.lineTo(CX-hwTop(y5),y5);
+  for(var y6=NECK_Y;y6<=BOTY;y6+=6)ax.lineTo(CX+hwBot(y6),y6);
+  ax.stroke();
+}
+function render(now){
+  ax.fillStyle="#131009";ax.fillRect(0,0,W,H);
+  // plinths
+  ax.fillStyle="#3a2f1c";
+  ax.fillRect(CX-130,TOPY-22,260,16);
+  ax.fillRect(CX-130,BOTY+6,260,16);
+  ax.fillStyle="rgba(255,255,255,.07)";
+  ax.fillRect(CX-130,TOPY-22,260,4);
+  ax.fillRect(CX-130,BOTY+6,260,4);
+  // side posts
+  ax.fillStyle="#33291a";
+  ax.fillRect(CX-146,TOPY-22,10,BOTY-TOPY+44);
+  ax.fillRect(CX+136,TOPY-22,10,BOTY-TOPY+44);
+
+  ax.save();
+  if(flipping){
+    var a=Math.sin(Math.min(1,flipT)*Math.PI); // slight swing
+    var rot=flipT*Math.PI;
+    ax.translate(CX,NECK_Y);
+    ax.rotate(rot);
+    ax.translate(-CX,-NECK_Y);
+    void a;
+  }
+  // top sand
+  if(rem>0.0005&&!flippingSwappedDraw()){
+    var lv=topLevelY();
+    ax.beginPath();
+    ax.moveTo(CX-hwTop(lv),lv);
+    for(var y=lv;y<=NECK_Y;y+=5)ax.lineTo(CX-hwTop(y),y);
+    ax.lineTo(CX+hwTop(NECK_Y),NECK_Y);
+    for(var y2=NECK_Y;y2>=lv;y2-=5)ax.lineTo(CX+hwTop(y2),y2);
+    ax.closePath();
+    var g=ax.createLinearGradient(0,TOPY,0,NECK_Y);
+    g.addColorStop(0,"#e8b452");g.addColorStop(1,"#b5762a");
+    ax.fillStyle=g;ax.fill();
+    // surface shading
+    ax.strokeStyle="rgba(120,74,20,.7)";ax.lineWidth=2;
+    ax.beginPath();
+    ax.moveTo(CX-hwTop(lv),lv);
+    ax.lineTo(CX+hwTop(lv),lv);
+    ax.stroke();
+  }
+  // bottom pile
+  var any=false;
+  for(var i=0;i<COLS;i++)if(h[i]>0.5){any=true;break;}
+  if(any){
+    ax.beginPath();
+    ax.moveTo(CX-(COLS/2)*COLW,BOTY);
+    for(var k=0;k<COLS;k++){
+      var x=CX+((k-(COLS-1)/2))*COLW;
+      ax.lineTo(x,BOTY-h[k]);
+    }
+    ax.lineTo(CX+(COLS/2)*COLW,BOTY);
+    ax.closePath();
+    var g2=ax.createLinearGradient(0,BOTY-90,0,BOTY);
+    g2.addColorStop(0,"#e8b452");g2.addColorStop(1,"#9c6522");
+    ax.fillStyle=g2;ax.fill();
+    ax.strokeStyle="rgba(110,68,18,.8)";ax.lineWidth=2;ax.stroke();
+  }
+  // falling grains
+  if(rem>0.0005&&running&&!flipping){
+    ax.fillStyle="#f2c463";
+    for(var q=0;q<grains.length;q++){
+      var p=grains[q];
+      ax.fillRect(p.x,p.y,2.4,3.4);
+    }
+    // dust at impact
+    ax.fillStyle="rgba(242,196,99,.4)";
+    ax.beginPath();ax.arc(CX,BOTY-h[21],6,0,6.2832);ax.fill();
+  }
+  drawGlass();
+  ax.restore();
+
+  // countdown dial
+  var secs=Math.ceil(rem*DUR/speedMul);
+  ax.fillStyle="rgba(224,169,76,.95)";
+  ax.font="44px Georgia,serif";
+  ax.textAlign="center";
+  ax.fillText(secs,CX,TOPY+62);
+  ax.font="9px ui-monospace,Menlo,monospace";
+  ax.fillStyle="rgba(138,126,104,.9)";
+  ax.fillText("SECONDS",CX,TOPY+78);
+  ax.textAlign="left";
+  if(flipping){
+    ax.fillStyle="rgba(224,169,76,.9)";
+    ax.font="12px Georgia,serif";
+    ax.textAlign="center";
+    ax.fillText("turning…",CX,BOTY+44);
+    ax.textAlign="left";
+  }
+}
+function flippingSwappedDraw(){
+  // during flip after swap, top sand hidden until rotation completes
+  return flipping&&flipSwapped;
+}
+var last=performance.now(),mAcc=0;
+function loop(now){
+  var dt=now-last;last=now;
+  step(dt);
+  render(now);
+  mAcc+=dt;
+  if(mAcc>300){
+    mAcc=0;
+    document.getElementById("mT").textContent=Math.ceil(rem*DUR/speedMul);
+    document.getElementById("mF").textContent=turns;
+    document.getElementById("mV").textContent=Math.round(rem*100);
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

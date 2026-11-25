@@ -1,0 +1,17 @@
+TITLE: Morse Key — Field Set with Inked Tape and Sidetone
+
+FULL PROMPT:
+Build one self-contained HTML page, "Morse Key", with no external resources. Field-radio palette: olive-drab background with a warm panel glow, brass accents, cream paper tape; header with kicker, thin/accent title and units-sent/wpm counters. Stage: left a heavy-bordered tape canvas (780×230) with pre-printed baseline rules and vertical perforation rules, where marks are inked as solid blocks on one of three rows with a carriage return when the line runs out, decoded letters written above the marks in sepia, and a red pen head with a triangle stylus while the key is down; beneath it a key row with a brass knob (press-and-hold, translate-on-active) and a circular sidetone lamp that lights with a glow shadow. Right rig: transmit card (message input, send and cut-transmission buttons, a monospace output well), set card (speed 8–34 wpm, pitch 400–1000 Hz, volume sliders with the unit-length rule explained) and a reference card listing A–Z Morse in a dotted table.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like a 1940s field set on a hut table: brass knob heavy under the fingers, a lamp that tells you the circuit is closed, and cream tape crawling out with the message on it.
+
+MAJOR VISUAL TECHNIQUES:
+- Timing derived from the standard unit (1200/wpm) so the audio envelope and the inked blocks share one source of truth
+- WebAudio oscillator with setTargetAtTime gain envelopes to avoid key-click
+- A scheduled task queue ({at, kind}) driving tone, mark, letter-gap and word-gap events off one clock
+- Tape layout as a row/penX cursor with modulo row advance when penX passes the right margin
+- Manual key measures hold duration against a unit to decide dit vs dah
+
+INTENDED INTERACTION MODEL:
+Type a message and press send: the tape inks each element in time with audible dits and dahs, letters appear above the marks, and the lamp flashes on every tone; cut transmission clears the timers. Press and hold the brass knob (pointer, space or enter) to key by hand — short holds print a dit, long holds a dah. Sliders change speed, pitch and volume live. Reduced motion pre-inks a static "CQ" sample on the tape and still allows user-initiated sending.

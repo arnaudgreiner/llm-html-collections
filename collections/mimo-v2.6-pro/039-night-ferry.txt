@@ -1,0 +1,18 @@
+TITLE: Night Ferry — Bridge Orders on a Moonlit Crossing
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Night Ferry", with no external resources. Near-black navy palette with amber navigation lights; header with kicker, thin/accent title and live heading/ETA. Stage: left a bordered sea panel with a 780×470 canvas — split sky/sea gradients, a moon with radial glow, animated swell lines drawn as phase-shifted sine paths (amplitude tied to a swell slider), four blinking shore beacons, 1–6 crossing vessels with names, wakes and navigation lights, and the ferry itself: rotated hull polygon with amber outline, white superstructure, funnel, optional deck-light pool, masthead light, foam wake, dashed dead-reasoning course line and a 45°-tick compass ring. Right rig: bridge orders card (helm −45…45, throttle 4–20 kt, swell 0–6 m sliders, auto-pilot and deck-lights toggles), a whistle card with three buttons and a Rule 34 explainer, and an engine telegraph card with 14 animated gauge bars plus a timestamped log table (warnings in amber).
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like standing at a cold bridge window at 22:00: instruments warm and small to the right, everything else dark water and one amber hull sliding through it.
+
+MAJOR VISUAL TECHNIQUES:
+- Rotated ship drawn in canvas with a transformed wake cone and a dead-reckoning dashed course vector
+- Swell as layered sine paths whose amplitude is data-bound to a slider and phase bound to a clock
+- WebAudio oscillator whistle (two detuned oscillators) with setTimeout-segmented blast patterns
+- Auto-pilot as a proportional controller: lane error feeds a damped heading correction
+- Proximity detection with hysteresis (warn in at 60px, release at 90px) feeding the log
+- Gauge bars driven by a sine blend × throttle ratio, CSS height transitions
+
+INTENDED INTERACTION MODEL:
+Slide the helm (which disengages auto-pilot) or re-engage auto-pilot to hold the lane; throttle sets target speed the engines settle toward; swell scales the sea. Whistle buttons sound real tones, log the signal, and other vessels answer after ~1s. Deck lights add the glow pool and switch the traffic's lights off. Close-quarters passes log a warning in amber. Reduced motion draws one frame and leaves controls to repaint it on change.

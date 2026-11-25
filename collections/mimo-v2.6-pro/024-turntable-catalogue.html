@@ -1,0 +1,266 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>024 · Turntable Catalogue</title>
+<style>
+:root{--bg:#14110f;--paper:#efe7d8;--clay:#d4694a;--gold:#e0a458;
+  --sage:#7f9a7c;--slate:#5f7d95;--ink:#14110f}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:
+  radial-gradient(80% 60% at 50% 25%, #211c18 0%, #14110f 70%);
+  color:var(--paper);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  overflow-x:hidden}
+header{max-width:1180px;margin:0 auto;padding:44px 24px 10px;text-align:center}
+.kicker{font-size:10px;letter-spacing:.5em;text-transform:uppercase;color:#9b8f7f}
+h1{margin:12px 0 6px;font-size:clamp(34px,6vw,64px);font-weight:200;letter-spacing:.06em}
+h1 b{font-weight:800;color:var(--gold)}
+.sub{color:#9b8f7f;font-size:14.5px;max-width:56ch;margin:0 auto;line-height:1.65}
+
+.stage{position:relative;max-width:1180px;margin:30px auto 0;padding:0 24px 10px;
+  perspective:1400px}
+.ring{position:relative;height:360px;transform-style:preserve-3d;transition:transform .8s cubic-bezier(.22,.9,.24,1)}
+.card{position:absolute;top:40px;left:50%;width:230px;height:290px;margin-left:-115px;
+  border-radius:16px;background:var(--paper);color:var(--ink);
+  box-shadow:0 24px 50px rgba(0,0,0,.55);
+  transform:rotateY(var(--a)) translateZ(400px);
+  display:flex;flex-direction:column;overflow:hidden;transition:.8s cubic-bezier(.22,.9,.24,1)}
+.art{height:158px;position:relative;overflow:hidden;background:#e8ddc9}
+.art::before,.art::after{content:"";position:absolute}
+.clay .art{background:linear-gradient(135deg,#d4694a,#b7462e)}
+.clay .art::before{width:120px;height:120px;border:14px solid #efe7d8;border-radius:50%;
+  right:-30px;top:-30px;opacity:.85}
+.clay .art::after{left:-20px;bottom:-40px;width:170px;height:90px;background:#8f2f1e;
+  transform:rotate(-18deg);opacity:.7}
+.gold .art{background:linear-gradient(135deg,#e0a458,#b97b28)}
+.gold .art::before{left:50%;top:50%;width:110px;height:110px;margin:-55px 0 0 -55px;
+  background:repeating-conic-gradient(#14110f 0 12deg, transparent 12deg 24deg);border-radius:50%}
+.gold .art::after{inset:14px;border:2px solid #14110f;border-radius:8px;opacity:.5}
+.sage .art{background:linear-gradient(135deg,#7f9a7c,#4d6a4b)}
+.sage .art::before{left:-30px;top:20px;width:200px;height:60px;background:#efe7d8;
+  transform:rotate(24deg);opacity:.55}
+.sage .art::after{right:16px;bottom:14px;width:64px;height:64px;border-radius:50%;
+  background:#2f4a2e;box-shadow:0 0 0 8px rgba(239,231,216,.5)}
+.slate .art{background:linear-gradient(135deg,#5f7d95,#37506433),linear-gradient(#5f7d95,#33495c)}
+.slate .art::before{left:20px;top:-30px;width:16px;height:220px;background:#efe7d8;
+  transform:rotate(18deg);opacity:.7}
+.slate .art::after{right:-40px;bottom:-40px;width:150px;height:150px;border:10px solid #9fd0e8;
+  border-radius:50%;opacity:.6}
+.ink .art{background:linear-gradient(135deg,#2b2723,#14110f)}
+.ink .art::before{inset:0;background:
+  repeating-linear-gradient(45deg,#efe7d8 0 6px,transparent 6px 22px);opacity:.35}
+.ink .art::after{left:50%;top:50%;width:70px;height:70px;margin:-35px 0 0 -35px;
+  background:#e0a458;border-radius:6px;transform:rotate(45deg)}
+
+.card .body{padding:14px 16px 16px;display:flex;flex-direction:column;gap:6px;flex:1}
+.card .no{font-size:9.5px;letter-spacing:.34em;text-transform:uppercase;color:#8a7f6d}
+.card h3{margin:0;font-size:19px;font-weight:700;letter-spacing:-.01em}
+.card p{margin:0;font-size:12.5px;line-height:1.5;color:#5a5346}
+.card .tag{margin-top:auto;display:flex;gap:6px;flex-wrap:wrap}
+.tag span{font-size:9px;letter-spacing:.14em;text-transform:uppercase;border:1px solid #cfc4ae;
+  border-radius:20px;padding:3px 8px;color:#7a7160}
+.ring.ready .card{opacity:1}
+
+/* front-facing card detail */
+.card .peek{position:absolute;inset:auto 0 0 0;height:0;background:#14110f;color:var(--paper);
+  overflow:hidden;transition:.35s;font-size:11.5px;padding:0 16px;letter-spacing:.06em}
+.card:hover .peek{height:52px;padding-top:12px;border-top:2px solid var(--gold)}
+
+/* control strip */
+.controls{max-width:1180px;margin:6px auto 0;padding:0 24px;display:flex;
+  justify-content:center;align-items:center;gap:16px;flex-wrap:wrap}
+button{font-family:inherit;cursor:pointer}
+.nav{width:54px;height:54px;border-radius:50%;border:1.5px solid #3a332c;background:#1b1714;
+  color:var(--paper);font-size:20px;transition:.25s}
+.nav:hover{border-color:var(--gold);color:var(--gold);transform:scale(1.06)}
+.nav:active{transform:scale(.94)}
+.pos{font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#9b8f7f;
+  min-width:110px;text-align:center;font-variant-numeric:tabular-nums}
+.pos b{color:var(--gold);font-size:16px}
+.spin{display:flex;align-items:center;gap:9px;font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:#9b8f7f;cursor:pointer}
+.spin input{accent-color:var(--gold);width:17px;height:17px}
+
+.dots{display:flex;gap:9px;justify-content:center;margin-top:16px}
+.dots i{width:9px;height:9px;border-radius:50%;background:#3a332c;cursor:pointer;transition:.3s}
+.dots i.on{background:var(--gold);transform:scale(1.35)}
+
+.specs{max-width:820px;margin:28px auto 0;padding:16px 24px 60px;border-top:1px solid #2a241f;
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px}
+.spec{font-size:10.5px;letter-spacing:.2em;text-transform:uppercase;color:#7d7263}
+.spec b{display:block;margin-top:5px;font-size:14.5px;letter-spacing:.02em;color:var(--paper);
+  font-weight:600;text-transform:none;font-variant-numeric:tabular-nums}
+.foot{position:fixed;left:24px;bottom:16px;font-size:9.5px;letter-spacing:.34em;
+  text-transform:uppercase;color:#6a6154}
+@media(max-width:760px){ .card{transform:rotateY(var(--a)) translateZ(300px) scale(.86)} }
+@media(prefers-reduced-motion:reduce){
+  .ring,.card{transition:none!important}
+  *{animation:none!important}
+}
+</style>
+</head>
+<body>
+<header>
+  <span class="kicker">Folio 024 · cover art annual</span>
+  <h1>Turntable <b>Catalogue</b></h1>
+  <p class="sub">Five sleeves on a carousel — click the arrows, the dots, or drag across the
+    ring. The whole record revolves in real 3D.</p>
+</header>
+
+<div class="stage">
+  <div class="ring" id="ring" aria-label="rotating cover carousel"></div>
+</div>
+
+<div class="controls">
+  <button class="nav" id="prev" type="button" aria-label="previous sleeve">‹</button>
+  <span class="pos">sleeve <b id="pos">1</b> / <span id="tot">5</span></span>
+  <button class="nav" id="next" type="button" aria-label="next sleeve">›</button>
+  <label class="spin"><input type="checkbox" id="auto"> auto-spin</label>
+</div>
+<div class="dots" id="dots" aria-hidden="true"></div>
+
+<section class="specs">
+  <div class="spec">Title<b id="sTitle">Ember Terrace</b></div>
+  <div class="spec">Studio<b id="sStudio">Half-Light Atelier</b></div>
+  <div class="spec">Pressed<b id="sYear">2021</b></div>
+  <div class="spec">Format<b id="sFmt">Liner, 12″</b></div>
+</section>
+
+<div class="foot">024 / 100</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var DATA=[
+    {cls:"clay",  no:"SL-01", name:"Ember Terrace",  studio:"Half-Light Atelier", year:2021,
+     fmt:"Liner, 12″", copy:"Block-printed heat — three ink passes on unbleached stock.",
+     tags:["linocut","2 colour"]},
+    {cls:"gold",  no:"SL-02", name:"Roundhouse",      studio:"Meridian Press",     year:2019,
+     fmt:"Gatefold, 10″", copy:"A radial die-cut turns with the label beneath it.",
+     tags:["die-cut","radial"]},
+    {cls:"sage",  no:"SL-03", name:"Verdigris",       studio:"Fen & Field Co.",    year:2023,
+     fmt:"Liner, 12″", copy:"Oxidised greens over a struck cream band.",
+     tags:["overprint","band"]},
+    {cls:"slate", no:"SL-04", name:"Night Ferry",     studio:"Cold Harbour Unit",  year:2020,
+     fmt:"Pocket, 7″", copy:"Slanted mast line, one cold highlight, no photograph.",
+     tags:["mono","7-inch"]},
+    {cls:"ink",   no:"SL-05", name:"Diamond House",   studio:"Quarter Turn Studio",year:2022,
+     fmt:"Liner, 12″", copy:"Halftone lattice rotated 45° with a gold foil square.",
+     tags:["halftone","foil"]}
+  ];
+
+  var ring=document.getElementById("ring");
+  var dots=document.getElementById("dots");
+  var idx=0, N=DATA.length, step=360/N, angle=0, timer=null;
+
+  DATA.forEach(function(d,i){
+    var c=document.createElement("article");
+    c.className="card "+d.cls;
+    c.style.setProperty("--a",(i*step)+"deg");
+    c.setAttribute("aria-label",d.name);
+    c.innerHTML=
+      '<div class="art"></div>'+
+      '<div class="body">'+
+        '<span class="no">'+d.no+' · '+d.fmt+'</span>'+
+        '<h3>'+d.name+'</h3>'+
+        '<p>'+d.copy+'</p>'+
+        '<div class="tag">'+d.tags.map(function(t){return "<span>"+t+"</span>";}).join("")+'</div>'+
+      '</div>'+
+      '<div class="peek">'+d.studio+' — '+d.year+'</div>';
+    ring.appendChild(c);
+
+    var dot=document.createElement("i");
+    if(i===0) dot.className="on";
+    dot.addEventListener("click",function(){ go(i); });
+    dots.appendChild(dot);
+  });
+
+  document.getElementById("tot").textContent=N;
+
+  function render(){
+    ring.style.transform="rotateY("+angle+"deg)";
+    var norm=((idx%N)+N)%N;
+    document.getElementById("pos").textContent=norm+1;
+    var d=DATA[norm];
+    document.getElementById("sTitle").textContent=d.name;
+    document.getElementById("sStudio").textContent=d.studio;
+    document.getElementById("sYear").textContent=d.year;
+    document.getElementById("sFmt").textContent=d.fmt;
+    [].slice.call(dots.children).forEach(function(el,i){
+      el.classList.toggle("on", i===norm);
+    });
+    /* front card lifted, others dimmed */
+    [].slice.call(ring.children).forEach(function(el,i){
+      var front = i===norm;
+      el.style.filter = front? "none" : "brightness(.72) saturate(.85)";
+      el.style.zIndex = front? "5" : "1";
+    });
+  }
+
+  function go(i){
+    var prev=idx;
+    idx=i;
+    /* rotate the short way round */
+    var delta=idx-prev;
+    if(delta> N/2) delta-=N;
+    if(delta<-N/2) delta+=N;
+    angle -= delta*step;
+    render();
+  }
+
+  document.getElementById("next").addEventListener("click",function(){ go(idx+1); });
+  document.getElementById("prev").addEventListener("click",function(){ go(idx-1); });
+
+  document.getElementById("auto").addEventListener("change",function(){
+    if(timer){ clearInterval(timer); timer=null; }
+    if(this.checked && !reduce){ timer=setInterval(function(){ go(idx+1); },2200); }
+  });
+
+  /* drag to spin */
+  var dragging=false, startX=0, startA=0;
+  function down(x){ dragging=true; startX=x; startA=angle;
+    ring.style.transition="none"; }
+  function move(x){
+    if(!dragging) return;
+    angle=startA+(x-startX)*0.4;
+    ring.style.transform="rotateY("+angle+"deg)";
+  }
+  function up(){
+    if(!dragging) return;
+    dragging=false;
+    ring.style.transition="";
+    /* snap to the nearest card */
+    var nearest=Math.round(-angle/step);
+    idx=((nearest%N)+N)%N;
+    angle=-nearest*step;
+    render();
+  }
+  ring.addEventListener("pointerdown",function(e){ down(e.clientX); });
+  window.addEventListener("pointermove",function(e){ move(e.clientX); });
+  window.addEventListener("pointerup",up);
+  window.addEventListener("pointercancel",up);
+
+  window.addEventListener("keydown",function(e){
+    if(e.key==="ArrowRight"){ go(idx+1); }
+    if(e.key==="ArrowLeft"){ go(idx-1); }
+  });
+
+  render();
+  if(!reduce){
+    /* gentle entrance: cards settle onto their arc */
+    ring.style.transition="none";
+    ring.style.transform="rotateY(-40deg)";
+    requestAnimationFrame(function(){
+      requestAnimationFrame(function(){
+        ring.style.transition="";
+        render();
+      });
+    });
+  }
+})();
+</script>
+</body>
+</html>

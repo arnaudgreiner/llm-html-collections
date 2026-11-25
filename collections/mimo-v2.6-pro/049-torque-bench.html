@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>049 · Torque Bench</title>
+<style>
+:root{--bg:#0e1417;--panel:#131c20;--line:#25343a;--ink:#dce7e5;--mute:#7d948f;
+  --wood:#b5824a;--wood2:#8a5f31;--brass:#e0b25c;--red:#e06a4a;--grn:#7fd1a8}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:
+  linear-gradient(180deg,#0a0f12 0%,#101a1e 55%,#0a0f12 100%);color:var(--ink);
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:40px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:18px 30px 12px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:25px;font-weight:300}
+h1 b{font-weight:700;color:var(--brass)}
+.meta{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:var(--brass);font-variant-numeric:tabular-nums}
+.meta b.bad{color:var(--red)} .meta b.good{color:var(--grn)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 288px;gap:26px;padding:22px 30px 0;align-items:start}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+
+.bench{position:relative;background:
+  radial-gradient(520px 320px at 50% 30%,#1a262b 0%,#0c1316 75%);
+  border:1px solid var(--line);border-radius:18px;overflow:hidden;padding:8px}
+.bench svg{display:block;width:100%;height:auto}
+.grip{cursor:grab;touch-action:none} .grip:active,.grip.grabbing{cursor:grabbing}
+.hint{font-size:11.5px;color:var(--mute);line-height:1.7;padding:10px 4px 4px;margin:0}
+.hint b{color:var(--ink)}
+
+.rail{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:15px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;justify-content:space-between;font-size:13px;padding:7px 0;
+  border-bottom:1px dotted var(--line)}
+.row:last-child{border-bottom:none}
+.row b{font-family:"Courier New",monospace;color:var(--brass)}
+.row b.neg{color:var(--red)} .row b.pos{color:var(--grn)}
+.pans{display:flex;flex-direction:column;gap:8px}
+.pan{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  font-size:12.5px;background:#0e1518;border:1px solid var(--line);border-radius:9px;
+  padding:9px 11px;cursor:pointer;color:var(--ink);font-family:inherit;transition:.14s}
+.pan:hover{border-color:var(--brass);transform:translateY(-2px)}
+.pan.on{border-color:var(--brass);box-shadow:inset 0 0 0 1px var(--brass)}
+.pan em{font-style:normal;font-size:10px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.btns{display:flex;gap:9px}
+.b{flex:1;font:700 10px/1.2 "Segoe UI",sans-serif;letter-spacing:.14em;text-transform:uppercase;
+  padding:11px 6px;border-radius:9px;border:1px solid var(--line);background:#0e1518;
+  color:var(--ink);cursor:pointer;transition:.14s}
+.b:hover{transform:translateY(-2px);border-color:var(--brass);color:var(--brass)}
+.b.on{background:var(--brass);border-color:var(--brass);color:#14100a}
+.verdict{margin-top:11px;padding:11px 12px;border-radius:9px;font-size:12.5px;line-height:1.6;
+  background:#0e1518;border:1px solid var(--line);color:var(--mute)}
+.verdict.ok{border-color:var(--grn);color:var(--grn)}
+.verdict.ok b{color:var(--grn)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">beam balance · drag weights onto the hooks</span>
+  <h1>Torque <b>Bench</b></h1>
+  <span class="meta">net torque <b id="netOut">0.00 N·m</b> · tilt <b id="tiltOut">0.0°</b></span>
+</header>
+
+<div class="stage">
+  <div class="bench">
+    <svg id="benchSvg" viewBox="0 0 760 430" role="img"
+         aria-label="A balance beam with hooks and draggable weights">
+      <defs>
+        <linearGradient id="wood" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#c99256"/>
+          <stop offset="1" stop-color="#8a5f31"/>
+        </linearGradient>
+        <linearGradient id="brassG" x1="0" y1="0" x2="0" y2="1">
+          <stop offset="0" stop-color="#f2d089"/>
+          <stop offset="1" stop-color="#b98c3c"/>
+        </linearGradient>
+      </defs>
+
+      <!-- bench top -->
+      <rect x="0" y="372" width="760" height="58" fill="#1a262b"/>
+      <rect x="0" y="372" width="760" height="3" fill="#2b3d44"/>
+
+      <!-- pillar -->
+      <path d="M356 372 L364 236 L396 236 L404 372 Z" fill="url(#wood)"/>
+      <rect x="340" y="366" width="80" height="10" rx="3" fill="#5c3f20"/>
+
+      <!-- needle + pivot -->
+      <g id="beam">
+        <!-- beam bar with pivot at (380,236) -->
+        <g id="bar">
+          <rect x="70" y="228" width="620" height="14" rx="7" fill="url(#wood)"/>
+          <rect x="70" y="228" width="620" height="4" rx="2" fill="rgba(255,255,255,.22)"/>
+          <!-- end caps -->
+          <circle cx="76" cy="235" r="12" fill="url(#brassG)"/>
+          <circle cx="684" cy="235" r="12" fill="url(#brassG)"/>
+          <!-- hooks -->
+          <g id="hooks"></g>
+          <!-- pointer -->
+          <path d="M380 236 L380 180 L374 196 L386 196 Z" fill="url(#brassG)"/>
+        </g>
+        <g id="weights"></g>
+      </g>
+
+      <circle cx="380" cy="236" r="17" fill="url(#brassG)" stroke="#6b4d20" stroke-width="2"/>
+      <circle cx="380" cy="236" r="6" fill="#3a2a12"/>
+
+      <!-- scale arc behind needle -->
+      <path d="M320 168 A 78 78 0 0 1 440 168" fill="none" stroke="#25343a" stroke-width="3"/>
+      <g stroke="#4a6169" stroke-width="2">
+        <line x1="322" y1="170" x2="332" y2="176"/>
+        <line x1="351" y1="156" x2="357" y2="165"/>
+        <line x1="380" y1="152" x2="380" y2="162"/>
+        <line x1="409" y1="156" x2="403" y2="165"/>
+        <line x1="438" y1="170" x2="428" y2="176"/>
+      </g>
+
+      <g id="ghost" opacity="0"></g>
+    </svg>
+    <p class="hint">Drag a brass mass from the shelf onto any hook — or pick a hung one up and drop it on the bench top to take it down. Each hook sits a fixed distance from the pivot, so <b>torque = weight × distance</b>.</p>
+  </div>
+
+  <aside class="rail">
+    <section class="card">
+      <h2>Beam</h2>
+      <div class="row"><span>left torque</span><b id="lOut">0.00 N·m</b></div>
+      <div class="row"><span>right torque</span><b id="rOut">0.00 N·m</b></div>
+      <div class="row"><span>net torque</span><b id="nOut">0.00 N·m</b></div>
+      <div class="row"><span>hung masses</span><b id="cOut">0</b></div>
+      <div class="verdict" id="verdictOut">Nothing on the beam — start hanging masses.</div>
+    </section>
+
+    <section class="card">
+      <h2>Mass shelf</h2>
+      <div class="pans" id="shelf"></div>
+      <p class="hint">Click a mass to hang it on the next free hook; click a hung mass to take it down.</p>
+    </section>
+
+    <section class="card">
+      <h2>Bench</h2>
+      <div class="btns">
+        <button class="b" id="auto" type="button">auto-balance</button>
+        <button class="b" id="clear" type="button">clear beam</button>
+      </div>
+      <div class="btns" style="margin-top:9px">
+        <button class="b" id="target" type="button">challenge</button>
+        <button class="b" id="damp" type="button">lock pivot</button>
+      </div>
+      <p class="hint">Challenge sets a hidden target torque you must match within 0.10 N·m.</p>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:18px 30px 0;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)">
+  <span>spring-lagged tilt · pointer drag with snapping hooks · derived torque table</span><span>049 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var SVGNS=(function(){var d=document.createElement("div");d.innerHTML="<svg></svg>";return d.firstChild.namespaceURI;})();
+  function n(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  var PIVX=380, PIVY=236;
+  var HOOKS=[
+    {id:"L3",x:120,side:-1,d:3.0},{id:"L2",x:200,side:-1,d:2.0},{id:"L1",x:280,side:-1,d:1.0},
+    {id:"R1",x:480,side:1,d:1.0},{id:"R2",x:560,side:1,d:2.0},{id:"R3",x:640,side:1,d:3.0}
+  ];
+  var SHELF=[
+    {n:"50 g",kg:0.05},{n:"100 g",kg:0.10},{n:"200 g",kg:0.20},{n:"500 g",kg:0.50}
+  ];
+  var G0=9.81;
+  var slots=HOOKS.map(function(){return null;});   /* kg or null per hook */
+  var cur=0, target=0, tilt=0, locked=false, challenge=false, targetT=0;
+  var wG=G("weights"), ghost=G("ghost");
+
+  /* hook marks on the bar */
+  var hooksHit=[];
+  (function(){
+    var hg=G("hooks");
+    HOOKS.forEach(function(h,i){
+      var g=n("g",{});
+      g.appendChild(n("path",{d:"M"+h.x+" 242 L"+h.x+" 258",stroke:"#c9a05a","stroke-width":"3"}));
+      g.appendChild(n("circle",{cx:h.x,cy:262,r:7,fill:"none",stroke:"#c9a05a","stroke-width":"3"}));
+      var t=n("text",{x:h.x,y:284,"font-size":"10",fill:"#7d948f","text-anchor":"middle",
+        "font-family":"Segoe UI,sans-serif","letter-spacing":"1.5"});
+      t.textContent=h.id;
+      g.appendChild(t);
+      hg.appendChild(g);
+      hooksHit[i]=n("circle",{cx:h.x,cy:262,r:22,fill:"transparent",class:"grip"});
+      hg.appendChild(hooksHit[i]);
+    });
+  })();
+
+  /* shelf DOM buttons */
+  var shelf=G("shelf");
+  SHELF.forEach(function(m,i){
+    var b=document.createElement("button");
+    b.type="button"; b.className="pan";
+    b.innerHTML="<span>"+m.n+"</span><em>hang</em>";
+    b.addEventListener("click",function(){ hangNext(m.kg); });
+    shelf.appendChild(b);
+  });
+
+  function hangNext(kg){
+    var i=slots.indexOf(null);
+    if(i<0) return;
+    slots[i]=kg;
+    rebuild();
+  }
+  function unhang(i){ slots[i]=null; rebuild(); }
+
+  function rebuild(){
+    while(wG.firstChild) wG.removeChild(wG.firstChild);
+    HOOKS.forEach(function(h,i){
+      if(slots[i]==null) return;
+      var g=makeWeight(slots[i], h.x, 278, i);
+      wG.appendChild(g);
+    });
+    update();
+  }
+
+  function makeWeight(kg,x,y,idx){
+    var r=Math.min(26, 11+kg*26);
+    var g=n("g",{class:"grip","data-idx":String(idx)});
+    g.appendChild(n("line",{x1:x,y1:264,x2:x,y2:y-r,stroke:"#c9a05a","stroke-width":"2"}));
+    g.appendChild(n("circle",{cx:x,cy:y,r:r,fill:"url(#brassG)",stroke:"#6b4d20","stroke-width":"2"}));
+    var t=n("text",{x:x,y:y+4,"font-size":Math.round(r*0.62),fill:"#3a2a12",
+      "text-anchor":"middle","font-family":"Segoe UI,sans-serif","font-weight":"700"});
+    t.textContent=Math.round(kg*1000);
+    g.appendChild(t);
+    var t2=n("text",{x:x,y:y+r+14,"font-size":"9.5",fill:"#7d948f","text-anchor":"middle",
+      "font-family":"Segoe UI,sans-serif","letter-spacing":"1.4"});
+    t2.textContent="g";
+    g.appendChild(t2);
+    attachDrag(g, idx);
+    return g;
+  }
+
+  /* dragging a hung weight off / onto hooks */
+  var drag=null;
+  function attachDrag(g, idx){
+    g.addEventListener("pointerdown",function(ev){
+      ev.stopPropagation(); ev.preventDefault();
+      drag={idx:idx, kg:slots[idx]};
+      ghost.innerHTML="";
+      var mkg=drag.kg, r=Math.min(26, 11+mkg*26);
+      ghost.appendChild(n("circle",{cx:ev.offsetX,cy:ev.offsetY,r:r,
+        fill:"rgba(224,178,92,.85)",stroke:"#6b4d20","stroke-width":"2"}));
+      ghost.setAttribute("opacity","0.9");
+      try{ g.setPointerCapture(ev.pointerId); }catch(e){}
+      ghost._r=r;
+      moveGhost(ev);
+    });
+    g.addEventListener("pointermove",moveGhost);
+    g.addEventListener("pointerup",dropGhost);
+    g.addEventListener("pointercancel",function(ev){
+      drag=null; ghost.setAttribute("opacity","0"); ghost.innerHTML="";
+    });
+  }
+  function moveGhost(ev){
+    if(!drag) return;
+    var svg=G("benchSvg"), rect=svg.getBoundingClientRect();
+    var vx=(ev.clientX-rect.left)/rect.width*760;
+    var vy=(ev.clientY-rect.top)/rect.height*430;
+    var c=ghost.firstChild;
+    if(c){ c.setAttribute("cx",vx.toFixed(1)); c.setAttribute("cy",vy.toFixed(1)); }
+    /* highlight nearest hook */
+    HOOKS.forEach(function(h,i){
+      var near=Math.abs(h.x-vx)<44 && vy>210;
+      if(near) ghost.setAttribute("filter","");
+    });
+    drag._x=vx; drag._y=vy;
+  }
+  function dropGhost(ev){
+    if(!drag) return;
+    var kg=drag.kg, from=drag.idx;
+    if(drag._x===undefined){ drag=null; ghost.setAttribute("opacity","0"); ghost.innerHTML=""; unhang(from); return; }
+    var vx=drag._x, vy=drag._y;
+    drag=null;
+    ghost.setAttribute("opacity","0"); ghost.innerHTML="";
+    if(vy<200 || vy>360){ unhang(from); return; }  /* set down on the bench top */
+    var best=-1, bd=1e9;
+    HOOKS.forEach(function(h,i){
+      var d=Math.abs(h.x-(vx||0));
+      if(d<bd){ bd=d; best=i; }
+    });
+    if(best>=0 && bd<60){
+      var free=slots[best]===null || best===from;
+      if(free){ slots[from]=null; slots[best]=kg; }
+      rebuild();
+      return;
+    }
+    rebuild();
+  }
+
+  function update(){
+    var L=0,R=0,count=0;
+    HOOKS.forEach(function(h,i){
+      if(slots[i]==null) return;
+      count++;
+      var tq=slots[i]*G0*h.d;
+      if(h.side<0) L+=tq; else R+=tq;
+    });
+    var net=R-L;
+    cur=Math.max(-6,Math.min(6,net));
+    G("lOut").textContent=L.toFixed(2)+" N·m";
+    G("rOut").textContent=R.toFixed(2)+" N·m";
+    var nEl=G("nOut");
+    nEl.textContent=(net>0?"+":"")+net.toFixed(2)+" N·m";
+    nEl.className=Math.abs(net)<0.05?"pos":(Math.abs(net)<0.6?"":"neg");
+    G("netOut").textContent=(net>0?"+":"")+net.toFixed(2)+" N·m";
+    G("cOut").textContent=String(count);
+
+    var v=G("verdictOut");
+    if(challenge){
+      var err=Math.abs(net-targetT);
+      if(err<=0.10){ v.className="verdict ok"; v.innerHTML="<b>Balanced.</b> You matched the challenge to "+err.toFixed(2)+" N·m."; }
+      else { v.className="verdict"; v.textContent="Challenge: hold "+targetT.toFixed(2)+" N·m — you are "+(net<targetT?"short by ":"over by ")+err.toFixed(2)+" N·m."; }
+    } else if(count===0){
+      v.className="verdict"; v.textContent="Nothing on the beam — start hanging masses.";
+    } else if(Math.abs(net)<0.05){
+      v.className="verdict ok"; v.innerHTML="<b>Level.</b> The beam is in perfect equilibrium.";
+    } else {
+      v.className="verdict";
+      v.textContent=net<0?"Left side heavier — the beam dips left.":"Right side heavier — the beam dips right.";
+    }
+  }
+
+  /* animation: spring lag toward target tilt */
+  function frame(){
+    target=locked?0:Math.max(-14,Math.min(14,cur*7));
+    tilt+=(target-tilt)*(reduce?1:0.12);
+    G("beam").setAttribute("transform","rotate("+tilt.toFixed(2)+" "+PIVX+" "+PIVY+")");
+    G("tiltOut").textContent=(tilt>=0?"+":"")+tilt.toFixed(1)+"°";
+    requestAnimationFrame(frame);
+  }
+
+  /* controls */
+  G("auto").addEventListener("click",function(){
+    slots=HOOKS.map(function(){return null;});
+    /* pair one mass against another: 0.5kg at L3 (14.7) vs 0.2kg*? keep simple */
+    slots[0]=0.50; slots[5]=0.50;
+    rebuild();
+  });
+  G("clear").addEventListener("click",function(){
+    slots=HOOKS.map(function(){return null;});
+    challenge=false; G("target").classList.remove("on");
+    rebuild();
+  });
+  G("target").addEventListener("click",function(){
+    challenge=!challenge;
+    this.classList.toggle("on",challenge);
+    if(challenge){
+      var opts=[0.98,1.47,1.96,2.94,3.92,5.88];
+      targetT=opts[Math.floor(Math.random()*opts.length)];
+    }
+    update();
+  });
+  G("damp").addEventListener("click",function(){
+    locked=!locked;
+    this.classList.toggle("on",locked);
+    this.textContent=locked?"release pivot":"lock pivot";
+  });
+
+  rebuild();
+  requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

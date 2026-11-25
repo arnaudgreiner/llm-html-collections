@@ -1,0 +1,18 @@
+TITLE: Turntable Catalogue — CSS 3D Sleeve Carousel
+
+FULL PROMPT:
+Design exactly one self-contained HTML page, "Turntable Catalogue", with no external images, fonts or scripts. Use a warm charcoal body with a radial vignette. At the centre, a .ring with transform-style:preserve-3d and a 1400px perspective stage holds five .card sleeves, each 230×290px, positioned at rotateY(i × 72deg) translateZ(400px) so they form a real carousel (300px and scaled down under 760px). Every sleeve is cream #efe7d8 with black type and a purely CSS .art panel built from ::before/::after shapes — one per distinct sleeve: a cream ring + rotated slab on clay red, a repeating-conic-gradient wheel on gold, a rotated band + circle on sage, a slanted stripe + arc on slate, and a repeating-linear-gradient halftone with a rotated gold square on near-black. Each card carries an accession number, title, one-line note and pill tags, plus a hover .peek strip that slides up in black with a gold rule. Controls: circular ‹ › buttons, a position read-out "sleeve N / 5", an auto-spin checkbox, five dot jump buttons, a four-field spec block that reflects the front sleeve, and a fixed folio footer. Build all cards and dots from a JS data array.
+
+INTENDED DESIGN DESCRIPTION:
+A record-shop turntable rendered in CSS 3D: flat printed sleeves standing on a rotating ring, seen with perspective.
+
+MAJOR VISUAL TECHNIQUES:
+- transform-style:preserve-3d + perspective for genuine carousel depth
+- Per-card rotateY/translateZ placement from an index, with a shared 0.8s cubic-bezier
+- Shape-only cover art from ::before/::after (conic/linear/repeating gradients, border circles, rotated slabs)
+- Shortest-path rotation maths when moving between indices
+- Pointer drag mapped to rotateY with snap-to-nearest on release
+- brightness/saturate dimming and z-index lifting for non-front cards
+
+INTENDED INTERACTION MODEL:
+Arrow buttons step forward/back; dots jump straight to a sleeve; ←/→ keys work too. Auto-spin cycles every 2.2s until unchecked. Dragging the ring free-spins it and snaps to the closest card on pointerup. The front sleeve's spec block (title, studio, year, format) and the dot indicators update on every change. Reduced motion disables transitions, entrance rotation and auto-spin entirely.

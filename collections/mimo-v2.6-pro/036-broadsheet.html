@@ -1,0 +1,413 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>036 · Broadsheet</title>
+<style>
+:root{--paper:#f4efe3;--ink:#17161a;--mute:#6d6a63;--rule:#1d1c20;--red:#9d2418}
+*{box-sizing:border-box}
+body{margin:0;background:#3a3a38;color:var(--ink);
+  font-family:Georgia,'Times New Roman',serif;padding:26px 14px 60px}
+.sheet{max-width:1120px;margin:0 auto;background:var(--paper);padding:26px 34px 34px;
+  box-shadow:0 40px 80px rgba(0,0,0,.5);position:relative;
+  background-image:radial-gradient(rgba(0,0,0,.035) 1px,transparent 1px);background-size:4px 4px}
+.masthead{text-align:center;border-bottom:3px double var(--rule);padding-bottom:8px}
+.masthead .nm{font-size:clamp(34px,6vw,64px);letter-spacing:.04em;font-weight:400;
+  text-transform:uppercase;margin:6px 0 2px;font-variant:small-caps}
+.masthead .nm em{font-style:normal;color:var(--red)}
+.dateline{display:flex;justify-content:center;gap:16px;flex-wrap:wrap;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--mute);padding:7px 0 8px;
+  border-bottom:1px solid var(--rule);margin-top:8px}
+.dateline b{color:var(--ink)}
+
+.tickerbar{overflow:hidden;border-bottom:1px solid var(--rule);background:#ece5d5;
+  margin:0 -34px;padding:5px 0;font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;
+  letter-spacing:.14em;text-transform:uppercase;cursor:pointer;position:relative}
+.ticker{display:inline-block;white-space:nowrap;padding-left:100%;
+  animation:slide 34s linear infinite}
+.tickerbar.paused .ticker{animation-play-state:paused}
+@keyframes slide{to{transform:translateX(-100%)}}
+.ticker .up{color:#1d6b32}.ticker .dn{color:var(--red)}
+
+.topgrid{display:grid;grid-template-columns:1.6fr 1fr 1fr;gap:0;margin-top:16px}
+@media(max-width:820px){.topgrid{grid-template-columns:1fr}}
+.col{padding:0 16px;border-left:1px solid var(--rule)}
+.col:first-child{padding-left:0;border-left:0}
+.col:last-child{padding-right:0}
+.lead h2{font-size:clamp(26px,3.4vw,40px);line-height:1.06;margin:0 0 8px;font-weight:400}
+.lead .stand{font-size:14.5px;font-style:italic;color:#40403f;margin:0 0 10px}
+.kicker2{font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--red);margin:0 0 6px}
+.txt{column-count:2;column-gap:16px;column-rule:1px solid #cfc9b8;font-size:13.4px;
+  line-height:1.62;text-align:justify;hyphens:auto}
+@media(max-width:620px){.txt{column-count:1}}
+.txt p{margin:0 0 10px}
+.dropcap::first-letter{float:left;font-size:52px;line-height:.82;padding:4px 7px 0 0;
+  font-weight:700}
+.story{border-top:1px solid var(--rule);margin-top:12px;padding-top:10px;cursor:pointer;
+  transition:background .18s}
+.story:first-of-type{border-top:0;margin-top:0;padding-top:0}
+.story:hover{background:rgba(157,36,24,.06)}
+.story h3{margin:0 0 5px;font-size:19px;font-weight:400;line-height:1.2}
+.story .meta{font-family:"Segoe UI",system-ui,sans-serif;font-size:9px;letter-spacing:.22em;
+  text-transform:uppercase;color:var(--mute);margin-bottom:5px}
+.story p{margin:0;font-size:13px;line-height:1.55}
+.more{font-family:"Segoe UI",system-ui,sans-serif;font-size:9px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--red);display:inline-block;margin-top:6px}
+
+/* right rail boxes */
+.box{border:1.5px solid var(--rule);padding:11px 12px;margin-bottom:14px;background:#efe9db}
+.box h4{margin:0 0 8px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.3em;text-transform:uppercase;border-bottom:1px solid var(--rule);padding-bottom:6px}
+.wx{display:flex;align-items:center;gap:12px}
+.wx svg{flex:none}
+.wx .t{font-size:34px;line-height:1}
+.wx .d{font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;color:var(--mute);
+  letter-spacing:.06em;line-height:1.5}
+.lotto{list-style:none;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif}
+.lotto li{display:flex;justify-content:space-between;font-size:11.5px;padding:4px 0;
+  border-bottom:1px dotted #b9b2a1;letter-spacing:.08em}
+.puzzle{font-family:Consolas,monospace;font-size:14px;line-height:1.9;text-align:center;
+  letter-spacing:.3em;white-space:pre;background:#fff;border:1px dashed var(--rule);padding:9px}
+.editorial{font-size:13px;line-height:1.6;font-style:italic;border-top:1px solid var(--rule);
+  border-bottom:1px solid var(--rule);padding:10px 0;margin-top:6px}
+
+.toolbar{display:flex;gap:9px;justify-content:center;flex-wrap:wrap;margin:20px auto 0;
+  font-family:"Segoe UI",system-ui,sans-serif}
+.btn{font:inherit;font-size:10px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:9px 14px;border:1px solid var(--rule);background:transparent;color:var(--ink);
+  border-radius:2px;cursor:pointer;transition:.16s}
+.btn:hover{background:var(--ink);color:var(--paper)}
+.btn.red{background:var(--red);border-color:var(--red);color:#fff8f0}
+.foot{max-width:1120px;margin:16px auto 0;display:flex;justify-content:space-between;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:#cfcabb;flex-wrap:wrap;gap:10px}
+
+/* reader overlay */
+.reader{position:fixed;inset:0;background:rgba(18,17,16,.86);display:none;
+  align-items:flex-start;justify-content:center;padding:5vh 16px;overflow:auto;z-index:9}
+.reader.on{display:flex}
+.reader .card{background:var(--paper);max-width:640px;padding:26px 30px 30px;
+  box-shadow:0 40px 90px rgba(0,0,0,.6);animation:rise .3s ease}
+@keyframes rise{from{opacity:0;transform:translateY(18px)}to{opacity:1;transform:none}}
+.reader h2{margin:6px 0 6px;font-size:29px;font-weight:400;line-height:1.12}
+.reader .stand{font-style:italic;color:#41413f;margin:0 0 14px;font-size:14.5px}
+.reader p{font-size:14px;line-height:1.72;text-align:justify;hyphens:auto}
+.reader .close{float:right;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;
+  letter-spacing:.2em;text-transform:uppercase;border:1px solid var(--rule);background:transparent;
+  padding:7px 11px;cursor:pointer}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="sheet">
+  <div class="masthead">
+    <div class="dateline">
+      <span id="dateTxt">Tuesday, 22 September 2026</span>
+      <span><b>The Eastgate Broadsheet</b></span>
+      <span>No. <b id="issue">4,182</b></span>
+      <span>Twelve pages · 2<em style="font-style:normal">/</em>—</span>
+      <span id="editionTag">First edition</span>
+    </div>
+    <div class="nm">The Eastgate <em>Broadsheet</em></div>
+    <div class="dateline" style="border-bottom:0;padding-bottom:0;margin-top:4px">
+      <span>Independent since 1902</span><span>·</span>
+      <span>Weather, page 4</span><span>·</span>
+      <span>Crossword, page 11</span>
+    </div>
+  </div>
+
+  <div class="tickerbar" id="tickerbar" title="hover to pause">
+    <div class="ticker" id="ticker"></div>
+  </div>
+
+  <div class="topgrid">
+    <section class="col lead">
+      <p class="kicker2">Lead · City</p>
+      <h2 id="leadHead">Council Votes to Keep the Clock Tower Clocks Wound by Hand</h2>
+      <p class="stand" id="leadStand">After a nine-month review, members rejected an electric
+        movement — “the tick is part of the street”, one member said — and hired an apprentice
+        instead.</p>
+      <div class="txt dropcap" id="leadBody">
+        <p>The vote, taken shortly before eleven, was closer than anyone expected. Proponents of
+          an electric movement had argued for reliability; opponents argued that a winding key
+          turned once a week is the cheapest civic ritual the city still keeps.</p>
+        <p>The chamberlain estimated the saving at four hundred pounds a year. The clerk pointed
+          out that the tower's bell is rung by a person, and that the two decisions are not
+          unrelated.</p>
+        <p>An apprenticeship will be posted in the new year. Candidates must not be afraid of
+          heights, or of Fridays.</p>
+      </div>
+      <div class="story" data-story="0">
+        <p class="meta">Quarry Road · 6 min read</p>
+        <h3>Bakery at Number 14 Will Not Close, Says Third Generation of Hollises</h3>
+        <p>Rumours of a sale were “flour dust in the wind”, the family said, confirming that the
+          sourdough starter — begun in 1978 — remains very much alive.</p>
+        <span class="more">Continue reading →</span>
+      </div>
+      <div class="story" data-story="1">
+        <p class="meta">Transport · 4 min read</p>
+        <h3>Night Bus 12 Gets a New Route and an Older Bus</h3>
+        <p>Passengers will notice the difference mostly in the corners. The timetable, gratifyingly,
+          stays exactly as it was.</p>
+        <span class="more">Continue reading →</span>
+      </div>
+    </section>
+
+    <section class="col">
+      <p class="kicker2">Feature</p>
+      <div class="story" data-story="2">
+        <h3>The Man Who Counts the River</h3>
+        <p class="meta">Environment · 11 min read</p>
+        <p>Every morning for thirty-one years, Peter Ndlovu has walked the bank with a notebook and
+          read the water like a page. What he has learned is mostly about patience, and partly
+          about rain four valleys away.</p>
+        <span class="more">Continue reading →</span>
+      </div>
+      <div class="story" data-story="3">
+        <h3>A Grammar of Repair Shops</h3>
+        <p class="meta">Trade · 7 min read</p>
+        <p>Sharpeners, cobblers, radio men: the district still runs a small economy of mending, and
+          its practitioners share one rule — never explain a price you have not first explained a
+          problem.</p>
+        <span class="more">Continue reading →</span>
+      </div>
+      <div class="story" data-story="4">
+        <h3>Letters: On Seagulls, Scaffolding and Silence</h3>
+        <p class="meta">Correspondence</p>
+        <p>Readers write in, at length, about the birds. One suggests a falcon. Another suggests
+          patience. A third suggests the falcon be given the scaffolding.</p>
+        <span class="more">Continue reading →</span>
+      </div>
+      <div class="editorial">
+        “A city is a set of agreements about noise. This week we recommend keeping the
+        Tuesday ones.”
+      </div>
+    </section>
+
+    <section class="col">
+      <div class="box">
+        <h4>Weather · page 4</h4>
+        <div class="wx">
+          <svg width="54" height="54" viewBox="0 0 54 54" aria-hidden="true">
+            <circle cx="20" cy="20" r="11" fill="#d9a13a"></circle>
+            <path d="M16 40h24a8 8 0 0 0 0-16 11 11 0 0 0-21 3 7 7 0 0 0-3 13z" fill="#7d8a93"></path>
+          </svg>
+          <div>
+            <div class="t" id="wxT">14°</div>
+            <div class="d" id="wxD">Bright spells, turning<br>grey by teatime · wind SW 9</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="box">
+        <h4>Markets</h4>
+        <ul class="lotto" id="markets"></ul>
+      </div>
+
+      <div class="box">
+        <h4>Crossword 4,182</h4>
+        <div class="puzzle">■ B A S I S ■
+■ ■ ■ 1 ■ ■
+T I M E ■ ■ ■
+■ ■ ■ ■ R ■
+4 ■ Q ■ ■ ■
+■ ■ ■ ■ ■ ■</div>
+        <p style="font-size:11.5px;margin:8px 0 0;color:var(--mute);font-style:italic">
+          1 across: grounds for argument (6). Answers, page 12.</p>
+      </div>
+
+      <div class="box">
+        <h4>Births &amp; Notices</h4>
+        <p style="font-size:12.5px;line-height:1.6;margin:0">MERCER — a daughter, Iris, at
+          Eastgate General; both well. Lost: one grey glove, Cathedral Steps, claimable at
+          this office.</p>
+      </div>
+    </section>
+  </div>
+
+  <div class="toolbar">
+    <button class="btn red" id="late" type="button">Late edition</button>
+    <button class="btn" id="rollWx" type="button">New forecast</button>
+    <button class="btn" id="toggleTicker" type="button">Pause ticker</button>
+  </div>
+</div>
+
+<footer class="foot">
+  <span>hot-metal layout, CSS columns, no photographs</span>
+  <span>036 / 100</span>
+</footer>
+
+<div class="reader" id="reader" role="dialog" aria-modal="true">
+  <div class="card">
+    <button class="close" id="closeReader" type="button">Close</button>
+    <p class="kicker2" id="rKick">Feature</p>
+    <h2 id="rTitle">—</h2>
+    <p class="stand" id="rStand">—</p>
+    <div id="rBody"></div>
+  </div>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+
+  var ARTICLES=[
+    ["Bakery at Number 14 Will Not Close, Says Third Generation of Hollises",
+     "Rumours of a sale were “flour dust in the wind”, the family said.",
+     ["There is a moment, just after four, when the ovens and the street are the same temperature.",
+      "Ada Hollis has worked that hour since she was nineteen and sees no reason to stop now. Her father bought the ovens from a hotel that burned; the receipts are framed by the till.",
+      "The lease runs another twenty-two years. The starter, kept in a crock behind the flour, has outlived three landlords and one flood."]],
+    ["Night Bus 12 Gets a New Route and an Older Bus",
+     "Passengers will notice the difference mostly in the corners.",
+     ["The 12 will now serve the hospital gate directly, cutting seven minutes and adding two corners that the current bus takes at a polite angle.",
+      "The vehicle itself, rescued from a school pool in the next county, has a character: a door that agrees with itself before opening, and heating that arrives when it is ready.",
+      "Drivers were consulted on the route; passengers were consulted on the heating; the heating declined to comment."]],
+    ["The Man Who Counts the River",
+     "Thirty-one years of mornings, one notebook at a time.",
+     ["Peter Ndlovu measures the river with his eyes first: colour, hurry, the way the weed lies flat or floats up.",
+      "Then the notebook: date, height, a word for the weather. Thirty-one years of them fill a shelf in his hall, indexed by nothing more complicated than habit.",
+      "He has spotted four floods before the warning service did. He is careful to say, every time, that it is not a gift — only attention, paid daily, compounding."]],
+    ["A Grammar of Repair Shops",
+     "Sharpeners, cobblers and radio men still set the prices of patience.",
+     ["Every repair shop in the district keeps a bench by the window for one reason: the work needs daylight and the street needs to see it.",
+      "The shared rule is about price, not skill — never quote a figure before you have quoted the problem. A zip is not a zip; it is a zip, a lining and a decision.",
+      "Three of the eleven shops surveyed have been in the same family twice over. One has been in the same family three times, which in this trade counts as a warning and a boast."]],
+    ["Letters: On Seagulls, Scaffolding and Silence",
+     "Readers write in, at length, about the birds.",
+     ["SIR — The gulls are not the problem. The problem is that we feed them in winter and then act surprised in spring, when they have found a ledge with a view.",
+      "SIR — Regarding the scaffolding on Cathedral Steps: I suggest it be adopted as permanent. The pigeons have already done so.",
+      "SIR — On silence: I walked the length of Quarry Road at six on Sunday and heard, for the first time in years, the clock tower tick through an open window. Worth keeping, that."]]
+  ];
+
+  var LEADS=[
+    ["Council Votes to Keep the Clock Tower Clocks Wound by Hand",
+     "After a nine-month review, members rejected an electric movement — “the tick is part of the street”, one member said — and hired an apprentice instead."],
+    ["Market Hall Roof Repaired With the Original Slate, Somehow",
+     "The last of the quarry's stock turned up in a barn two counties away, numbered in chalk and waiting forty years for this exact job."],
+    ["Library Opens on Sundays Again After Twelve Years",
+     "Volunteers roster themselves in pairs; the tea urn has been reinstated with full ceremony and a plaque made from an old date stamp."]
+  ];
+
+  var WX=[
+    ["14°","Bright spells, turning<br>grey by teatime · wind SW 9"],
+    ["9°","Rain by noon, easing<br>after four · wind W 17"],
+    ["17°","Warm, high cloud,<br>calm until dusk · wind S 4"],
+    ["11°","Squalls between<br>showers · wind NW 22"]
+  ];
+
+  var TICKER_NAMES=["MARLOWE INDS","QUARRY CEMENT","EASTGATE WATER","HOLLIS & FENN",
+    "NIGHTJAR REC","BROADFIELD FARM","COLDHARBOUR","RIVER POWER"];
+
+  function rnd(a,b){ return a+Math.random()*(b-a); }
+
+  function buildTicker(){
+    var parts=TICKER_NAMES.map(function(n){
+      var v=rnd(12,180), d=rnd(-2.4,3.1);
+      var cls=d>=0?"up":"dn";
+      return n+" <b>"+v.toFixed(2)+"</b> <span class='"+cls+"'>"+(d>=0?"▲":"▼")+
+        " "+Math.abs(d).toFixed(2)+"%</span>";
+    });
+    G("ticker").innerHTML=parts.join(" &nbsp;·&nbsp; ")+" &nbsp;·&nbsp; "+parts.join(" &nbsp;·&nbsp; ");
+  }
+
+  function buildMarkets(){
+    var host=G("markets");
+    host.innerHTML="";
+    TICKER_NAMES.slice(0,6).forEach(function(n){
+      var li=document.createElement("li");
+      var v=rnd(4,220), d=rnd(-3,3);
+      li.innerHTML="<span>"+n+"</span><span style='color:"+(d>=0?"#1d6b32":"#9d2418")+"'>"+
+        (d>=0?"+":"")+d.toFixed(1)+"%</span>";
+      host.appendChild(li);
+    });
+  }
+
+  /* reader */
+  function openReader(i){
+    var a=ARTICLES[i]; if(!a) return;
+    G("rTitle").textContent=a[0];
+    G("rStand").textContent=a[1];
+    G("rKick").textContent="The Eastgate Broadsheet · full report";
+    var body=G("rBody");
+    body.innerHTML="";
+    a[2].forEach(function(p,k){
+      var el=document.createElement("p");
+      el.textContent=p;
+      if(k===0 && !reduce){
+        el.className="dropcap";
+        el.style.animation="rise .3s ease .05s backwards";
+      }
+      body.appendChild(el);
+    });
+    var extra=document.createElement("p");
+    extra.textContent="The editor reserves the right to set this story again on Monday, "+
+      "with whatever has happened since.";
+    extra.style.color="#6d6a63";
+    body.appendChild(extra);
+    G("reader").classList.add("on");
+  }
+  G("closeReader").addEventListener("click",function(){ G("reader").classList.remove("on"); });
+  G("reader").addEventListener("click",function(e){
+    if(e.target===this) this.classList.remove("on");
+  });
+  document.addEventListener("keydown",function(e){
+    if(e.key==="Escape") G("reader").classList.remove("on");
+  });
+  [].forEach.call(document.querySelectorAll(".story"),function(el){
+    el.addEventListener("click",function(){ openReader(parseInt(el.dataset.story,10)); });
+  });
+  G("leadBody").addEventListener("click",function(){ openReader(0); });
+  G("leadBody").style.cursor="pointer";
+
+  /* ticker pause */
+  var bar=G("tickerbar");
+  bar.addEventListener("mouseenter",function(){ bar.classList.add("paused"); });
+  bar.addEventListener("mouseleave",function(){ bar.classList.remove("paused"); });
+  G("toggleTicker").addEventListener("click",function(){
+    var p=bar.classList.toggle("paused");
+    this.textContent=p?"Resume ticker":"Pause ticker";
+  });
+
+  /* late edition */
+  var edition=1;
+  G("late").addEventListener("click",function(){
+    edition++;
+    var lead=LEADS[(edition-1)%LEADS.length];
+    G("leadHead").textContent=lead[0];
+    G("leadStand").textContent=lead[1];
+    G("editionTag").textContent=edition===2?"Second edition":edition+"th edition";
+    G("issue").textContent=(4181+edition).toLocaleString();
+    var d=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    G("dateTxt").textContent=d.toDateString().split(" ").slice(0,3).join(" ")+
+      ", "+p(d.getHours())+":"+p(d.getMinutes())+" wire";
+    buildTicker(); buildMarkets();
+    if(!reduce){
+      var sheet=document.querySelector(".sheet");
+      sheet.style.transition="none"; sheet.style.filter="brightness(.96)";
+      requestAnimationFrame(function(){
+        sheet.style.transition="filter .5s"; sheet.style.filter="";
+      });
+    }
+    this.textContent="Pull the next edition";
+  });
+
+  G("rollWx").addEventListener("click",function(){
+    var w=WX[Math.floor(Math.random()*WX.length)];
+    G("wxT").textContent=w[0];
+    G("wxD").innerHTML=w[1];
+  });
+
+  buildTicker();
+  buildMarkets();
+  var d0=new Date(), p0=function(v){return (v<10?"0":"")+v;};
+  G("dateTxt").textContent=d0.toDateString();
+})();
+</script>
+</body>
+</html>

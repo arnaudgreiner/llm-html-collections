@@ -1,0 +1,17 @@
+TITLE: Constellation Compass — A Draggable Celestial Rose
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Constellation Compass", with no external resources. Observatory palette: near-black navy with a deep indigo radial wash, an instrument card with 20px radius and heavy shadow, cyan and pale-lavender accents; header with kicker, thin/accent title and azimuth/elevation counters. Stage: left a 700×700 SVG dial — sky gradient disc, 260 seeded background stars inside the circle, horizon hill path over the lower third, a rotating #roseG group carrying a 72-tick degree ring (major ticks every 45°, labels N/E/S/W, an "000" label at the top), a translucent needle and a white pivot diamond; the star points and constellation polylines live outside the rose group so they stay put. Right rail: a scrollable catalogue of 20 named stars, a five-row specification table, and an instrument card with auto-drift, re-aim north, hide/show lines and random hour buttons. Three absolute-positioned readout chips sit over the dial corners.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like brass-and-glass navigational equipment — the sky pinned under a ruled ring you can grab and swing, with the readouts ticking as it turns.
+
+MAJOR VISUAL TECHNIQUES:
+- Linear-congruential PRNG seeded once so the star field is identical on every load
+- Constellation figures as polyline point strings with a per-figure label text node
+- Rose rotation as one rotate() about the dial centre on a group that excludes the stars
+- Pointer-drag maths converting client coordinates through getBoundingClientRect into a 700-unit viewBox, taking the wrapped angular delta per move
+- Elevation derived from radial distance (90° at centre to 0° at the ring), bearing from atan2 with 0° at twelve o'clock
+
+INTENDED INTERACTION MODEL:
+Drag anywhere on the dial to swing the ring (pointer capture so the drag survives leaving the element) or use arrow keys for five-degree nudges; clicking a catalogue row or a star point selects it, rings it, brightens its constellation polyline, swings the needle to its bearing and fills the spec table. Auto drift turns the sky slowly, re-aim north eases to zero, hide lines removes the figures, random hour re-seeds the sky time chip. Reduced motion skips the rAF loop entirely — dragging, selection and buttons still write the transform directly.

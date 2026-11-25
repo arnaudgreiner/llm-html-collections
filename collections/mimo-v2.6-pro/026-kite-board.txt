@@ -1,0 +1,18 @@
+TITLE: Kite Board — Drag-and-Drop Production Kanban
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Kite Board", with no external resources. Body: warm paper #f2efe9 with a 26px graph-paper grid from two repeating linear-gradients. Header: kicker, light "Kite" / heavy blue "Board" title, a colour legend (urgent rose / soon sun / relaxed jade / review blue) and an instruction tip describing mouse drag and keyboard moving. Four .col panels (Backlog, Building, In review, Shipped) each with an uppercase heading, a pill-shaped live count and a .list drop area; empty lists show a dashed "drop here" placeholder. Cards are white rounded tiles with a left accent bar whose colour comes from the tone, a grab glyph revealed on hover, title, one-line note, a bordered pill tag, a due date that turns red for imminent dates, and a P0–P3 priority marker; hover lifts them 2px. Below the board, a form with a borderless text input and a blue Add card button appends a new card to Backlog, and a two-part uppercase footer closes it. Build from a seeded data array plus a uid counter; ghost element and counts update on every change.
+
+INTENDED DESIGN DESCRIPTION:
+A print-studio production board: graph paper under pinned index cards, colour used only for urgency, all state changes animated but fast.
+
+MAJOR VISUAL TECHNIQUES:
+- Native HTML5 drag & drop with dataTransfer id, a dashed insertion ghost and column highlight
+- e.target.closest delegation on the board for dragover/dragleave/drop
+- Keyboard reordering: ←/→ move columns, ↑/↓ reorder within a column, with focus restored by id
+- Re-render from a single tasks[] array so counts and lists always agree
+- Tone→colour map driving the accent bar, pill and due-date urgency
+- Scale/opacity entrance transition on newly added cards
+
+INTENDED INTERACTION MODEL:
+Drag a card onto a column (the dashed ghost shows the landing spot) or focus it and press arrow keys to move it between columns and within them; Enter releases. Hovering exposes the grip and lifts the card. Type in the bottom input and press Enter (or click Add card) to append a card to Backlog with a random tone and priority. Counts update live. Reduced motion removes all transitions.

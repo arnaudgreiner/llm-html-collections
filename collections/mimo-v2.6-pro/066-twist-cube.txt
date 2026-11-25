@@ -1,0 +1,18 @@
+TITLE: Twist Cube — 3×3 Pocket Cube Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Twist Cube — 3×3". Build a real 3×3 twisty cube in the browser using CSS 3D: a perspective scene holding a preserve-3d cube of 26 cubies, each cubie a 56px box of six bordered sticker faces (white, yellow, green, blue, red, orange on the outside, dark plastic inside), state tracked as integer position plus an integer orientation matrix rendered to each cubie as a matrix3d transform. Drag anywhere on the scene to orbit the view (clamped on the tilt axis); twelve face buttons (U U′ D D′ L L′ R R′ F F′ B B′) twist one layer 90° with a 320ms eased rotate3d animation on exactly the affected cubies, then commit the integer state instantly so the next move starts clean. SCRAMBLE applies 22 random layer rotations without animation, RESET returns all cubies to their solved matrix, move counter and elapsed timer run during solving and freeze with a congratulations state when all six faces are uniform again. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a dark plum studio with a single object floating under a soft radial spotlight: saturated stickers, thick black plastic gaps, violet controls that match the rim light. The craft is mathematical honesty — the cube is not a picture of a cube; every click runs the same Rodrigues rotation on positions and orientation matrices that the CSS animation draws, which is why a scramble can always be walked back to a truly solved state.
+
+MAJOR VISUAL TECHNIQUES:
+- CSS perspective scene + transform-style:preserve-3d hierarchy (scene → rotating cube → cubies → six translated sticker faces each)
+- matrix3d() built from three integer column vectors plus scaled translation, so orientation and position live in one affine transform
+- rotate3d() layer animation whose Rodrigues math is identical to the committed integer rotation — the animation and the state cannot drift apart
+- Commit pattern: transition "none" → set transform → forced reflow → remove inline transition, snapping cubies into place between moves
+- Pointer-event orbit with pointer capture and tilt clamping over a radial-gradient studio backdrop
+- Solved detection over the full 26-piece state (positions + orientation matrices), driving the move timer and win state
+
+INTENDED INTERACTION MODEL:
+Drag to look around the cube, twist faces with the twelve buttons (primed = opposite direction), hit SCRAMBLE for a fresh 22-move puzzle, and race the clock back to six solid faces; RESET restores the solved state at any time.

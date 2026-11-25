@@ -1,0 +1,294 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>048 · Cartographer's Fold</title>
+<style>
+:root{--paper:#e8ddc4;--paper2:#dccfae;--ink:#2f2a20;--seal:#a5462f;
+  --bg:#1b1a17;--line:#cbbd9c;--hi:#7a6a45;--mute:#8d846f}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:
+  radial-gradient(760px 520px at 50% 24%,#2c2a24 0%,var(--bg) 70%);
+  color:#efe7d4;font-family:Georgia,"Times New Roman",serif;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;
+  padding:20px 34px 12px;border-bottom:1px solid #3a372e}
+.kicker{font:600 9.5px/1.4 "Segoe UI",system-ui,sans-serif;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:27px;font-weight:400}
+h1 i{font-style:italic;color:#d8b877}
+.meta{margin-left:auto;font:600 9.5px/1.4 "Segoe UI",system-ui,sans-serif;
+  letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
+.meta b{color:#d8b877}
+
+.wrap{display:grid;grid-template-columns:minmax(0,1fr) 274px;gap:30px;
+  padding:34px 34px 0;align-items:start}
+@media(max-width:940px){.wrap{grid-template-columns:1fr}}
+
+.desk{position:relative;display:flex;align-items:center;justify-content:center;min-height:470px;
+  perspective:1500px;perspective-origin:50% 46%;cursor:grab}
+.desk.grabbing{cursor:grabbing}
+.desk::after{content:"";position:absolute;width:520px;height:120px;
+  background:radial-gradient(closest-side,rgba(0,0,0,.55),transparent 75%);
+  margin-top:330px;filter:blur(6px);pointer-events:none}
+
+.paper{position:relative;width:760px;height:470px;transform-style:preserve-3d;
+  transition:transform .8s cubic-bezier(.2,.7,.25,1)}
+.paper.flipped{transform:rotateY(180deg)}
+.strip{position:absolute;top:0;height:100%;transform-style:preserve-3d;
+  transition:transform .45s cubic-bezier(.55,.05,.25,1)}
+.face{position:absolute;inset:0;overflow:hidden;backface-visibility:hidden;
+  border-right:1px solid rgba(90,80,60,.35);box-shadow:inset -14px 0 26px rgba(70,60,40,.28)}
+.face.front{background:var(--paper)}
+.face.back{transform:rotateY(180deg);background:
+  repeating-linear-gradient(45deg,#d9cba9 0 7px,#d3c49f 7px 14px);
+  border-right:none;box-shadow:inset 14px 0 26px rgba(70,60,40,.3)}
+.face.back::after{content:"ARCHIVE  ·  SHEET 7 OF 7";position:absolute;
+  inset:auto 0 46%;text-align:center;font:700 9px/1 "Segoe UI",sans-serif;
+  letter-spacing:.42em;color:#9a8b68}
+.face svg{position:absolute;top:0;height:100%}
+.mapink{stroke:#4a4132;fill:none}
+.script{font-family:Georgia,serif;font-style:italic;fill:#4a4132}
+
+.rail{display:flex;flex-direction:column;gap:16px}
+.card{background:#24231e;border:1px solid #3a372e;border-radius:14px;padding:17px}
+.card h2{margin:0 0 12px;font:600 9.5px/1.4 "Segoe UI",sans-serif;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+.row{display:flex;justify-content:space-between;font-size:13.5px;padding:7px 0;
+  border-bottom:1px dotted #3a372e}
+.row:last-child{border-bottom:none}
+.row b{font-family:"Courier New",monospace;color:#d8b877}
+label.ctl{display:block;font:600 9.5px/1.4 "Segoe UI",sans-serif;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--mute);margin:14px 0 9px}
+input[type=range]{width:100%;accent-color:#d8b877}
+.btns{display:flex;gap:9px;margin-top:14px}
+.b{flex:1;font:700 10px/1.2 "Segoe UI",sans-serif;letter-spacing:.14em;
+  text-transform:uppercase;padding:11px 5px;border-radius:8px;cursor:pointer;
+  border:1px solid #4a463a;background:#2c2a24;color:#efe7d4;transition:.15s}
+.b:hover{transform:translateY(-2px);border-color:#d8b877;color:#d8b877}
+.b.on{background:#d8b877;color:#22201b;border-color:#d8b877}
+.note{font-size:12.5px;line-height:1.75;color:var(--mute);margin:12px 0 0}
+.note b{color:#efe7d4}
+.state{display:inline-block;margin-top:12px;padding:7px 12px;border-radius:7px;
+  background:#2c2a24;border:1px dashed #4a463a;font-size:12.5px;color:#d8b877}
+@media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">letter folds · drag the sheet or use the slider</span>
+  <h1>Cartographer's <i>Fold</i></h1>
+  <span class="meta">progress <b id="pOut">0.0 / 6.0</b> · sheet <b id="sOut">flat</b></span>
+</header>
+
+<div class="wrap">
+  <div class="desk" id="desk">
+    <div class="paper" id="paper"></div>
+  </div>
+
+  <aside class="rail">
+    <section class="card">
+      <h2>Fold state</h2>
+      <div class="row"><span>strip</span><b id="stOut">0 / 6</b></div>
+      <div class="row"><span>footprint</span><b id="fpOut">760 × 470</b></div>
+      <div class="row"><span>thickness</span><b id="thOut">1 sheet</b></div>
+      <div class="row"><span>side</span><b id="sdOut">obverse</b></div>
+      <div class="state" id="stateOut">unfolded on the desk</div>
+    </section>
+
+    <section class="card">
+      <h2>Controls</h2>
+      <label class="ctl" for="p">Fold progress</label>
+      <input type="range" id="p" min="0" max="6" step="0.01" value="0">
+      <div class="btns">
+        <button class="b" id="foldAll" type="button">fold all</button>
+        <button class="b" id="openAll" type="button">unfold</button>
+      </div>
+      <div class="btns" style="margin-top:9px">
+        <button class="b" id="flip" type="button">turn over</button>
+        <button class="b" id="shake" type="button">shuffle fold</button>
+      </div>
+      <p class="note">Drag sideways anywhere on the desk to run the fold by hand — each sixth rolls one panel over its neighbour, so the map disappears strip by strip.</p>
+    </section>
+
+    <section class="card">
+      <h2>Legend</h2>
+      <div class="row"><span>scale</span><b>1 : 63 360</b></div>
+      <div class="row"><span>surveyed</span><b>anno 1887</b></div>
+      <div class="row"><span>contours</span><b>20 ft</b></div>
+      <div class="row"><span>packer</span><b>W. Halloway</b></div>
+    </section>
+  </aside>
+</div>
+
+<footer style="display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;
+  padding:22px 34px 0;font:600 9.5px/1.4 'Segoe UI',sans-serif;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)">
+  <span>perspective folding · backface-hidden pairs · one shared map, six slices</span>
+  <span>048 / 100</span>
+</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var G=function(id){return document.getElementById(id);};
+  var SVGNS=(function(){var d=document.createElement("div");d.innerHTML="<svg></svg>";return d.firstChild.namespaceURI;})();
+  function n(t,a){var e=document.createElementNS(SVGNS,t);for(var k in a)e.setAttribute(k,a[k]);return e;}
+
+  var N=6, W=760/N, H=470;
+  var paper=G("paper"), desk=G("desk");
+  var progress=0, flipped=false;
+
+  /* one shared map drawing, viewBox slices it per strip */
+  function mapSVG(){
+    var s=n("svg",{viewBox:"0 0 760 470",width:760,height:H});
+    var g=n("g",{});
+    /* sea hatch */
+    for(var y=14;y<200;y+=13){
+      for(var x=6;x<760;x+=26){
+        g.appendChild(n("path",{d:"M"+x+" "+y+" q6 -4 12 0",
+          stroke:"rgba(74,65,50,.32)","stroke-width":"1",fill:"none"}));
+      }
+    }
+    /* coastline */
+    g.appendChild(n("path",{d:"M10 260 C90 232 140 276 210 250 C280 224 300 268 370 252 C440 236 470 282 545 258 C615 236 660 272 750 244 L750 460 L10 460 Z",
+      fill:"rgba(190,214,214,.55)",stroke:"#4a4132","stroke-width":"1.6"}));
+    /* contours */
+    for(var i=0;i<5;i++){
+      var off=i*15;
+      g.appendChild(n("path",{d:"M60 "+(300-off)+" C170 "+(268-off)+" 240 "+(350-off)+" 350 "+(318-off)+" C450 "+(290-off)+" 520 "+(360-off)+" 700 "+(330-off),
+        stroke:"rgba(74,65,50,"+(0.28+i*0.08)+")","stroke-width":"1.1",fill:"none"}));
+    }
+    /* grid */
+    for(var gx=0;gx<=760;gx+=95) g.appendChild(n("line",{x1:gx,y1:0,x2:gx,y2:H,stroke:"rgba(74,65,50,.18)","stroke-width":"1"}));
+    for(var gy=0;gy<=H;gy+=94) g.appendChild(n("line",{x1:0,y1:gy,x2:760,y2:gy,stroke:"rgba(74,65,50,.18)","stroke-width":"1"}));
+    /* road / route */
+    g.appendChild(n("path",{d:"M40 420 L180 366 L300 392 L430 330 L560 352 L720 300",
+      stroke:"#a5462f","stroke-width":"2.4",fill:"none","stroke-dasharray":"9 6"}));
+    /* towns */
+    [[180,366],[430,330],[720,300]].forEach(function(t){
+      g.appendChild(n("circle",{cx:t[0],cy:t[1],r:5.5,fill:"#2f2a20"}));
+      g.appendChild(n("circle",{cx:t[0],cy:t[1],r:10,fill:"none",stroke:"#2f2a20","stroke-width":"1.4"}));
+    });
+    /* labels */
+    function txt(x,y,s2,size,rot){
+      var t=n("text",{x:x,y:y,"font-size":size||13,fill:"#4a4132","text-anchor":"middle",
+        "font-family":"Georgia,serif"});
+      if(rot) t.setAttribute("transform","rotate("+rot+" "+x+" "+y+")");
+      t.textContent=s2; g.appendChild(t);
+    }
+    txt(180,350,"Holloway",13);
+    txt(430,314,"Kirk Mere",13);
+    txt(720,284,"Saltwick",13);
+    txt(380,120,"THE GREY SOUND",15,0);
+    g.lastChild.setAttribute("letter-spacing","5");
+    txt(120,430,"Bay of Reeds",13,0);
+    g.lastChild.setAttribute("font-style","italic");
+    /* compass rose */
+    var rose=n("g",{transform:"translate(648,92)"});
+    rose.appendChild(n("circle",{r:34,fill:"none",stroke:"#4a4132","stroke-width":"1.3"}));
+    rose.appendChild(n("path",{d:"M0 -30 L7 0 L0 30 L-7 0 Z",fill:"#2f2a20"}));
+    rose.appendChild(n("path",{d:"M-30 0 L0 7 L30 0 L0 -7 Z",fill:"none",stroke:"#4a4132","stroke-width":"1.2"}));
+    var nt=n("text",{x:0,y:-36,"font-size":"12",fill:"#2f2a20","text-anchor":"middle"});
+    nt.textContent="N"; rose.appendChild(nt);
+    g.appendChild(rose);
+    /* scale bar */
+    var sc=n("g",{transform:"translate(34,446)"});
+    for(var b=0;b<6;b++) sc.appendChild(n("rect",{x:b*22,y:0,width:22,height:7,
+      fill:b%2?"#2f2a20":"#e8ddc4",stroke:"#2f2a20","stroke-width":"1"}));
+    g.appendChild(sc);
+    s.appendChild(g);
+    return s;
+  }
+
+  var strips=[];
+  for(var i=0;i<N;i++){
+    var st=document.createElement("div");
+    st.className="strip";
+    st.style.left=(i*W)+"px";
+    st.style.width=W+"px";
+    st.style.transformOrigin=(i%2===0?"left":"right")+" center";
+    st.style.zIndex=String(10+i);
+    st.style.transitionDelay=(reduce?"0ms":(i*45)+"ms");
+
+    var front=document.createElement("div");
+    front.className="face front";
+    front.style.width=W+"px";
+    var fsvg=mapSVG();
+    fsvg.style.left=(-i*W)+"px";
+    fsvg.setAttribute("width",760);
+    front.appendChild(fsvg);
+
+    var back=document.createElement("div");
+    back.className="face back";
+    back.style.width=W+"px";
+
+    st.appendChild(front); st.appendChild(back);
+    paper.appendChild(st);
+    strips.push(st);
+  }
+
+  function apply(){
+    progress=Math.max(0,Math.min(N,progress));
+    strips.forEach(function(st,i){
+      var t=Math.max(0,Math.min(1,progress-i));
+      var dir=(i%2===0)?-1:1;
+      st.style.transform="rotateY("+(dir*180*t)+"deg)";
+    });
+    G("p").value=progress.toFixed(2);
+    G("pOut").textContent=progress.toFixed(1)+" / 6.0";
+    var done=Math.floor(progress);
+    G("stOut").textContent=done+" / 6";
+    var footW=Math.max(127,Math.round(760*(1-progress/N)));
+    G("fpOut").textContent=footW+" × "+H;
+    G("thOut").textContent=(done===0?"1 sheet":(done+1)+" sheets");
+    G("sdOut").textContent=flipped?"reverse":"obverse";
+    var st2;
+    if(done===0) st2="unfolded on the desk";
+    else if(done<3) st2="half folded — "+done+" panels turned";
+    else if(done<6) st2="nearly a packet";
+    else st2="closed packet, ready for the post";
+    G("stateOut").textContent=st2;
+  }
+
+  /* slider */
+  G("p").addEventListener("input",function(){ progress=parseFloat(this.value); apply(); });
+  G("foldAll").addEventListener("click",function(){ progress=N; apply(); });
+  G("openAll").addEventListener("click",function(){ progress=0; apply(); });
+  G("flip").addEventListener("click",function(){
+    flipped=!flipped;
+    paper.classList.toggle("flipped",flipped);
+    apply();
+  });
+  G("shake").addEventListener("click",function(){
+    progress=Math.round(Math.random()*(N+1));
+    apply();
+  });
+
+  /* drag to fold */
+  var dragging=false, startX=0, startP=0;
+  desk.addEventListener("pointerdown",function(e){
+    dragging=true; startX=e.clientX; startP=progress;
+    desk.classList.add("grabbing");
+    try{ desk.setPointerCapture(e.pointerId); }catch(err){}
+  });
+  desk.addEventListener("pointermove",function(e){
+    if(!dragging) return;
+    progress=startP+(e.clientX-startX)/70;
+    apply();
+  });
+  function stop(e){
+    if(!dragging) return;
+    dragging=false; desk.classList.remove("grabbing");
+    try{ desk.releasePointerCapture(e.pointerId); }catch(err){}
+  }
+  desk.addEventListener("pointerup",stop);
+  desk.addEventListener("pointercancel",stop);
+
+  apply();
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+TITLE: Watershed — River Delta Carver
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Watershed: River Delta Carver". Render a 960×540 canvas heightmap terrain (240×135 grid, 4px cells) built from layered value noise plus a ridged term and a northward highland bias sloping down to a sea at h=0.16. Rain spawns drops on high ground; each drop walks its 8-neighbourhood downhill with a tiny jitter, eroding the cell it stands on, carrying a sediment load, depositing into slower targets, brightening a decaying wetness trail, and depositing a silt fan where it reaches the sea. Colour comes from an ImageData pass with three palettes (SATELLITE bands, SURVEY INK paper, TOPO RELIEF hypsometric), blending animated wetness to river-cyan and fresh sediment to silt-ochre, plus an overlay hillshade from the NW. Controls: rain toggle, storm burst (420 drops), rain-rate slider, palette select, new terrain, flatten, and drag-to-dig on the map; stats show drops, eroded and sediment totals. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A surveyor's hydrology table: green highlands bleeding braided cyan channels toward a dark sea. The craft is emergence — no river is drawn; thousands of stupid falling drops negotiate one into existence.
+
+MAJOR VISUAL TECHNIQUES:
+- Agent-based hydraulic erosion over an 8-neighbour heightmap with sediment transport
+- Per-frame ImageData palette pass with wetness/sediment blend channels
+- Decaying wet-field and sediment-field for animated river glow and silt bars
+- Overlay hillshade derived from local gradient for relief legibility
+- Value-noise + ridged-noise terrain synthesis with deterministic hash
+
+INTENDED INTERACTION MODEL:
+Toggle rain, dial the rainfall, trigger storm bursts, dig by dragging, switch palettes, reshape or reset the terrain — and watch channels braid, silt up and find the sea while the counters track every grain moved.

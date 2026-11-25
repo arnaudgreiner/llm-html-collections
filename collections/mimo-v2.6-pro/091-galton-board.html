@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Galton Board — Falling Into The Curve</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#10131a;color:#c3c9d4;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#e8b04c;text-transform:uppercase}
+h1 i{font-style:normal;color:#7fb0c9}
+#rig{background:#161a23;border:1px solid #262d3a;border-radius:12px;padding:15px}
+canvas{display:block;border-radius:8px;box-shadow:0 10px 36px rgba(0,0,0,.5);cursor:pointer}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#1b202b;border:1px solid #323b4c;color:#c9d1de;font:inherit;font-size:9.5px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#e8b04c;color:#fff3da}
+button.on{background:#e8b04c;border-color:#e8b04c;color:#221703;font-weight:700}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#7b8496}
+.stat b{color:#e8b04c}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#5c6474;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Galton Board <i>M91</i> · falling into the curve</h1>
+<div id="rig"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bOne">● DROP ONE</button>
+  <button id="bAuto">▶ AUTO</button>
+  <button id="b50">⤼ ×50</button>
+  <button id="bReset">↺ RESET</button>
+  <span class="stat">dropped <b id="mN">0</b> · mean <b id="mM">—</b> · σ <b id="mS">—</b></span>
+</div>
+<div class="hint">each bead meets twelve pegs and flips left or right — alone the path is noise, piled up the bins draw the bell curve you never drew · the dashed line is the exact binomial prediction for how many have fallen</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520,cx=W/2;
+var ROWS=12,S=40,PEG0=70,ROWH=26;
+var BIN_TOP=372,FLOOR=502;
+var balls=[],counts=[],total=0,auto=false,acc=0;
+for(var i=0;i<=ROWS;i++)counts.push(0);
+function pegY(r){return PEG0+r*ROWH;}
+function pegX(r,m){return cx+(m-r/2)*S;}
+function reset(){
+  balls=[];total=0;
+  for(var i=0;i<=ROWS;i++)counts[i]=0;
+}
+function drop(){
+  balls.push({x:cx+(Math.random()-0.5)*5,y:44,d:0,hits:0,vy:1.7,xT:cx,landing:false});
+}
+document.getElementById("bOne").addEventListener("click",drop);
+document.getElementById("b50").addEventListener("click",function(){
+  for(var i=0;i<50;i++)drop();
+});
+document.getElementById("bReset").addEventListener("click",reset);
+document.getElementById("bAuto").addEventListener("click",function(){
+  auto=!auto;this.className=auto?"on":"";
+  this.textContent=auto?"⏸ AUTO ON":"▶ AUTO";
+});
+function perBallH(){
+  var mx=1;
+  for(var i=0;i<counts.length;i++)if(counts[i]>mx)mx=counts[i];
+  return Math.min(9,100/mx);
+}
+function step(dt){
+  if(auto){acc+=dt;while(acc>170){acc-=170;drop();}}
+  for(var i=balls.length-1;i>=0;i--){
+    var b=balls[i];
+    if(b.landing){
+      b.y+=(b.ty-b.y)*0.16;
+      b.x+=(b.tx-b.x)*0.16;
+      if(Math.abs(b.ty-b.y)<1.2){
+        counts[b.bin]++;total++;
+        balls.splice(i,1);
+      }
+      continue;
+    }
+    b.y+=b.vy;
+    if(b.vy<4)b.vy+=0.03;
+    // deflection at each peg row
+    while(b.hits<ROWS&&b.y>pegY(b.hits)){
+      var side=Math.random()<0.5?-1:1;
+      b.d+=side;b.xT=cx+b.d*S/2;
+      b.hits++;
+      b.vy=Math.min(3.6,1.7+b.hits*0.16);
+    }
+    b.x+=(b.xT-b.x)*0.35;
+    if(b.hits>=ROWS){
+      var bin=Math.max(0,Math.min(ROWS,(b.d+ROWS)/2));
+      b.landing=true;b.bin=bin;
+      b.tx=cx+(bin-ROWS/2)*S;
+      var ph=perBallH();
+      b.ty=FLOOR-counts[bin]*ph-ph;
+    }
+  }
+}
+function comb(n,k){
+  var c=1;
+  for(var i=0;i<k;i++)c=c*(n-i)/(i+1);
+  return c;
+}
+function render(){
+  ax.fillStyle="#0e1117";ax.fillRect(0,0,W,H);
+  // hopper
+  ax.fillStyle="#1d2330";
+  ax.beginPath();
+  ax.moveTo(cx-70,16);ax.lineTo(cx+70,16);ax.lineTo(cx+14,54);ax.lineTo(cx-14,54);
+  ax.closePath();ax.fill();
+  ax.strokeStyle="#39435a";ax.lineWidth=2;ax.stroke();
+  // pegs
+  for(var r=0;r<ROWS;r++){
+    for(var m=0;m<=r;m++){
+      var px=pegX(r,m),py=pegY(r);
+      ax.fillStyle="#39435a";
+      ax.beginPath();ax.arc(px,py,3.4,0,6.2832);ax.fill();
+      ax.fillStyle="rgba(232,176,76,.5)";
+      ax.beginPath();ax.arc(px-1,py-1,1.3,0,6.2832);ax.fill();
+    }
+  }
+  // bins
+  var ph=perBallH();
+  var maxCount=1;
+  for(var i2=0;i2<=ROWS;i2++)if(counts[i2]>maxCount)maxCount=counts[i2];
+  for(var k=0;k<=ROWS;k++){
+    var bx=cx+(k-ROWS/2)*S;
+    // divider
+    ax.strokeStyle="#2a3140";ax.lineWidth=2;
+    ax.beginPath();ax.moveTo(bx-S/2,BIN_TOP);ax.lineTo(bx-S/2,FLOOR);ax.stroke();
+    // bar (sand)
+    var hgt=counts[k]*ph;
+    if(hgt>0){
+      var g=ax.createLinearGradient(0,FLOOR-hgt,0,FLOOR);
+      g.addColorStop(0,"#e8b04c");g.addColorStop(1,"#8a5f1d");
+      ax.fillStyle=g;
+      ax.fillRect(bx-S/2+2,FLOOR-hgt,S-4,hgt);
+      // grain
+      ax.fillStyle="rgba(0,0,0,.28)";
+      var rows=Math.floor(hgt/7);
+      for(var q=0;q<rows;q++){
+        ax.fillRect(bx-S/2+5+((q*13)%(S-14)),FLOOR-hgt+3+q*7,3,2);
+      }
+    }
+    ax.fillStyle="#59617a";
+    ax.font="9px ui-monospace,Menlo,monospace";
+    ax.textAlign="center";
+    ax.fillText(k,bx,FLOOR+15);
+  }
+  // floor
+  ax.strokeStyle="#39435a";ax.lineWidth=2;
+  ax.beginPath();ax.moveTo(cx-(ROWS+1)*S/2,FLOOR);ax.lineTo(cx+(ROWS+1)*S/2,FLOOR);ax.stroke();
+  // binomial prediction
+  if(total>0){
+    ax.strokeStyle="rgba(127,176,201,.9)";
+    ax.lineWidth=1.5;ax.setLineDash([5,5]);
+    ax.beginPath();
+    for(var k2=0;k2<=ROWS;k2++){
+      var exp=total*comb(ROWS,k2)/Math.pow(2,ROWS);
+      var ex=cx+(k2-ROWS/2)*S;
+      var ey=FLOOR-Math.min(exp,FLOOR-BIN_TOP-6)*ph;
+      if(k2===0)ax.moveTo(ex,ey);else ax.lineTo(ex,ey);
+    }
+    ax.stroke();ax.setLineDash([]);
+    ax.fillStyle="rgba(127,176,201,.9)";
+    ax.font="9px ui-monospace,Menlo,monospace";
+    ax.fillText("BINOMIAL(12,½)",cx+(ROWS+1)*S/2-6,BIN_TOP-6);
+    ax.textAlign="left";
+  }
+  // falling beads
+  for(var i3=0;i3<balls.length;i3++){
+    var b=balls[i3];
+    ax.fillStyle="#dfe6f2";
+    ax.beginPath();ax.arc(b.x,b.y,4.6,0,6.2832);ax.fill();
+    ax.fillStyle="rgba(255,255,255,.85)";
+    ax.beginPath();ax.arc(b.x-1.4,b.y-1.4,1.5,0,6.2832);ax.fill();
+  }
+  // stats text on canvas
+  ax.fillStyle="#7b8496";
+  ax.font="10px ui-monospace,Menlo,monospace";
+  ax.fillText("12 pegs · fair coin at every one",18,26);
+}
+function stats(){
+  document.getElementById("mN").textContent=total;
+  if(total<2){document.getElementById("mM").textContent="—";document.getElementById("mS").textContent="—";return;}
+  var mean=0;
+  for(var k=0;k<=ROWS;k++)mean+=k*counts[k];
+  mean/=total;
+  var v=0;
+  for(var k2=0;k2<=ROWS;k2++)v+=counts[k2]*(k2-mean)*(k2-mean);
+  v/=total;
+  document.getElementById("mM").textContent=mean.toFixed(2);
+  document.getElementById("mS").textContent=Math.sqrt(v).toFixed(2);
+}
+var last=performance.now(),sAcc=0;
+function loop(now){
+  var dt=now-last;last=now;
+  step(dt);
+  render();
+  sAcc+=dt;
+  if(sAcc>400){sAcc=0;stats();}
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,18 @@
+TITLE: Word Foundry — Generated Word Search Set Like Letterpress
+
+FULL PROMPT:
+Produce exactly one self-contained HTML page, "Word Foundry", with no external resources. Give it a warm paper background (a fine horizontal scan pattern over #f4efe4), a double-rule header with an uppercase sans kicker, a large serif title whose second word is red (#c8452f), an italic deck line, and three pill buttons (drag select, reveal hint, new plate). The main sheet is an off-white card with an inner hairline frame, a centred uppercase caption and a 12×12 grid of rounded paper cells holding Georgia capitals. Beside it, a rail holds the commission list of eight lowercase words with letter counts (turning teal and struck through when found), a hatched progress bar, two stat boxes (found, misfires), and an italic press-log note. A rotated double-outlined "struck" stamp appears when the plate is clear. End with a thin uppercase footer.
+
+INTENDED DESIGN DESCRIPTION:
+A print shop's proofing table: aged paper, hairline frames, a red used the way a proof mark is used — sparingly, and always as a correction or a completion.
+
+MAJOR VISUAL TECHNIQUES:
+- Grid generation with per-word placement attempts across four directions, respecting existing letters, then alphabet fill
+- Immediate regeneration when fewer than eight words fit, so the list always matches the grid
+- Straight-run selection using axis/45° validation instead of freehand cells
+- pointerdown/pointermove with elementFromPoint so selection works with mouse and touch without native drag
+- Three visual states per cell (sel / find / bad) with misfires reverted on a timeout
+- Hatched progress bar from a repeating 45° gradient, width driven by found/total
+
+INTENDED INTERACTION MODEL:
+Press on the first letter and drag to the last; any horizontal, vertical or diagonal run resolves on pointerup, striking the word through in the rail and raising the count. A wrong run flashes red and counts as a misfire. "Reveal hint" pulses the first cell of the next unfound word; "new plate" regenerates grid, list and counters; the drag pill reports its own state. Winning stamps the sheet and turns the grid red.

@@ -1,0 +1,17 @@
+TITLE: Grid & Clue — Crossword Draughtsman
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Grid & Clue: Crossword Draughtsman". Style it as newsprint on cream paper. Generate a 13×13 crossword live: pick a shuffled pool from a built-in ~100-entry word bank (each word carries its clue), plant the first word centred across, then greedily place every remaining word only where it shares letters with the grid while obeying crossword adjacency rules (no side-touching, open ends). Render the grid as a CSS grid of DOM cells with block squares, red clue numbers, and per-cell pop animation when filled; render Across/Down clue columns whose entries highlight their word's cells when clicked. Controls: new draught (rebuild), reveal word (types letters one at a time on a 70ms interval), solve all (staggers reveals), clear fills; header stats show edition, placed words, filled %, crossings and selected word. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A newspaper puzzle page assembling itself under the draughtsman's hand — cream stock, black grid, red marginalia. The craft is the placement algorithm performing as theatre: you watch constraints refuse words until one finally fits.
+
+MAJOR VISUAL TECHNIQUES:
+- Greedy crossword packing with crossing, adjacency and open-end constraints
+- DOM grid typography: numbered cells, block squares, highlight states
+- Staggered typewriter reveals for answers
+- Clue-column cross-highlighting via shared selection state
+- Newsprint art direction (rules, red marginalia, serif/mono pairing)
+
+INTENDED INTERACTION MODEL:
+Click a clue to light its slots, reveal answers letter by letter, solve the whole grid or clear it, and regenerate a fresh draught to watch the packing happen again.

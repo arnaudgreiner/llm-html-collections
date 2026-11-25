@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Brass Heavens — Mechanical Orrery</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#131009;color:#c4b58c;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#d8b255;text-transform:uppercase}
+h1 i{font-style:normal;color:#8fb0c9}
+#rig{background:#1a160d;border:1px solid #2e2718;border-radius:12px;padding:14px}
+canvas{display:block;border-radius:8px;background:#0e0c07;cursor:pointer;touch-action:none}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;width:100%;max-width:940px}
+button{background:#1c1810;border:1px solid #37301f;color:#c9bb92;font:inherit;font-size:9.5px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#d8b255;color:#fff4d6}
+button.on{background:#d8b255;border-color:#d8b255;color:#2a1e05;font-weight:700}
+label{font-size:9.5px;letter-spacing:.14em;color:#776c50;display:flex;gap:7px;align-items:center}
+input[type=range]{width:110px;accent-color:#d8b255}
+.stat{font-size:9.5px;letter-spacing:.16em;color:#776c50}
+.stat b{color:#d8b255}
+#card{font-size:10px;letter-spacing:.12em;color:#8fb0c9;min-height:16px;text-align:center}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#514a37;text-align:center;max-width:930px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Brass Heavens <i>M86</i> · mechanical orrery</h1>
+<div id="rig"><canvas id="cv" width="940" height="580"></canvas></div>
+<div class="bar">
+  <label>rate <input type="range" id="rate" min="0" max="140" value="40"></label>
+  <button id="bRun" class="on">▶ WOUND</button>
+  <button id="bGears" class="on">⚙ GEAR TRAIN</button>
+  <button id="bArm" class="on">— ARMS</button>
+  <button id="bEll">◯ ORBITS: ELLIPSE</button>
+  <button id="bToday">✦ SET TO TODAY</button>
+  <span class="stat">t + <b id="mT">0</b> d · bodies <b id="mN">8</b> · selected <b id="mS">—</b></span>
+</div>
+<div id="card">click a planet to read its plate · engraved brass, eight enamel beads, one mainspring</div>
+<div class="hint">every arm is driven by period ratios: Earth makes one turn while Neptune crawls a twentieth of its own · the gear train under the plate turns at exactly those ratios · drag RATE to wind the clock forward</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=940,H=580,cx=W/2,cy=H/2+6;
+var BODIES=[
+  {n:"MERCURY",per:88,  a:0.34,c:"#b6a894",r:3.6,note:"88 d · cratered messenger"},
+  {n:"VENUS",  per:225, a:0.46,c:"#e3c07a",r:5.4,note:"225 d · cloud deck"},
+  {n:"EARTH",  per:365, a:0.58,c:"#5f9fd8",r:5.8,note:"365 d · the standard year"},
+  {n:"MARS",   per:687, a:0.69,c:"#c26a45",r:4.6,note:"687 d · rust and quakes"},
+  {n:"JUPITER",per:4333,a:0.83,c:"#d8a86e",r:10.5,note:"11.9 y · the great spot"},
+  {n:"SATURN", per:10759,a:0.94,c:"#cfc08a",r:9,  note:"29.5 y · ringed"},
+  {n:"URANUS", per:30687,a:1.05,c:"#8fc9c4",r:7.4,note:"84 y · sideways spin"},
+  {n:"NEPTUNE",per:60190,a:1.16,c:"#5f7fd8",r:7.2,note:"164.8 y · supersonic winds"}
+];
+var BELT=[];
+for(var b=0;b<160;b++)BELT.push({a:Math.random()*6.2832,rr:0.76+Math.random()*0.02,s:0.4+Math.random()*0.9});
+var t=0,rate=0.40,run=true,gears=true,arms=true,circle=false,sel=-1;
+document.getElementById("rate").addEventListener("input",function(){rate=Number(this.value)/100;});
+document.getElementById("bRun").addEventListener("click",function(){
+  run=!run;this.className=run?"on":"";this.textContent=run?"▶ WOUND":"❚❚ UNWOUND";
+});
+document.getElementById("bGears").addEventListener("click",function(){
+  gears=!gears;this.className=gears?"on":"";
+});
+document.getElementById("bArm").addEventListener("click",function(){
+  arms=!arms;this.className=arms?"on":"";
+});
+document.getElementById("bEll").addEventListener("click",function(){
+  circle=!circle;this.textContent=circle?"◯ ORBITS: CIRCLE":"◯ ORBITS: ELLIPSE";
+});
+document.getElementById("bToday").addEventListener("click",function(){
+  t=Date.now()/86400000;  // days since epoch — a real "today" epoch angle
+});
+function unitOf(){return Math.min(W,H)*0.40;}
+function posOf(i){
+  var bd=BODIES[i];
+  var frac=(t/bd.per)%1;
+  var ang=frac*6.2832;
+  var rr=bd.a;
+  if(!circle){
+    // mild eccentricity, perihelion at angle 0
+    rr=bd.a*(1-0.06*Math.cos(ang))/(1+0.06);
+  }
+  var u=unitOf();
+  return [cx+Math.cos(ang)*rr*u,cy+Math.sin(ang)*rr*u*0.62];
+}
+var orbitScale=1;
+function ppos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointerdown",function(e){
+  var p=ppos(e);
+  var best=-1,bd2=400;
+  for(var i=0;i<BODIES.length;i++){
+    var q=posOf(i);
+    var d=(q[0]-p[0])*(q[0]-p[0])+(q[1]-p[1])*(q[1]-p[1]);
+    if(d<bd2){bd2=d;best=i;}
+  }
+  sel=best;
+  if(best>=0){
+    var bd=BODIES[best];
+    document.getElementById("mS").textContent=bd.n;
+    document.getElementById("card").textContent=bd.n+" · "+bd.note+" · orbit radius "+bd.a.toFixed(2)+" au (plate scale)";
+  }else{
+    document.getElementById("mS").textContent="—";
+    document.getElementById("card").textContent="click a planet to read its plate · engraved brass, eight enamel beads, one mainspring";
+  }
+});
+function gearRing(r,teeth,phase,col,width){
+  ax.save();
+  ax.translate(cx,cy);
+  ax.rotate(phase);
+  ax.strokeStyle=col;
+  ax.lineWidth=width;
+  ax.beginPath();ax.arc(0,0,r,0,6.2832);ax.stroke();
+  var step=6.2832/teeth;
+  for(var i=0;i<teeth;i++){
+    var a=i*step;
+    var x0=Math.cos(a)*r,y0=Math.sin(a)*r;
+    var x1=Math.cos(a)*(r+6),y1=Math.sin(a)*(r+6);
+    ax.beginPath();ax.moveTo(x0,y0);ax.lineTo(x1,y1);ax.stroke();
+  }
+  ax.restore();
+}
+function render(){
+  var unit=unitOf();
+  // plate
+  ax.fillStyle="#0e0c07";ax.fillRect(0,0,W,H);
+  var pl=ax.createRadialGradient(cx,cy,40,cx,cy,unit*1.35);
+  pl.addColorStop(0,"#241d10");pl.addColorStop(0.75,"#17130b");pl.addColorStop(1,"#0e0c07");
+  ax.fillStyle=pl;
+  ax.beginPath();ax.arc(cx,cy,unit*1.3,0,6.2832);ax.fill();
+  ax.strokeStyle="#3a301b";ax.lineWidth=3;
+  ax.beginPath();ax.arc(cx,cy,unit*1.3,0,6.2832);ax.stroke();
+  // engraved orbit rings
+  for(var i=0;i<BODIES.length;i++){
+    var bd=BODIES[i];
+    var r=bd.a*unit;
+    ax.save();
+    ax.translate(cx,cy);
+    ax.scale(1,0.62);
+    ax.beginPath();
+    ax.arc(0,0,r,0,6.2832);
+    ax.strokeStyle=(i===sel)?"rgba(216,178,85,.9)":"rgba(216,178,85,.26)";
+    ax.lineWidth=(i===sel)?2:1;
+    ax.stroke();
+    ax.restore();
+  }
+  // asteroid belt
+  ax.fillStyle="rgba(200,180,140,.5)";
+  for(var k=0;k<BELT.length;k++){
+    var bl=BELT[k];
+    var ba=bl.a+t*(1/1600)*6.2832;
+    ax.fillRect(cx+Math.cos(ba)*bl.rr*unit-0.6,cy+Math.sin(ba)*bl.rr*unit*0.62-0.6,bl.s,bl.s);
+  }
+  // gear train
+  if(gears){
+    gearRing(unit*1.14,54,-t*0.020,"rgba(216,178,85,.5)",1.4);
+    gearRing(unit*1.05,46, t*0.031,"rgba(216,178,85,.35)",1.2);
+    gearRing(unit*0.30,20,-t*0.14,"rgba(216,178,85,.55)",1.3);
+    gearRing(unit*0.20,14, t*0.22,"rgba(216,178,85,.45)",1.1);
+    // cross-brace spokes
+    ax.strokeStyle="rgba(216,178,85,.18)";
+    ax.lineWidth=2;
+    for(var s=0;s<6;s++){
+      var aa=s/6*6.2832;
+      ax.beginPath();
+      ax.moveTo(cx+Math.cos(aa)*unit*0.2,cy+Math.sin(aa)*unit*0.62*0.2);
+      ax.lineTo(cx+Math.cos(aa)*unit*1.14,cy+Math.sin(aa)*unit*0.62*1.14);
+      ax.stroke();
+    }
+  }
+  // sun
+  ax.shadowBlur=30;ax.shadowColor="rgba(240,190,80,.8)";
+  var sg=ax.createRadialGradient(cx,cy,2,cx,cy,20);
+  sg.addColorStop(0,"#fff4c9");sg.addColorStop(0.5,"#f5c24f");sg.addColorStop(1,"#b6791f");
+  ax.fillStyle=sg;
+  ax.beginPath();ax.arc(cx,cy,16,0,6.2832);ax.fill();
+  ax.shadowBlur=0;
+  // bodies + arms
+  for(var j=0;j<BODIES.length;j++){
+    var p=posOf(j);
+    var body=BODIES[j];
+    if(arms){
+      ax.strokeStyle=(j===sel)?"rgba(216,178,85,.95)":"rgba(190,165,110,.55)";
+      ax.lineWidth=(j===sel)?2.4:1.4;
+      ax.beginPath();ax.moveTo(cx,cy);ax.lineTo(p[0],p[1]);ax.stroke();
+      // counterweight collar
+      ax.fillStyle="rgba(230,205,140,.8)";
+      ax.beginPath();ax.arc((cx+p[0])/2,(cy+p[1])/2,2.2,0,6.2832);ax.fill();
+    }
+    ax.shadowBlur=(j===sel)?22:10;
+    ax.shadowColor=body.c;
+    ax.fillStyle=body.c;
+    ax.beginPath();ax.arc(p[0],p[1],body.r,0,6.2832);ax.fill();
+    ax.shadowBlur=0;
+    if(j===3){ // saturn-like ring on the ringed one handled below
+    }
+    if(j===5){
+      ax.strokeStyle="rgba(240,225,180,.75)";
+      ax.lineWidth=2;
+      ax.beginPath();ax.ellipse(p[0],p[1],body.r+5,(body.r+5)*0.4,0.5,0,6.2832);ax.stroke();
+    }
+    // label
+    ax.fillStyle=(j===sel)?"#f5d98a":"rgba(200,182,140,.75)";
+    ax.font="9px ui-monospace,monospace";
+    ax.fillText(body.n,p[0]+body.r+5,p[1]-body.r-2);
+    // tiny year counter tick
+    if(j===2){
+      ax.strokeStyle="rgba(95,159,216,.9)";
+      ax.lineWidth=2;
+      var fr=(t/body.per)%1;
+      ax.beginPath();ax.arc(p[0],p[1],body.r+3.4,-1.5708,-1.5708+fr*6.2832);ax.stroke();
+    }
+  }
+  // engraved date plate
+  ax.fillStyle="rgba(14,12,7,.85)";
+  ax.fillRect(cx-140,H-44,280,28);
+  ax.strokeStyle="#3a301b";ax.lineWidth=1;
+  ax.strokeRect(cx-140,H-44,280,28);
+  ax.fillStyle="#d8b255";
+  ax.font="11px ui-monospace,monospace";
+  ax.textAlign="center";
+  var day=Math.floor(t);
+  ax.fillText("EPOCH DAY "+day+"  ·  θE "+(((t/365)%1)*360).toFixed(1)+"°",cx,H-26);
+  ax.textAlign="left";
+}
+function loop(){
+  if(run)t+=rate*0.9;
+  render();
+  document.getElementById("mT").textContent=Math.floor(t);
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,19 @@
+TITLE: Woven Loom — Canvas Cloth Simulator with Loupe
+
+FULL PROMPT:
+Write exactly one self-contained HTML page, "Woven Loom", simulating cloth on a hand loom with zero external resources: no images, no fonts, no scripts from anywhere. Style a warm walnut workshop ground (#171310 over #2a211a) with a fine horizontal scanline texture, serif display type for the masthead ("Warp & Weft" with an italic ochre word) and a letterspaced sans for all labels. The main panel holds a 900×560 canvas that renders the cloth, plus a 132×132 loupe canvas beneath it with a crosshair. The right column carries three panels: a weave draft chooser (Plain, Twill 2/2, Satin 5, Basket, Herringbone) with an 8×8 draft mini-grid built from divs, a warp-ends range slider and a weft-tension slider; a five-entry yarn-pair palette where each swatch is a split two-tone button with its own caption; and a finish row toggling Selvage, Slub and Cloth pull.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a working bench in a dim weaving shed: the cloth is the only bright thing, framed by dark rules and quiet cream type, with ochre (#e8a33d) reserved for active states and the loupe crosshair. Nothing is skeuomorphic-with-images — the textile is genuinely drawn thread by thread, so its colour and structure are real.
+
+MAJOR VISUAL TECHNIQUES:
+- Three-pass canvas weaving: all warp, all weft, then warp floats clipped and redrawn on top
+- Per-thread linear gradients perpendicular to travel so each yarn reads as a cylinder
+- Sine wobble along each thread path for slack, scaled by the tension slider
+- Deterministic hash "slub" function for irregular yarn thickness
+- drawImage crop into the loupe for a live magnified cell with a crosshair
+- Draft functions returning true/false per cell, reused by both canvas and the mini-grid
+- CSS radial vignette drawn into the canvas so the cloth sits inside its frame
+
+INTENDED INTERACTION MODEL:
+Changing the draft rewrites the structure everywhere at once and updates the shaft count and mini-grid. The warp slider changes sett and recomputes the picks-per-inch read-out; the tension slider changes thread slack and flips the cloth-state label between slack, balanced and board-like. Choosing a yarn pair recolours both passes and replaces the caption. Selvage, Slub and Cloth pull re-render immediately. Hovering the cloth magnifies the crossing under the pointer and reports whether warp or weft floats, plus the cell's pixel dimensions.

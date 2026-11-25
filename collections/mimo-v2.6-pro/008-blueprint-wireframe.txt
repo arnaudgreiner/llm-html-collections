@@ -1,0 +1,18 @@
+TITLE: Blueprint Wireframe — Interactive Engineering Drawing
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Blueprint Wireframe", an interactive engineering drawing sheet with zero external resources. Use a deep blueprint ground (#092a4a into #1d0637-blue) overlaid with four stacked repeating gradients forming a coarse 40px grid and a fine 8px subdivision, plus a radial wash. Inside a bordered sheet, lay a toolbar of four toggles, then a two-column split: on the left an inline SVG elevation of a modular actuator — housing rectangle, shaft, bore circles, eight-petal rotor, bolt holes, cooling fins, terminal box, feet, chain-dotted centre axes in yellow (#ffcf3f), leader lines with monospaced annotations, and a dimension group using marker arrowheads and mm values; on the right a callout register with a spec table and a live cursor coordinate readout. Under it, an engineering title block split into four cells, then a four-card notes row. Four numbered hotspot buttons sit over the drawing at percentage positions.
+
+INTENDED DESIGN DESCRIPTION:
+The page should look like a real released drawing pulled from a plan chest: cool cyan-on-blue linework, one warm accent reserved strictly for dimensions, axes and active states, and monospaced lettering throughout so numbers align in columns. The composition is a framed sheet with corner registration marks and nested inset frames, and every panel is a rule rather than a shadow — flat, precise and dense with information.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered repeating-linear-gradients for a two-tier metric grid with a disable state
+- Inline SVG line drawing with dash-dot centrelines and a rotated 45° hatch pattern
+- SVG marker arrowheads for dimension terminators
+- Absolute-positioned hotspot markers tied to drawing percentages
+- Section view swap by toggling display on sibling SVG groups
+- Live coordinate readout from pointer offsets against a bounding rect
+
+INTENDED INTERACTION MODEL:
+The Assembly / Section buttons swap the outer SVG group for a hatched cut-away revealing the bore; Dimensions hides or restores the dimension group; Grid removes the background grid entirely. Hovering, focusing or clicking a numbered hotspot writes that part's note into the side register and marks the hotspot active. Moving the pointer over the drawing area updates X/Y coordinates in the panel. Buttons reflect their state with an inverted yellow fill, and all motion is reduced to none under prefers-reduced-motion.

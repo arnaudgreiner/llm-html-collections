@@ -1,0 +1,18 @@
+TITLE: Launch Sequence — Pad 39B Countdown Console
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Launch Sequence — Pad 39B Countdown Console". Build a mission-control launch console in three columns: a giant amber countdown clock reading T–00:10.0 with an auto-advancing event sequence checklist (guidance on internal power, tower arm retract, propellant pressurize, ignition, hold-down release, liftoff, tower cleared, roll program, max Q, stage cut-off, parking orbit) and a rolling comms log; a center canvas camera feed (CAM 04 · PAD 39B) showing a white rocket with escape tower beside a lattice gantry with a retracting swing arm, on a pad over a flame trench; and a telemetry column with three conic-gradient needle gauges (thrust %, altitude km, velocity m/s) plus digital readouts. The sequence runs itself: engine plume starts at T-3, camera shake scales with thrust, smoke billows across the pad, and at liftoff a simple physics integrator climbs the vehicle while the camera follows, the sky darkens from dusk to space and stars fade in with parallax. HOLD freezes the clock, ABORT triggers a blinking red escape-motor abort, RESET rewinds everything, and ×1/×5/×20 speed buttons run the count fast. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a phosphor-and-steel launch control room: deep navy panels, amber countdown glow, small-caps telemetry labels and a camera feed that shakes with the engines. The craft is in the timing — a checklist that ticks itself off in real time, a thrust curve that starts the plume three seconds before motion, and a camera rig that transitions from a fixed pad shot to a following shot without a cut.
+
+MAJOR VISUAL TECHNIQUES:
+- Three-column CSS grid console (checklist / camera canvas / telemetry) collapsing to one column on narrow screens
+- Canvas camera feed: gradient sky that lerps dusk→space with altitude, parallax starfield, lattice gantry with X-braces, beacon blink, retracting swing-arm rotated about its pivot
+- Thrust-driven plume: gradient flame cone plus screen-space spark particles, world-space billowing smoke puffs that enlarge and fade while the camera rises
+- Screen-shake proportional to thrust, camera-follow math (partial then full) keeping the rocket framed while the pad scrolls away
+- conic-gradient gauge arcs driven by CSS custom properties (--deg, --a) with transform-rotated needles
+- Event checklist with done/now states fed by a while-loop that survives ×20 time skips; comms log capped at 7 entries
+
+INTENDED INTERACTION MODEL:
+Watch the count run, or press HOLD to freeze the clock and study the checklist, ×5/×20 to fast-forward to liftoff, ABORT at any moment for the blinking escape-motor scenario, and RESET to rewind the whole mission to T-10. Telemetry gauges and the camera feed tell the story without touching a button.

@@ -1,0 +1,367 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>018 · Pegboard Drop</title>
+<style>
+:root{--bg:#0a0e14;--panel:#121822;--edge:#232d3d;--txt:#e8eef7;--mute:#8395ac;
+  --acc:#ff5f7e;--blue:#4dd0e1;--gold:#ffd166}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--txt);
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  background:
+   radial-gradient(90% 70% at 50% -10%,#16202e,#0a0e14 60%),
+   var(--bg);
+  padding:26px 20px 54px}
+.wrap{max-width:1180px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:1px solid var(--edge);padding-bottom:15px}
+.kicker{font-size:10px;letter-spacing:.44em;text-transform:uppercase;color:var(--mute)}
+h1{margin:8px 0 0;font-size:clamp(30px,5vw,52px);font-weight:200;letter-spacing:-.02em}
+h1 b{font-weight:800;color:var(--acc)}
+h1 i{font-family:Georgia,serif;font-weight:400;color:var(--gold)}
+.meta{text-align:right;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;
+  color:var(--mute);line-height:2}
+.meta b{color:var(--blue)}
+.board{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:18px;margin-top:18px}
+.stage{position:relative;border:1px solid var(--edge);border-radius:12px;overflow:hidden;
+  background:linear-gradient(180deg,#0d1219,#0a0e14)}
+.stage canvas{display:block;width:100%;height:auto;cursor:crosshair}
+.hint{position:absolute;left:16px;top:14px;font-size:10.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:rgba(232,238,247,.6);pointer-events:none}
+.side{display:flex;flex-direction:column;gap:14px}
+.card{border:1px solid var(--edge);background:var(--panel);border-radius:12px;padding:15px 16px}
+.card h2{margin:0 0 12px;font-size:10px;letter-spacing:.34em;text-transform:uppercase;
+  color:var(--mute)}
+.bank{display:grid;grid-template-columns:repeat(5,1fr);gap:6px}
+.slot{border:1px solid var(--edge);border-radius:7px;padding:9px 4px 8px;text-align:center;
+  background:#0e141d;transition:.25s}
+.slot b{display:block;font-size:17px;font-weight:800;color:var(--gold);
+  font-variant-numeric:tabular-nums}
+.slot span{font-size:8.5px;letter-spacing:.14em;color:var(--mute);text-transform:uppercase}
+.slot.hit{border-color:var(--gold);background:rgba(255,209,102,.12);
+  box-shadow:0 0 18px rgba(255,209,102,.28);transform:translateY(-3px)}
+.totals{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px}
+.tl{border:1px solid var(--edge);border-radius:8px;padding:10px 11px;background:#0e141d}
+.tl b{display:block;font-size:23px;font-weight:800;color:var(--blue);
+  font-variant-numeric:tabular-nums}
+.tl span{font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.btns{display:flex;gap:9px;flex-wrap:wrap}
+button{font-family:inherit;cursor:pointer;transition:.2s}
+.go{flex:1;padding:13px 10px;border:1.5px solid var(--acc);background:rgba(255,95,126,.14);
+  color:var(--acc);border-radius:9px;font-size:11px;font-weight:800;letter-spacing:.2em;
+  text-transform:uppercase}
+.go:hover{background:var(--acc);color:#160408;transform:translateY(-2px)}
+.ghost{padding:13px 14px;border:1.5px solid var(--edge);background:transparent;color:var(--mute);
+  border-radius:9px;font-size:11px;font-weight:800;letter-spacing:.18em;text-transform:uppercase}
+.ghost:hover{border-color:var(--blue);color:var(--blue)}
+label.row{display:flex;justify-content:space-between;align-items:center;font-size:10.5px;
+  letter-spacing:.18em;text-transform:uppercase;color:var(--mute);margin:13px 0 7px}
+label.row b{color:var(--txt);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--acc)}
+.hist{list-style:none;margin:0;padding:0;max-height:170px;overflow:auto}
+.hist li{display:flex;justify-content:space-between;gap:10px;padding:7px 2px;font-size:12.5px;
+  border-bottom:1px dashed var(--edge);color:var(--mute);font-variant-numeric:tabular-nums}
+.hist li b{color:var(--gold);font-weight:700}
+.hist li:first-child{color:var(--txt)}
+.log{font-size:12px;line-height:1.7;color:var(--mute);margin:0}
+.log b{color:var(--acc)}
+.foot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:20px;
+  font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(max-width:940px){.board{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 018 · gravity well</span>
+      <h1>Pegboard <b>Drop</b> <i>&amp; collect</i></h1>
+    </div>
+    <div class="meta">
+      Rows <b id="mRows">9</b> · Pegs <b id="mPegs">0</b><br>
+      Balls in flight <b id="mLive">0</b> · Restitution <b id="mRest">0.62</b>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="stage">
+      <span class="hint">click anywhere to release a ball</span>
+      <canvas id="cv" width="860" height="620" aria-label="Pegboard physics simulation"></canvas>
+    </div>
+
+    <aside class="side">
+      <section class="card">
+        <h2>Prize bank</h2>
+        <div class="bank" id="bank">
+          <div class="slot" data-i="0"><b>500</b><span>edge</span></div>
+          <div class="slot" data-i="1"><b>100</b><span>wide</span></div>
+          <div class="slot" data-i="2"><b>50</b><span>mid</span></div>
+          <div class="slot" data-i="3"><b>100</b><span>wide</span></div>
+          <div class="slot" data-i="4"><b>500</b><span>edge</span></div>
+        </div>
+        <div class="totals">
+          <div class="tl"><b id="score">0</b><span>Score</span></div>
+          <div class="tl"><b id="drops">0</b><span>Drops</span></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Controls</h2>
+        <label class="row">Gravity <b id="gVal">1.00</b></label>
+        <input type="range" id="g" min="40" max="220" value="100">
+        <label class="row">Bounce <b id="bVal">0.62</b></label>
+        <input type="range" id="b" min="20" max="90" value="62">
+        <label class="row">Ball size <b id="rVal">7</b></label>
+        <input type="range" id="r" min="4" max="14" value="7">
+        <div class="btns" style="margin-top:14px">
+          <button class="go" id="drop" type="button">Release ×1</button>
+          <button class="ghost" id="rain" type="button">Rain ×12</button>
+        </div>
+        <div class="btns" style="margin-top:9px">
+          <button class="ghost" id="clear" type="button" style="flex:1">Clear board</button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Last landings</h2>
+        <ul class="hist" id="hist"><li><span>no drops yet</span><b>—</b></li></ul>
+      </section>
+    </aside>
+  </div>
+
+  <section class="card" style="margin-top:16px">
+    <h2>Read-out</h2>
+    <p class="log" id="log">Pegs are struck, not hovered: every bounce loses speed to a
+      restitution factor you control. Hold the size small and gravity high for a
+      <b>chaotic</b> scatter, or the reverse for slow, deliberate arcs.</p>
+  </section>
+
+  <footer class="foot">
+    <span>Pegboard drop · verlet-free impulse physics on canvas</span>
+    <span>018 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("cv"), ctx=cv.getContext("2d");
+  var W=cv.width, H=cv.height;
+
+  var GRAV=1.0, REST=0.62, R=7;
+  var ROWS=9, balls=[], pegs=[], bins=[];
+  var score=0, drops=0, history=[];
+
+  var el=function(id){ return document.getElementById(id); };
+
+  function build(){
+    pegs=[]; bins=[];
+    var top=90, gapY=(H-top-70)/(ROWS-1);
+    var count=0;
+    for(var r=0;r<ROWS;r++){
+      var n=r+3;
+      var pad=54;
+      var step=(W-pad*2)/(n-1);
+      for(var i=0;i<n;i++){
+        pegs.push({x:pad+step*i, y:top+gapY*r, r:5, hit:0, row:r});
+        count++;
+      }
+    }
+    /* prize slots along the bottom */
+    var slotW=W/5;
+    for(var s=0;s<5;s++){
+      bins.push({x:s*slotW, w:slotW, v:[500,100,50,100,500][s], flash:0});
+    }
+    el("mPegs").textContent=count;
+    el("mRows").textContent=ROWS;
+  }
+
+  function spawn(x,y){
+    balls.push({x:x!==undefined?x:W/2+(Math.random()-0.5)*90, y:y!==undefined?y:40,
+      vx:(Math.random()-0.5)*1.6, vy:0.5, r:R, life:0, hue:Math.random()*40+170, dead:false});
+    drops++;
+    el("drops").textContent=drops;
+  }
+
+  function land(bin){
+    score+=bin.v;
+    el("score").textContent=score;
+    bin.flash=1;
+    var cell=document.querySelector('.slot[data-i="'+bins.indexOf(bin)+'"]');
+    if(cell){ cell.classList.add("hit");
+      setTimeout(function(){ cell.classList.remove("hit"); },420); }
+    var li=document.createElement("li");
+    li.innerHTML='<span>drop #'+drops+' → slot '+(bins.indexOf(bin)+1)+'</span><b>+'+bin.v+'</b>';
+    var hist=el("hist");
+    hist.insertBefore(li,hist.firstChild);
+    while(hist.children.length>6) hist.removeChild(hist.lastChild);
+    el("log").innerHTML='Landed in slot <b>'+(bins.indexOf(bin)+1)+
+      '</b> for <b>+'+bin.v+'</b>. Bank is <b>'+score+
+      '</b> across <b>'+drops+'</b> drops — gravity '+GRAV.toFixed(2)+
+      ', restitution '+REST.toFixed(2)+'.';
+  }
+
+  function step(){
+    var dt=1;
+    for(var b=0;b<balls.length;b++){
+      var o=balls[b];
+      if(o.dead) continue;
+      o.vy+=GRAV*0.22*dt;
+      o.vx*=0.999;
+      o.x+=o.vx*dt; o.y+=o.vy*dt;
+      o.life++;
+
+      /* pegs */
+      for(var p=0;p<pegs.length;p++){
+        var g=pegs[p];
+        var dx=o.x-g.x, dy=o.y-g.y;
+        var d2=dx*dx+dy*dy, min=o.r+g.r;
+        if(d2<min*min && d2>0.0001){
+          var d=Math.sqrt(d2);
+          var nx=dx/d, ny=dy/d;
+          var overlap=min-d;
+          o.x+=nx*overlap; o.y+=ny*overlap;
+          var dot=o.vx*nx+o.vy*ny;
+          o.vx-=(1+REST)*dot*nx;
+          o.vy-=(1+REST)*dot*ny;
+          /* slight lateral jitter so identical drops diverge */
+          o.vx+=(Math.random()-0.5)*0.5;
+          g.hit=1;
+        }
+      }
+      /* walls */
+      if(o.x<o.r){ o.x=o.r; o.vx=-o.vx*REST; }
+      if(o.x>W-o.r){ o.x=W-o.r; o.vx=-o.vx*REST; }
+
+      /* floor / bins */
+      if(o.y>H-46){
+        var idx=Math.max(0,Math.min(4,Math.floor(o.x/(W/5))));
+        land(bins[idx]);
+        o.dead=true;
+      }
+      if(o.life>1400) o.dead=true;
+    }
+    balls=balls.filter(function(o){ return !o.dead; });
+    for(var i=0;i<pegs.length;i++) pegs[i].hit*=0.86;
+    for(var k=0;k<bins.length;k++) bins[k].flash*=0.92;
+    el("mLive").textContent=balls.length;
+  }
+
+  function draw(t){
+    var bg=ctx.createLinearGradient(0,0,0,H);
+    bg.addColorStop(0,"#0d1219"); bg.addColorStop(1,"#0a0e14");
+    ctx.fillStyle=bg; ctx.fillRect(0,0,W,H);
+
+    /* guide rails */
+    ctx.strokeStyle="rgba(77,208,225,.14)"; ctx.lineWidth=2;
+    ctx.beginPath(); ctx.moveTo(24,20); ctx.lineTo(24,H-46);
+    ctx.moveTo(W-24,20); ctx.lineTo(W-24,H-46); ctx.stroke();
+
+    /* bins */
+    bins.forEach(function(bn,i){
+      var x=bn.x;
+      ctx.fillStyle= bn.flash>0.05
+        ? "rgba(255,209,102,"+(0.10+bn.flash*0.30).toFixed(3)+")"
+        : "rgba(255,255,255,.025)";
+      ctx.fillRect(x,H-46,bn.w,46);
+      ctx.strokeStyle="rgba(35,45,61,.9)"; ctx.lineWidth=2;
+      ctx.beginPath(); ctx.moveTo(x,H-46); ctx.lineTo(x,H); ctx.stroke();
+      ctx.fillStyle= bn.flash>0.05?"#ffd166":"#5b6b80";
+      ctx.font="700 15px 'Segoe UI',system-ui,sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText(String(bn.v), x+bn.w/2, H-22);
+    });
+    ctx.strokeStyle="rgba(35,45,61,1)"; ctx.strokeRect(0,H-46,W,46);
+
+    /* pegs */
+    pegs.forEach(function(g){
+      var glow=g.hit;
+      if(glow>0.04){
+        var rg=ctx.createRadialGradient(g.x,g.y,0,g.x,g.y,16);
+        rg.addColorStop(0,"rgba(255,95,126,"+(glow*0.9).toFixed(3)+")");
+        rg.addColorStop(1,"rgba(255,95,126,0)");
+        ctx.fillStyle=rg;
+        ctx.beginPath(); ctx.arc(g.x,g.y,16,0,Math.PI*2); ctx.fill();
+      }
+      ctx.fillStyle= glow>0.04 ? "#ff9fb3" : "#39465a";
+      ctx.beginPath(); ctx.arc(g.x,g.y,g.r+glow*1.5,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="rgba(255,255,255,.25)";
+      ctx.beginPath(); ctx.arc(g.x-1.4,g.y-1.4,1.6,0,Math.PI*2); ctx.fill();
+    });
+
+    /* balls with trails */
+    balls.forEach(function(o){
+      ctx.strokeStyle="rgba(77,208,225,.25)"; ctx.lineWidth=o.r*0.7;
+      ctx.beginPath();
+      ctx.moveTo(o.x-o.vx*4, o.y-o.vy*4);
+      ctx.lineTo(o.x,o.y);
+      ctx.stroke();
+      var g=ctx.createRadialGradient(o.x-2,o.y-2,1,o.x,o.y,o.r);
+      g.addColorStop(0,"hsl("+o.hue+",90%,85%)");
+      g.addColorStop(1,"hsl("+o.hue+",85%,55%)");
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(o.x,o.y,o.r,0,Math.PI*2); ctx.fill();
+    });
+
+    if(reduce){ /* static overlay guide */
+      ctx.fillStyle="rgba(232,238,247,.5)";
+      ctx.font="600 13px 'Segoe UI',system-ui,sans-serif";
+      ctx.textAlign="center";
+      ctx.fillText("reduced motion — balls resolve instantly", W/2, 26);
+    }
+  }
+
+  var last=0;
+  function loop(now){
+    if(!reduce){
+      /* two sub-steps keep collisions stable at speed */
+      step(); step();
+    }
+    draw(now);
+    requestAnimationFrame(loop);
+  }
+
+  cv.addEventListener("click",function(e){
+    var rect=cv.getBoundingClientRect();
+    var x=(e.clientX-rect.left)*(W/rect.width);
+    spawn(Math.max(30,Math.min(W-30,x)),40);
+  });
+  el("drop").addEventListener("click",function(){ spawn(); });
+  el("rain").addEventListener("click",function(){
+    var n=0;
+    var iv=setInterval(function(){ spawn(); if(++n>=12) clearInterval(iv); }, reduce?0:70);
+  });
+  el("clear").addEventListener("click",function(){
+    balls=[]; el("mLive").textContent="0";
+  });
+  el("g").addEventListener("input",function(){
+    GRAV=+this.value/100;
+    el("gVal").textContent=GRAV.toFixed(2);
+    el("mRest").textContent=REST.toFixed(2);
+  });
+  el("b").addEventListener("input",function(){
+    REST=+this.value/100;
+    el("bVal").textContent=REST.toFixed(2);
+    el("mRest").textContent=REST.toFixed(2);
+  });
+  el("r").addEventListener("input",function(){
+    R=+this.value; el("rVal").textContent=R;
+    balls.forEach(function(o){ o.r=R; });
+  });
+
+  build();
+  if(reduce){
+    /* resolve drops synchronously: reduced motion still shows outcomes */
+    el("log").innerHTML="Reduced motion is on: balls settle the moment they are released.";
+  }
+  requestAnimationFrame(loop);
+  spawn(); spawn();
+})();
+</script>
+</body>
+</html>

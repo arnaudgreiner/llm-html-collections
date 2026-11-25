@@ -1,0 +1,282 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>017 · Studio Kanban</title>
+<style>
+:root{--bg:#101418;--col:#161b21;--card:#1d242c;--edge:#2b3542;--txt:#e7edf3;
+  --mute:#7e8fa2;--acc:#4fd1a5;--hot:#ff6b6b;--sun:#ffc857;--blue:#5aa9ff}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--txt);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  background:
+   radial-gradient(120% 90% at 10% -10%,rgba(90,169,255,.16),transparent 60%),
+   radial-gradient(90% 70% at 90% 0%,rgba(79,209,165,.12),transparent 55%),
+   var(--bg);
+  padding:26px 22px 54px}
+.wrap{max-width:1320px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:1px solid var(--edge);padding-bottom:16px}
+.kicker{font-size:10px;letter-spacing:.44em;text-transform:uppercase;color:var(--mute)}
+h1{margin:8px 0 0;font-size:clamp(30px,5vw,54px);font-weight:200;letter-spacing:-.02em}
+h1 b{font-weight:800;color:var(--acc)}
+.tools{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.search{position:relative}
+.search input{width:220px;padding:11px 14px 11px 34px;border:1px solid var(--edge);
+  background:rgba(255,255,255,.04);color:var(--txt);border-radius:8px;font-family:inherit;
+  font-size:13px;outline:none;transition:.2s}
+.search input:focus{border-color:var(--acc);box-shadow:0 0 0 3px rgba(79,209,165,.15)}
+.search::before{content:"⌕";position:absolute;left:11px;top:7px;font-size:17px;color:var(--mute)}
+.btn{padding:11px 16px;border:1px solid var(--acc);background:rgba(79,209,165,.14);
+  color:var(--acc);border-radius:8px;font-family:inherit;font-size:11px;font-weight:800;
+  letter-spacing:.2em;text-transform:uppercase;cursor:pointer;transition:.2s}
+.btn:hover{background:var(--acc);color:#08130f;transform:translateY(-2px)}
+.stats{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:18px 0 16px}
+.st{border:1px solid var(--edge);background:rgba(255,255,255,.03);border-radius:10px;
+  padding:13px 15px}
+.st b{display:block;font-size:26px;font-weight:800;font-variant-numeric:tabular-nums}
+.st span{font-size:9.5px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.st.hot b{color:var(--hot)}.st.ok b{color:var(--acc)}.st.sun b{color:var(--sun)}
+.st.blue b{color:var(--blue)}
+
+.board{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:14px;align-items:start}
+.col{background:var(--col);border:1px solid var(--edge);border-radius:12px;padding:12px;
+  min-height:340px;transition:.2s}
+.col.over{border-color:var(--acc);background:#182420;
+  box-shadow:inset 0 0 0 1px rgba(79,209,165,.4)}
+.chead{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  padding:2px 4px 11px;border-bottom:1px dashed var(--edge);margin-bottom:11px}
+.chead h2{margin:0;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:800}
+.chead .dot{width:8px;height:8px;border-radius:50%;display:inline-block;margin-right:7px}
+.c1 .dot{background:var(--sun)}.c2 .dot{background:var(--blue)}
+.c3 .dot{background:#b48cff}.c4 .dot{background:var(--acc)}
+.count{font-size:11px;font-weight:800;color:var(--mute);background:rgba(255,255,255,.06);
+  border-radius:20px;padding:3px 9px;font-variant-numeric:tabular-nums}
+.list{display:flex;flex-direction:column;gap:10px;min-height:60px}
+.card{background:var(--card);border:1px solid var(--edge);border-left:3px solid var(--blue);
+  border-radius:9px;padding:11px 12px 12px;cursor:grab;transition:.18s;position:relative}
+.card:hover{transform:translateY(-3px);border-color:#3d4a5a;box-shadow:0 10px 24px rgba(0,0,0,.4)}
+.card.drag{opacity:.35;cursor:grabbing;transform:rotate(-2deg)}
+.card .tags{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:7px}
+.tag{font-size:9px;letter-spacing:.16em;text-transform:uppercase;padding:3px 7px;
+  border-radius:4px;font-weight:700}
+.tag.p0{background:rgba(255,107,107,.16);color:var(--hot);border:1px solid rgba(255,107,107,.4)}
+.tag.p1{background:rgba(255,200,87,.14);color:var(--sun);border:1px solid rgba(255,200,87,.35)}
+.tag.p2{background:rgba(90,169,255,.14);color:var(--blue);border:1px solid rgba(90,169,255,.35)}
+.tag.fn{background:rgba(79,209,165,.12);color:var(--acc);border:1px solid rgba(79,209,165,.3)}
+.tag.dx{background:rgba(180,140,255,.14);color:#b48cff;border:1px solid rgba(180,140,255,.35)}
+.card h3{margin:0;font-size:14.5px;font-weight:600;line-height:1.35}
+.card p{margin:6px 0 0;font-size:12px;color:var(--mute);line-height:1.5}
+.card .foot{display:flex;justify-content:space-between;align-items:center;gap:8px;
+  margin-top:10px;padding-top:9px;border-top:1px dashed var(--edge)}
+.who{display:flex;align-items:center;gap:7px;font-size:11px;color:var(--mute)}
+.av{width:22px;height:22px;border-radius:50%;display:grid;place-items:center;font-size:10px;
+  font-weight:800;color:#0d1116}
+.due{font-size:10.5px;letter-spacing:.1em;color:var(--mute);font-variant-numeric:tabular-nums}
+.due.late{color:var(--hot);border:1px solid rgba(255,107,107,.4);border-radius:4px;padding:2px 6px}
+.empty{font-size:11.5px;color:var(--mute);text-align:center;padding:16px 6px;
+  border:1px dashed var(--edge);border-radius:8px;letter-spacing:.1em}
+.add{width:100%;margin-top:10px;padding:9px;border:1px dashed var(--edge);background:transparent;
+  color:var(--mute);border-radius:8px;cursor:pointer;font-family:inherit;font-size:11px;
+  letter-spacing:.2em;text-transform:uppercase;transition:.2s}
+.add:hover{border-color:var(--acc);color:var(--acc)}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:22px;
+  font-size:10px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.toast{position:fixed;left:50%;bottom:26px;transform:translate(-50%,80px);opacity:0;
+  background:#0d1116;border:1px solid var(--acc);color:var(--acc);border-radius:8px;
+  padding:11px 18px;font-size:12px;letter-spacing:.1em;transition:.28s;pointer-events:none}
+.toast.show{transform:translate(-50%,0);opacity:1}
+@media(max-width:1050px){.board{grid-template-columns:repeat(2,1fr)}
+  .stats{grid-template-columns:repeat(2,1fr)}}
+@media(max-width:640px){.board{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 017 · workflow surface</span>
+      <h1>Studio <b>Kanban</b></h1>
+    </div>
+    <div class="tools">
+      <span class="search"><input id="q" type="search" placeholder="Filter cards…" aria-label="Filter cards"></span>
+      <button class="btn" id="newBtn" type="button">+ New card</button>
+    </div>
+  </header>
+
+  <section class="stats">
+    <div class="st sun"><b id="sBack">0</b><span>Backlog</span></div>
+    <div class="st blue"><b id="sProg">0</b><span>In progress</span></div>
+    <div class="st hot"><b id="sOver">0</b><span>Overdue</span></div>
+    <div class="st ok"><b id="sDone">0</b><span>Shipped</span></div>
+  </section>
+
+  <main class="board" id="board">
+    <section class="col c1" data-col="backlog">
+      <div class="chead"><h2><span class="dot"></span>Backlog</h2><span class="count">0</span></div>
+      <div class="list" id="col-backlog"></div>
+      <button class="add" type="button" data-add="backlog">+ add card</button>
+    </section>
+    <section class="col c2" data-col="doing">
+      <div class="chead"><h2><span class="dot"></span>In progress</h2><span class="count">0</span></div>
+      <div class="list" id="col-doing"></div>
+      <button class="add" type="button" data-add="doing">+ add card</button>
+    </section>
+    <section class="col c3" data-col="review">
+      <div class="chead"><h2><span class="dot"></span>Review</h2><span class="count">0</span></div>
+      <div class="list" id="col-review"></div>
+      <button class="add" type="button" data-add="review">+ add card</button>
+    </section>
+    <section class="col c4" data-col="done">
+      <div class="chead"><h2><span class="dot"></span>Shipped</h2><span class="count">0</span></div>
+      <div class="list" id="col-done"></div>
+      <button class="add" type="button" data-add="done">+ add card</button>
+    </section>
+  </main>
+
+  <footer class="foot">
+    <span>Drag cards between columns · filter narrows instantly</span>
+    <span>017 / 100</span>
+  </footer>
+</div>
+<div class="toast" id="toast" role="status"></div>
+
+<script>
+(function(){
+  "use strict";
+  var COLS=["backlog","doing","review","done"];
+  var people={MO:["Mira O.", "#ffc857"],TR:["Theo R.","#5aa9ff"],IN:["Ines K.","#4fd1a5"],
+              PA:["Pav L.","#b48cff"],SO:["Sofia D.","#ff6b6b"]};
+  var uid=100;
+  var cards=[
+    {id:1,col:"backlog",t:"Split checkout bundle",d:"Cut 380 KB from the first paint of the pay screen.",tags:["perf","p1"],who:"TR",due:"24 Sep",late:false},
+    {id:2,col:"backlog",t:"Dark mode audit",d:"Sweep every token against the AA contrast table.",tags:["dx","p2"],who:"IN",due:"29 Sep",late:false},
+    {id:3,col:"backlog",t:"Offline drafts",d:"Queue edits locally and reconcile on reconnect.",tags:["feat","p2"],who:"MO",due:"02 Oct",late:false},
+    {id:4,col:"doing",t:"Refactor token pipeline",d:"One source of truth for colour, space and type scales.",tags:["dx","p0"],who:"PA",due:"22 Sep",late:true},
+    {id:5,col:"doing",t:"Map keyboard shortcuts",d:"Parity pass with the desktop client, plus a cheat sheet.",tags:["a11y","p1"],who:"SO",due:"25 Sep",late:false},
+    {id:6,col:"review",t:"Invite flow rewrite",d:"Three steps instead of seven; copy reviewed, needs eyes.",tags:["feat","p1"],who:"MO",due:"23 Sep",late:false},
+    {id:7,col:"review",t:"Billing webhook retries",d:"Exponential backoff with a dead-letter console.",tags:["feat","p0"],who:"TR",due:"21 Sep",late:true},
+    {id:8,col:"done",t:"Empty-state illustrations",d:"Four scenes drawn as inline SVG, no raster assets.",tags:["dx","p2"],who:"IN",due:"18 Sep",late:false},
+    {id:9,col:"done",t:"Session refresh fix",d:"No more silent logouts on long-lived tabs.",tags:["perf","p1"],who:"PA",due:"19 Sep",late:false}
+  ];
+  var filter="";
+
+  var toast=document.getElementById("toast"), tTimer=0;
+  function say(msg){
+    toast.textContent=msg; toast.classList.add("show");
+    clearTimeout(tTimer); tTimer=setTimeout(function(){ toast.classList.remove("show"); },1800);
+  }
+
+  function tagClass(t){
+    if(t==="p0"||t==="p1"||t==="p2") return t;
+    if(t==="feat") return "fn";
+    if(t==="dx"||t==="perf"||t==="a11y") return "dx";
+    return "fn";
+  }
+  function matches(c){
+    if(!filter) return true;
+    var hay=(c.t+" "+c.d+" "+c.tags.join(" ")+people[c.who][0]).toLowerCase();
+    return hay.indexOf(filter)>=0;
+  }
+
+  function render(){
+    var shown=0;
+    COLS.forEach(function(col){
+      var host=document.getElementById("col-"+col);
+      host.innerHTML="";
+      var all=cards.filter(function(c){ return c.col===col; });
+      var vis=all.filter(matches);
+      shown+=vis.length;
+      if(!vis.length){
+        var e=document.createElement("div");
+        e.className="empty";
+        e.textContent = all.length ? "no match" : "drop cards here";
+        host.appendChild(e);
+      }
+      vis.forEach(function(c){
+        var el=document.createElement("article");
+        el.className="card";
+        el.draggable=true;
+        el.dataset.id=c.id;
+        el.style.borderLeftColor =
+          c.tags[0]==="p0"?"#ff6b6b":(c.tags[0]==="p1"?"#ffc857":"#5aa9ff");
+        var tagsHtml=c.tags.map(function(t){
+          return '<span class="tag '+tagClass(t)+'">'+t+'</span>'; }).join("");
+        var p=people[c.who];
+        el.innerHTML=
+          '<div class="tags">'+tagsHtml+'</div>'+
+          '<h3>'+c.t+'</h3><p>'+c.d+'</p>'+
+          '<div class="foot"><span class="who"><span class="av" style="background:'+
+            p[1]+'">'+c.who+'</span>'+p[0]+'</span>'+
+          '<span class="due'+(c.late?" late":"")+'">'+(c.late?"overdue · ":"")+c.due+'</span></div>';
+        el.addEventListener("dragstart",function(ev){
+          ev.dataTransfer.setData("text/plain",String(c.id));
+          ev.dataTransfer.effectAllowed="move";
+          el.classList.add("drag");
+        });
+        el.addEventListener("dragend",function(){ el.classList.remove("drag"); });
+        el.addEventListener("click",function(){
+          var order=COLS.indexOf(c.col);
+          c.col=COLS[Math.min(order+1,COLS.length-1)];
+          render();
+          say(c.col==="done" ? "“"+c.t+"” shipped" : "moved to "+c.col);
+        });
+        host.appendChild(el);
+      });
+      document.querySelector('.col[data-col="'+col+'"] .count').textContent=all.length;
+    });
+    /* stats */
+    document.getElementById("sBack").textContent=
+      cards.filter(function(c){return c.col==="backlog";}).length;
+    document.getElementById("sProg").textContent=
+      cards.filter(function(c){return c.col==="doing";}).length;
+    document.getElementById("sOver").textContent=
+      cards.filter(function(c){return c.late && c.col!=="done";}).length;
+    document.getElementById("sDone").textContent=
+      cards.filter(function(c){return c.col==="done";}).length;
+    if(shown===0 && filter) say("no cards match “"+filter+"”");
+  }
+
+  /* dnd targets */
+  document.querySelectorAll(".col").forEach(function(col){
+    col.addEventListener("dragover",function(e){ e.preventDefault(); col.classList.add("over"); });
+    col.addEventListener("dragleave",function(){ col.classList.remove("over"); });
+    col.addEventListener("drop",function(e){
+      e.preventDefault(); col.classList.remove("over");
+      var id=+e.dataTransfer.getData("text/plain");
+      var c=cards.filter(function(x){ return x.id===id; })[0];
+      if(!c) return;
+      c.col=col.dataset.col;
+      if(c.col==="done") c.late=false;
+      render();
+      say("“"+c.t+"” → "+col.dataset.col);
+    });
+  });
+
+  document.getElementById("q").addEventListener("input",function(){
+    filter=this.value.trim().toLowerCase(); render();
+  });
+
+  var presets=[
+    {t:"Instrument the funnel",d:"Event coverage for every step of onboarding.",tags:["feat","p1"]},
+    {t:"Trim the icon set",d:"Remove 40 unused glyphs from the sprite.",tags:["dx","p2"]},
+    {t:"Flaky test triage",d:"Quarantine, then fix, the four red tests.",tags:["perf","p0"]}
+  ];
+  function addCard(col){
+    var p=presets[uid%presets.length];
+    cards.push({id:++uid,col:col,t:p.t,d:p.d,tags:p.tags,who:"MO",
+      due:"30 Sep",late:false});
+    render(); say("card added to "+col);
+  }
+  document.getElementById("newBtn").addEventListener("click",function(){ addCard("backlog"); });
+  document.querySelectorAll("[data-add]").forEach(function(b){
+    b.addEventListener("click",function(){ addCard(b.dataset.add); });
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>

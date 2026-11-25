@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Harbour Depot — Sokoban Berths</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#12100e;color:#b8ac9a;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:13px;padding:22px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#ffcf7d;text-transform:uppercase}
+h1 i{font-style:normal;color:#6fd8c6}
+.wrap{display:flex;gap:15px;flex-wrap:wrap;justify-content:center;width:100%;max-width:1040px}
+#stage{flex:1;min-width:360px;background:#1a1713;border:1px solid #2e2822;border-radius:12px;padding:14px;position:relative}
+canvas{display:block;width:100%;border-radius:8px}
+#over{position:absolute;inset:0;display:none;align-items:center;justify-content:center;flex-direction:column;gap:12px;background:rgba(12,10,8,.82);border-radius:12px}
+#over.show{display:flex}
+#over h2{font-size:15px;letter-spacing:.3em;color:#6fd8c6}
+#over p{font-size:10.5px;letter-spacing:.2em;color:#8a7f6e}
+#over button{font-size:11px;padding:11px 22px}
+.panel{background:#1a1713;border:1px solid #2e2822;border-radius:12px;padding:14px 16px;width:246px}
+.ph{font-size:9.5px;letter-spacing:.26em;color:#6b6153;margin-bottom:10px}
+.lvl{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:14px}
+.lvl button{flex:1;min-width:38px}
+.lvl button.done{border-color:#3f7a6f;color:#6fd8c6}
+button{background:#221d18;border:1px solid #3a332b;color:#c4b8a5;font:inherit;font-size:10px;padding:8px 12px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#ffcf7d;color:#ffe2b0}
+button.on{background:#ffcf7d;border-color:#ffcf7d;color:#1a1206;font-weight:700}
+.rds{display:flex;gap:8px;margin-bottom:13px}
+.rd{flex:1;background:#131110;border:1px solid #2a241e;border-radius:8px;padding:8px 9px;text-align:center}
+.rd span{display:block;font-size:8px;letter-spacing:.18em;color:#5c5346}
+.rd b{font-size:15px;color:#ffcf7d}
+.rd i{font-style:normal;color:#6fd8c6}
+.dpad{display:grid;grid-template-columns:repeat(3,46px);grid-template-rows:repeat(3,40px);gap:6px;justify-content:center;margin-bottom:13px}
+.dpad button{font-size:13px;padding:0}
+.dpad .sp{visibility:hidden}
+.tools{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:13px}
+.legend{font-size:9.5px;letter-spacing:.12em;color:#6b6153;line-height:2}
+.legend s{display:inline-block;width:11px;height:11px;border-radius:3px;text-decoration:none;margin-right:7px;vertical-align:-1px}
+.hint{font-size:9.5px;letter-spacing:.14em;color:#4f4739;text-align:center;max-width:900px;line-height:1.9}
+#tip{font-size:10px;letter-spacing:.16em;color:#8a7f6e;text-align:center;min-height:15px}
+#tip i{font-style:normal;color:#ffcf7d}
+</style>
+</head>
+<body>
+<h1>Harbour Depot <i>M73</i> · sokoban berths</h1>
+<div class="wrap">
+  <div id="stage">
+    <canvas id="cv" width="720" height="520"></canvas>
+    <div id="over">
+      <h2>BERTH CLEARED</h2>
+      <p id="ovp"></p>
+      <button id="ovNext">NEXT BERTH ►</button>
+    </div>
+  </div>
+  <div class="panel">
+    <div class="ph">BERTH SELECT</div>
+    <div class="lvl" id="lvlRow">
+      <button data-l="0">01</button><button data-l="1">02</button>
+      <button data-l="2">03</button><button data-l="3">04</button>
+      <button data-l="4">05</button>
+    </div>
+    <div class="rds">
+      <div class="rd"><span>MOVES</span><b id="rMove">0</b></div>
+      <div class="rd"><span>PUSHES</span><b id="rPush">0</b></div>
+      <div class="rd"><span>PAR</span><i id="rPar">0</i></div>
+    </div>
+    <div class="ph">SHUNTER</div>
+    <div class="dpad">
+      <button class="sp"></button><button data-d="0,-1">▲</button><button class="sp"></button>
+      <button data-d="-1,0">◀</button><button data-d="0,1" id="faceBtn">●</button><button data-d="1,0">▶</button>
+      <button class="sp"></button><button data-d="0,1">▼</button><button class="sp"></button>
+    </div>
+    <div class="tools">
+      <button id="bUndo">UNDO</button>
+      <button id="bReset">RESET</button>
+      <button id="bHint">HINT</button>
+    </div>
+    <div class="legend">
+      <s style="background:#e0a24a"></s>cargo crate<br>
+      <s style="background:#2f5f57;border-radius:50%"></s>shunter<br>
+      <s style="background:#7a2f2f;border-radius:50%"></s>mooring ring<br>
+      <s style="background:#3f8f7d;border-radius:50%"></s>crate berthed
+    </div>
+  </div>
+</div>
+<div id="tip">push every crate onto a <i>mooring ring</i> — the shunter never pulls, only pushes</div>
+<div class="hint">arrow keys / WASD steer · crates slide two abreast never · UNDO rewinds the whole shift</div>
+<script>
+(function(){
+"use strict";
+var LEVELS=[
+{n:"OPEN SLIP",par:3,map:[
+"#####",
+"#   #",
+"# . #",
+"# $ #",
+"# @ #",
+"#####"]},
+{n:"TWIN BERTH",par:4,map:[
+"#######",
+"#     #",
+"# . . #",
+"# $ $ #",
+"#  @  #",
+"#######"]},
+{n:"THE DIVIDE",par:6,map:[
+"#######",
+"# . . #",
+"#  #  #",
+"# $ $ #",
+"#  @  #",
+"#######"]},
+{n:"THREE SLIPS",par:12,map:[
+"########",
+"#      #",
+"# . . .#",
+"#      #",
+"# $ $ $#",
+"#   @  #",
+"########"]},
+{n:"THE SHED",par:9,map:[
+"########",
+"#  .   #",
+"#  .   #",
+"#      #",
+"# $$#  #",
+"# @    #",
+"########"]}];
+var HINTS=[
+"Stand below the crate and push it up once.",
+"Berth the twin crates first-come — either order works.",
+"The dividing wall splits the quay; walk around, never through.",
+"Line up under each crate: two pushes apiece, twelve moves total.",
+"Load the east column first, then walk the second crate west and north."
+];
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=720,H=520;
+var lvl=0,grid=[],goals=[],crates=[],pc={c:0,r:0},px=0,py=0;
+var moves=0,pushes=0,undo=[],won=false,ts=36;
+var clear=new Array(5).fill(false);
+function parse(L){
+  grid=[];goals=[];crates=[];undo=[];moves=0;pushes=0;won=false;
+  var rows=L.map.length,cols=Math.max.apply(null,L.map.map(function(r){return r.length;}));
+  ts=Math.min(Math.floor((W-40)/cols),Math.floor((H-40)/rows));
+  for(var r=0;r<rows;r++){
+    grid[r]=[];
+    for(var c=0;c<cols;c++){
+      var ch=(L.map[r][c]||" ");
+      grid[r][c]=(ch==="#")?1:0;
+      if(ch==="."||ch==="*"||ch==="+")goals.push([c,r]);
+      if(ch==="$"||ch==="*")crates.push({c:c,r:r,x:0,y:0});
+      if(ch==="@"||ch==="+"){pc={c:c,r:r};}
+    }
+  }
+  px=posOf(pc).x;py=posOf(pc).y;
+  crates.forEach(function(k){var p=posOf(k);k.x=p.x;k.y=p.y;});
+  document.getElementById("rPar").textContent=L.par;
+  document.getElementById("over").classList.remove("show");
+  document.getElementById("tip").innerHTML="BERTH <i>"+("0"+(lvl+1)).slice(-2)+"</i> — "+L.n;
+  sync();
+}
+function off(){return {x:(W-ts*maxC())/2,y:(H-ts*grid.length)/2};}
+function maxC(){return Math.max.apply(null,grid.map(function(r){return r.length;}));}
+function posOf(o){var d=off();return {x:d.x+o.c*ts+ts/2,y:d.y+o.r*ts+ts/2};}
+function at(c,r){return (grid[r]&&grid[r][c]===1)?true:false;}
+function crateAt(c,r){for(var i=0;i<crates.length;i++)if(crates[i].c===c&&crates[i].r===r)return crates[i];return null;}
+function isGoal(c,r){return goals.some(function(g){return g[0]===c&&g[1]===r;});}
+function sync(){
+  document.getElementById("rMove").textContent=moves;
+  document.getElementById("rPush").textContent=pushes;
+}
+function snapshot(){
+  undo.push({p:{c:pc.c,r:pc.r},k:crates.map(function(k){return {c:k.c,r:k.r};}),m:moves,pu:pushes});
+  if(undo.length>300)undo.shift();
+}
+function tryMove(dx,dy){
+  if(won)return;
+  var tc=pc.c+dx,tr=pc.r+dy;
+  if(at(tc,tr))return;
+  var k=crateAt(tc,tr);
+  if(k){
+    var bc=tc+dx,br=tr+dy;
+    if(at(bc,br)||crateAt(bc,br))return;
+    snapshot();
+    k.c=bc;k.r=br;pushes++;
+  }else{
+    snapshot();
+  }
+  pc.c=tc;pc.r=tr;moves++;sync();
+  checkWin();
+}
+function checkWin(){
+  var all=crates.every(function(k){return isGoal(k.c,k.r);});
+  if(all){
+    won=true;clear[lvl]=true;
+    setTimeout(function(){
+      var L=LEVELS[lvl];
+      document.getElementById("ovp").textContent=L.n+" · "+moves+" moves / "+pushes+" pushes · par "+L.par;
+      document.getElementById("over").classList.add("show");
+      document.querySelectorAll("#lvlRow button").forEach(function(b,i){b.className=clear[i]?"done":"";});
+    },420);
+  }
+}
+function undoOne(){
+  if(!undo.length)return;
+  var s=undo.pop();
+  pc=s.p;
+  crates.forEach(function(k,i){k.c=s.k[i].c;k.r=s.k[i].r;});
+  moves=s.m;pushes=s.pu;won=false;
+  document.getElementById("over").classList.remove("show");
+  sync();
+}
+function reset(){parse(LEVELS[lvl]);}
+function rr(x,y,w,h,r){ax.beginPath();ax.moveTo(x+r,y);ax.arcTo(x+w,y,x+w,y+h,r);ax.arcTo(x+w,y+h,x,y+h,r);ax.arcTo(x,y+h,x,y,r);ax.arcTo(x,y,x+w,y,r);ax.closePath();}
+function draw(){
+  ax.fillStyle="#17130f";ax.fillRect(0,0,W,H);
+  var d=off(),rows=grid.length,cols=maxC();
+  for(var r=0;r<rows;r++)for(var c=0;c<cols;c++){
+    var x=d.x+c*ts,y=d.y+r*ts;
+    if(grid[r][c]===1){
+      ax.fillStyle="#241d16";ax.fillRect(x,y,ts,ts);
+      ax.fillStyle="#3a2f22";ax.fillRect(x,y,ts,6);
+      ax.strokeStyle="rgba(0,0,0,.35)";ax.strokeRect(x+.5,y+.5,ts-1,ts-1);
+    }else{
+      ax.fillStyle=((r+c)%2)?"#33281f":"#392d23";
+      ax.fillRect(x,y,ts,ts);
+      ax.strokeStyle="rgba(0,0,0,.18)";
+      ax.beginPath();ax.moveTo(x,y+ts/2);ax.lineTo(x+ts,y+ts/2);ax.stroke();
+    }
+  }
+  goals.forEach(function(g){
+    var gx=d.x+g[0]*ts+ts/2,gy=d.y+g[1]*ts+ts/2;
+    ax.strokeStyle="rgba(200,90,80,.85)";ax.lineWidth=2.5;
+    ax.beginPath();ax.arc(gx,gy,ts*0.28,0,6.2832);ax.stroke();
+    ax.beginPath();ax.arc(gx,gy,ts*0.14,0,6.2832);ax.stroke();
+    ax.lineWidth=1;
+  });
+  crates.forEach(function(k){
+    var p={x:k.x,y:k.y},s=ts*0.78,bert=isGoal(k.c,k.r);
+    ax.fillStyle="rgba(0,0,0,.35)";
+    rr(p.x-s/2+3,p.y-s/2+5,s,s,4);ax.fill();
+    var g=ax.createLinearGradient(p.x-s/2,p.y-s/2,p.x+s/2,p.y+s/2);
+    if(bert){g.addColorStop(0,"#4fbfa6");g.addColorStop(1,"#256a5c");}
+    else{g.addColorStop(0,"#e8b25c");g.addColorStop(1,"#a9702a");}
+    ax.fillStyle=g;
+    rr(p.x-s/2,p.y-s/2,s,s,4);ax.fill();
+    ax.strokeStyle=bert?"rgba(200,255,240,.7)":"rgba(80,50,15,.55)";
+    ax.lineWidth=1.6;
+    ax.strokeRect(p.x-s/2+4,p.y-s/2+4,s-8,s-8);
+    ax.beginPath();
+    ax.moveTo(p.x-s/2+4,p.y-s/2+4);ax.lineTo(p.x+s/2-4,p.y+s/2-4);
+    ax.moveTo(p.x+s/2-4,p.y-s/2+4);ax.lineTo(p.x-s/2+4,p.y+s/2-4);
+    ax.stroke();
+    ax.lineWidth=1;
+    if(bert){
+      ax.strokeStyle="rgba(150,255,230,.5)";
+      ax.beginPath();ax.arc(p.x,p.y,s*0.75,0,6.2832);ax.stroke();
+    }
+  });
+  var pp={x:px,y:py},pr=ts*0.62;
+  ax.fillStyle="rgba(0,0,0,.35)";
+  ax.beginPath();ax.arc(pp.x+2,pp.y+4,pr/2,0,6.2832);ax.fill();
+  var pg=ax.createRadialGradient(pp.x-pr*0.3,pp.y-pr*0.35,2,pp.x,pp.y,pr/2);
+  pg.addColorStop(0,"#8ff0dd");pg.addColorStop(1,"#2f7a6a");
+  ax.fillStyle=pg;
+  ax.beginPath();ax.arc(pp.x,pp.y,pr/2,0,6.2832);ax.fill();
+  ax.fillStyle="rgba(10,30,26,.9)";
+  ax.beginPath();ax.arc(pp.x,pp.y,pr*0.14,0,6.2832);ax.fill();
+}
+var last=performance.now();
+function loop(now){
+  var dt=Math.min(0.05,(now-last)/1000);last=now;
+  var e=1-Math.pow(0.0008,dt);
+  var tp=posOf(pc);
+  px+=(tp.x-px)*e;py+=(tp.y-py)*e;
+  crates.forEach(function(k){
+    var p=posOf(k);
+    k.x+=(p.x-k.x)*e;k.y+=(p.y-k.y)*e;
+  });
+  draw();
+  requestAnimationFrame(loop);
+}
+document.addEventListener("keydown",function(e){
+  var map={ArrowUp:[0,-1],ArrowDown:[0,1],ArrowLeft:[-1,0],ArrowRight:[1,0],
+           w:[0,-1],s:[0,1],a:[-1,0],d:[1,0],W:[0,-1],S:[0,1],A:[-1,0],D:[1,0],
+           z:[-9,0],Z:[-9,0]};
+  if(e.key==="z"||e.key==="Z"||e.key==="u"||e.key==="U"){undoOne();e.preventDefault();return;}
+  if(e.key==="r"||e.key==="R"){reset();return;}
+  var m=map[e.key];
+  if(!m)return;
+  e.preventDefault();
+  if(m[0]===-9){undoOne();return;}
+  tryMove(m[0],m[1]);
+});
+document.querySelectorAll(".dpad button[data-d]").forEach(function(b){
+  b.addEventListener("click",function(){
+    var d=b.getAttribute("data-d").split(",");
+    tryMove(Number(d[0]),Number(d[1]));
+  });
+});
+document.querySelectorAll("#lvlRow button").forEach(function(b){
+  b.addEventListener("click",function(){lvl=Number(b.getAttribute("data-l"));reset();});
+});
+document.getElementById("bUndo").addEventListener("click",undoOne);
+document.getElementById("bReset").addEventListener("click",reset);
+document.getElementById("bHint").addEventListener("click",function(){
+  document.getElementById("tip").innerHTML="HINT — <i>"+HINTS[lvl]+"</i>";
+});
+document.getElementById("ovNext").addEventListener("click",function(){
+  lvl=(lvl+1)%LEVELS.length;reset();
+});
+function fixPos(){var tp=posOf(pc);px=tp.x;py=tp.y;crates.forEach(function(k){var p=posOf(k);k.x=p.x;k.y=p.y;});}
+function posOfStatic(o){return posOf(o);}
+parse(LEVELS[0]);
+fixPos();
+requestAnimationFrame(loop);
+window.addEventListener("resize",function(){fixPos();});
+})();
+</script>
+</body>
+</html>

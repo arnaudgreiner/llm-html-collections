@@ -1,0 +1,341 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>027 · Pocket Sequencer</title>
+<style>
+:root{--bg:#15121b;--panel:#1d1926;--line:#2c2638;--txt:#efe9f7;--mute:#8b83a0;
+  --acc:#ff5fa2;--acc2:#57d7ff;--acc3:#ffd166;--on:#3b3350}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:
+  radial-gradient(900px 480px at 50% -12%, #261f36, transparent 70%), var(--bg);
+  color:var(--txt);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;
+  padding-bottom:46px}
+.wrap{max-width:1000px;margin:0 auto;padding:28px 18px}
+header{text-align:center}
+.kicker{font-size:10px;letter-spacing:.5em;text-transform:uppercase;color:var(--mute)}
+h1{margin:10px 0 4px;font-size:clamp(28px,5vw,50px);font-weight:300;letter-spacing:.02em}
+h1 b{font-weight:800;color:var(--acc)}
+.sub{color:var(--mute);font-size:13.5px;max-width:58ch;margin:6px auto 0;line-height:1.6}
+
+.machine{margin-top:22px;background:var(--panel);border:1px solid var(--line);
+  border-radius:20px;padding:16px;box-shadow:0 30px 60px rgba(0,0,0,.45)}
+.transport{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;
+  padding-bottom:14px;border-bottom:1px solid var(--line);margin-bottom:14px}
+.btn{background:#262034;border:1px solid var(--line);color:var(--txt);border-radius:12px;
+  padding:11px 16px;font:inherit;font-size:11px;letter-spacing:.22em;text-transform:uppercase;
+  cursor:pointer;transition:.18s;display:flex;align-items:center;gap:9px}
+.btn:hover{border-color:var(--acc);color:var(--acc)}
+.btn:active{transform:translateY(1px)}
+.btn.play{background:var(--acc);border-color:var(--acc);color:#1a0f17;font-weight:800}
+.btn.play:hover{color:#1a0f17;filter:brightness(1.07)}
+.knob{display:flex;align-items:center;gap:9px;background:#262034;border:1px solid var(--line);
+  border-radius:12px;padding:8px 14px}
+.knob label{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+.knob input[type=range]{width:110px;accent-color:var(--acc2)}
+.knob output{font-size:12.5px;font-weight:700;font-variant-numeric:tabular-nums;min-width:44px;
+  color:var(--acc2)}
+
+.grid{display:grid;grid-template-columns:56px repeat(16,1fr);gap:6px;align-items:center}
+@media(max-width:720px){.grid{grid-template-columns:44px repeat(16,1fr);gap:4px}}
+.rowname{font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);
+  text-align:right;padding-right:4px;line-height:1.2}
+.rowname i{display:block;font-style:normal;font-size:8px;color:#6a6280}
+.cell{position:relative;aspect-ratio:1/1;border-radius:7px;background:var(--on);border:1px solid
+  transparent;cursor:pointer;transition:.12s;min-height:20px}
+.cell:hover{border-color:rgba(255,255,255,.35)}
+.cell.on{box-shadow:inset 0 -3px 0 rgba(0,0,0,.35)}
+.cell.on.r0{background:var(--acc)} .cell.on.r1{background:var(--acc3)}
+.cell.on.r2{background:var(--acc2)} .cell.on.r3{background:#9dff6b}
+.cell.playhead{outline:2px solid rgba(255,255,255,.75);outline-offset:1px}
+.cell.beat{background:#332c47}
+.cell.on.beat{filter:brightness(1.25)}
+
+.scales{display:flex;gap:8px;flex-wrap:wrap;justify-content:center;margin-top:16px;
+  padding-top:14px;border-top:1px solid var(--line)}
+.pillbtn{background:transparent;border:1px solid var(--line);color:var(--mute);border-radius:30px;
+  padding:7px 14px;font:inherit;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  cursor:pointer;transition:.18s}
+.pillbtn:hover{color:var(--txt);border-color:var(--acc2)}
+.pillbtn.on{background:var(--acc2);border-color:var(--acc2);color:#07222c;font-weight:700}
+.hint{margin-top:14px;text-align:center;font-size:11.5px;color:var(--mute);line-height:1.7}
+.hint kbd{background:#262034;border:1px solid var(--line);border-radius:6px;padding:2px 7px;
+  font-family:inherit;font-size:10.5px;color:var(--acc3)}
+.foot{max-width:1000px;margin:26px auto 0;padding:0 18px;display:flex;justify-content:space-between;
+  gap:12px;flex-wrap:wrap;font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">Folio 027 · four tracks, sixteen steps</span>
+    <h1>Pocket <b>Sequencer</b></h1>
+    <p class="sub">A step grid you can play in the browser — every sound is synthesised live
+      from oscillators, so nothing is loaded and nothing loops.</p>
+  </header>
+
+  <section class="machine">
+    <div class="transport">
+      <button class="btn play" id="play" type="button"><span id="playIcon">▶</span>
+        <span id="playLbl">Play</span></button>
+      <button class="btn" id="clear" type="button">Clear</button>
+      <button class="btn" id="rand" type="button">Randomise</button>
+      <span class="knob"><label for="tempo">Tempo</label>
+        <input id="tempo" type="range" min="70" max="170" step="1" value="116">
+        <output id="tempoOut">116</output></span>
+      <span class="knob"><label for="level">Level</label>
+        <input id="level" type="range" min="0" max="100" step="1" value="70">
+        <output id="levelOut">70</output></span>
+    </div>
+
+    <div class="grid" id="grid" role="grid" aria-label="step sequencer"></div>
+
+    <div class="scales" role="group" aria-label="root note">
+      <button class="pillbtn on" data-root="60" type="button">C</button>
+      <button class="pillbtn" data-root="62" type="button">D</button>
+      <button class="pillbtn" data-root="65" type="button">F</button>
+      <button class="pillbtn" data-root="67" type="button">G</button>
+      <button class="pillbtn" data-root="69" type="button">A</button>
+      <span style="align-self:center;font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute);margin-left:6px">
+        pentatonic root</span>
+    </div>
+
+    <p class="hint">Click cells to arm them · <kbd>Space</kbd> play/stop ·
+      <kbd>C</kbd> clear · <kbd>R</kbd> randomise · rows: kick / snare / hat / lead</p>
+  </section>
+
+  <footer class="foot">
+    <span>Web Audio synthesis · zero assets</span>
+    <span>027 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var STEPS=16, ROWS=4;
+  var TRACK=[
+    {name:"kick",  sub:"low sine",     hue:"r0"},
+    {name:"snare", sub:"noise burst",  hue:"r1"},
+    {name:"hat",   sub:"short noise",  hue:"r2"},
+    {name:"lead",  sub:"saw lead",     hue:"r3"}
+  ];
+  /* default groove so the page is playable on first sight */
+  var pat=[
+    [1,0,0,0, 1,0,0,0, 1,0,0,0, 1,0,1,0],
+    [0,0,0,0, 1,0,0,0, 0,0,0,0, 1,0,0,0],
+    [1,0,1,0, 1,0,1,0, 1,0,1,0, 1,0,1,1],
+    [0,0,1,0, 0,1,0,0, 0,0,1,0, 1,0,0,1]
+  ];
+  var root=60, tempo=116, level=0.7, playing=false, step=0;
+  var timer=null, ctx=null, analyser=null;
+
+  var grid=document.getElementById("grid");
+
+  /* build grid: header-less, row labels + 16 cells per row */
+  TRACK.forEach(function(t,r){
+    var lab=document.createElement("div");
+    lab.className="rowname";
+    lab.innerHTML=t.name+"<i>"+t.sub+"</i>";
+    grid.appendChild(lab);
+    for(var s=0;s<STEPS;s++){
+      var b=document.createElement("button");
+      b.type="button";
+      b.className="cell"+(pat[r][s]?" on "+t.hue:"")+(s%4===0?" beat":"");
+      b.dataset.r=r; b.dataset.s=s;
+      b.setAttribute("aria-pressed", pat[r][s]?"true":"false");
+      b.setAttribute("aria-label", t.name+" step "+(s+1));
+      grid.appendChild(b);
+    }
+  });
+
+  function toggle(btn){
+    var r=+btn.dataset.r, s=+btn.dataset.s;
+    pat[r][s]=pat[r][s]?0:1;
+    btn.classList.toggle("on",!!pat[r][s]);
+    btn.setAttribute("aria-pressed", pat[r][s]?"true":"false");
+    if(pat[r][s]) buttonTone(r,s);
+  }
+
+  grid.addEventListener("click",function(e){
+    var t=e.target;
+    if(t.classList && t.classList.contains("cell")) toggle(t);
+  });
+
+  /* --- audio --- */
+  function ac(){
+    if(!ctx){
+      var AC=window.AudioContext||window.webkitAudioContext;
+      if(!AC) return null;
+      ctx=new AC();
+      var master=ctx.createGain();
+      master.gain.value=level;
+      analyser=ctx.createAnalyser();
+      analyser.fftSize=64;
+      master.connect(analyser);
+      analyser.connect(ctx.destination);
+      ctx._master=master;
+    }
+    if(ctx.state==="suspended") ctx.resume();
+    return ctx;
+  }
+
+  function env(node,when,attack,decay){
+    var g=ctx.createGain();
+    g.gain.setValueAtTime(0.0001,when);
+    g.gain.exponentialRampToValueAtTime(1,when+attack);
+    g.gain.exponentialRampToValueAtTime(0.0001,when+decay);
+    node.connect(g);
+    return g;
+  }
+
+  function mtof(m){ return 440*Math.pow(2,(m-69)/12); }
+
+  function noiseBuffer(dur){
+    var n=Math.floor(ctx.sampleRate*dur);
+    var buf=ctx.createBuffer(1,n,ctx.sampleRate);
+    var d=buf.getChannelData(0);
+    for(var i=0;i<n;i++) d[i]=Math.random()*2-1;
+    return buf;
+  }
+
+  function fire(r,when){
+    if(!ctx) return;
+    if(r===0){                                   /* kick: pitched sine drop */
+      var o=ctx.createOscillator(); o.type="sine";
+      o.frequency.setValueAtTime(150,when);
+      o.frequency.exponentialRampToValueAtTime(45,when+0.16);
+      var g=env(o,when,0.005,0.34);
+      g.connect(ctx._master);
+      o.start(when); o.stop(when+0.36);
+    }else if(r===1){                             /* snare: noise + body */
+      var s=ctx.createBufferSource(); s.buffer=noiseBuffer(0.25);
+      var f=ctx.createBiquadFilter(); f.type="highpass"; f.frequency.value=1400;
+      s.connect(f);
+      var g2=env(f,when,0.004,0.17);
+      g2.connect(ctx._master);
+      s.start(when); s.stop(when+0.2);
+    }else if(r===2){                             /* hat: tight high noise */
+      var h=ctx.createBufferSource(); h.buffer=noiseBuffer(0.09);
+      var hf=ctx.createBiquadFilter(); hf.type="highpass"; hf.frequency.value=7200;
+      h.connect(hf);
+      var g3=env(hf,when,0.002,0.06);
+      g3.connect(ctx._master);
+      h.start(when); h.stop(when+0.08);
+    }else{                                       /* lead: saw on pentatonic */
+      var k=ctx.createOscillator(); k.type="sawtooth";
+      var scale=[0,3,5,7,10];
+      var note=root+scale[(step*3)%scale.length]+(step%8===0?12:0);
+      k.frequency.setValueAtTime(mtof(note),when);
+      var lp=ctx.createBiquadFilter(); lp.type="lowpass";
+      lp.frequency.setValueAtTime(2600,when);
+      lp.frequency.exponentialRampToValueAtTime(700,when+0.28);
+      k.connect(lp);
+      var g4=env(lp,when,0.01,0.3);
+      g4.connect(ctx._master);
+      k.start(when); k.stop(when+0.34);
+    }
+  }
+
+  function buttonTone(r,s){
+    var a=ac();
+    if(!a) return;
+    var prev=step; step=s;
+    fire(r,a.currentTime+0.01);
+    step=prev;
+  }
+
+  /* --- transport --- */
+  function highlight(s){
+    var cells=grid.querySelectorAll(".cell");
+    for(var i=0;i<cells.length;i++){
+      cells[i].classList.toggle("playhead", +cells[i].dataset.s===s);
+    }
+  }
+
+  function tick(){
+    if(!playing) return;
+    ac();
+    var when=ctx? ctx.currentTime+0.01 : 0;
+    for(var r=0;r<ROWS;r++) if(pat[r][step]) fire(r,when);
+    highlight(step);
+    step=(step+1)%STEPS;
+    timer=setTimeout(tick, 60000/tempo/4);
+  }
+
+  function start(){
+    playing=true;
+    document.getElementById("playIcon").textContent="■";
+    document.getElementById("playLbl").textContent="Stop";
+    document.getElementById("play").classList.remove("play");
+    step=0;
+    tick();
+  }
+  function stop(){
+    playing=false;
+    if(timer) clearTimeout(timer);
+    document.getElementById("playIcon").textContent="▶";
+    document.getElementById("playLbl").textContent="Play";
+    document.getElementById("play").classList.add("play");
+    highlight(-1);
+  }
+  function togglePlay(){ playing? stop():start(); }
+
+  document.getElementById("play").addEventListener("click",togglePlay);
+
+  document.getElementById("clear").addEventListener("click",function(){
+    for(var r=0;r<ROWS;r++) for(var s=0;s<STEPS;s++) pat[r][s]=0;
+    [].slice.call(grid.querySelectorAll(".cell")).forEach(function(c){
+      c.classList.remove("on"); c.setAttribute("aria-pressed","false");
+    });
+  });
+
+  document.getElementById("rand").addEventListener("click",function(){
+    for(var r=0;r<ROWS;r++){
+      var density=[0.28,0.16,0.55,0.3][r];
+      for(var s=0;s<STEPS;s++) pat[r][s]=Math.random()<density?1:0;
+    }
+    [].slice.call(grid.querySelectorAll(".cell")).forEach(function(c){
+      var on=pat[+c.dataset.r][+c.dataset.s];
+      c.classList.toggle("on",!!on);
+      c.setAttribute("aria-pressed", on?"true":"false");
+    });
+  });
+
+  var tr=document.getElementById("tempo");
+  tr.addEventListener("input",function(){
+    tempo=+tr.value;
+    document.getElementById("tempoOut").textContent=tempo;
+  });
+  var lv=document.getElementById("level");
+  lv.addEventListener("input",function(){
+    level=+lv.value/100;
+    document.getElementById("levelOut").textContent=lv.value;
+    if(ctx && ctx._master) ctx._master.gain.value=level;
+  });
+
+  [].slice.call(document.querySelectorAll(".pillbtn")).forEach(function(b){
+    b.addEventListener("click",function(){
+      [].slice.call(document.querySelectorAll(".pillbtn")).forEach(function(o){
+        o.classList.remove("on");
+      });
+      b.classList.add("on");
+      root=+b.dataset.root;
+      if(playing) buttonTone(3,0);
+    });
+  });
+
+  window.addEventListener("keydown",function(e){
+    if(e.target.tagName==="INPUT") return;
+    if(e.code==="Space"){ e.preventDefault(); togglePlay(); }
+    else if(e.key==="c"||e.key==="C"){ document.getElementById("clear").click(); }
+    else if(e.key==="r"||e.key==="R"){ document.getElementById("rand").click(); }
+  });
+})();
+</script>
+</body>
+</html>

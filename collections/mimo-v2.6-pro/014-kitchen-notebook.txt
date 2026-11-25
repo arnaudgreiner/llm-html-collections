@@ -1,0 +1,19 @@
+TITLE: Kitchen Notebook — Editorial Cookbook with Sticky Index and Scaling Yields
+
+FULL PROMPT:
+Produce exactly one self-contained HTML page, "Kitchen Notebook", an editorial cookbook folio with no external resources: no images, no web fonts, no scripts or styles from anywhere. Use a cream paper ground (#fbf5e9) over a 4px dotted grain, ink #241c14, a red accent #b8402d and rules #d8cbb4, set in Georgia. The masthead is a double-rule band with a serif title whose second word is red italic, balanced by a right-hand meta stack. The body is a three-column grid: a sticky left index of five anchors with active-state highlighting, a main article containing an introduction with a 76px red drop cap, a pull quote behind a red bar, and three recipe blocks, plus a sticky right rail with a live shopping list, a coverage bar and a standing-advice card. Each recipe has an h3 title with red italic, a yield stepper (minus / readout / plus), a datum strip, a two-column grid of ingredient list and numbered method, and a bordered margin-note tip. Close with a colophon section carrying a rotated red circular stamp.
+
+INTENDED DESIGN DESCRIPTION:
+The page should read like a well-kept kitchen folio printed letterpress on cream stock: double rules, generous leading, leading zeroes on the method numbers inside red circles, and one accent colour used sparingly enough that it always means "look here". Everything is flat — no shadows, no rounded cards — and the only colour outside the ink-and-paper scheme is the red.
+
+MAJOR VISUAL TECHNIQUES:
+- ::first-letter drop cap at 76px with tuned padding for a three-line fall
+- CSS counters with decimal-leading-zero for circled method numbers
+- A 4px radial-gradient paper grain fixed behind the whole page
+- Fraction formatting that maps decimals to ¼ ½ ¾ ⅓ ⅔ before falling back to decimals
+- IntersectionObserver index highlighting with a negative bottom rootMargin
+- Ingredient text rebuilt from data attributes so scaling never mutates the base amount
+- Sticky positioning on both rails with a two-column collapse under 1080px
+
+INTENDED INTERACTION MODEL:
+Clicking a stepper rewrites every quantity in that recipe from its base yield and keeps ticked items in sync. Clicking an ingredient strikes it through, files it into the shopping list with its recipe name, and advances the coverage bar; clicking a shopping-list row unticks it. Clicking an index entry smooth-scrolls (instantly under reduced motion) and the index marker follows the section in view.

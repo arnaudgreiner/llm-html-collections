@@ -1,0 +1,17 @@
+TITLE: Sand on Steel — Chladni Plate
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Sand on Steel: Chladni Plate". On an 880×500 brushed-steel plate simulate 2600 sand grains migrating under a standing-wave mode v(x,y)=cos(nπx)cos(mπy)−cos(mπx)cos(nπy) on the unit square: each grain performs gradient descent on v² (force = −v∇v with analytic derivatives), so grains settle exactly on nodal lines. An EXCITE slider injects kinetic energy proportional to its setting so grains visibly jump off their lines and re-settle; n and m sliders retune the mode (resetting energy). Pointer-sprinkle adds grains (capped 5200), MORE SAND adds a batch, SWEEP clears and re-dumps a thinner field, NODAL GLOW toggles a 56×32 heatmap whose brightness is |v| inverse (nodal zones glow amber). Live stats show grain count, mode pair and the REST meter — fraction of grains currently on a node, drawn as a bar under the plate. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark lab bench with one steel plate and one bow: the pattern is never drawn, it is where the sand refuses to be shaken. The craft is making an invisible vibration field legible through accumulation.
+
+MAJOR VISUAL TECHNIQUES:
+- Analytic Chladni mode field with closed-form gradients
+- Per-grain gradient descent on v² (nodal capture) plus excitation jitter
+- Nodal heatmap compositing (brightness = 1−|v|)
+- Rest-fraction instrumentation as a physical meter
+- Plate chrome: brushed gradient, corner bolts, swept-shake transition
+
+INTENDED INTERACTION MODEL:
+Sprinkle sand, drag n/m and EXCITE to break and rebuild patterns, watch the REST bar fall and climb, glow or hide the underlying field to compare what you see with what is there.

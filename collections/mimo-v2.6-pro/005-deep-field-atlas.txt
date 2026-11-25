@@ -1,0 +1,18 @@
+TITLE: Deep Field Atlas — Interactive Constellation Plate
+
+FULL PROMPT:
+Build a single self-contained HTML page titled "Deep Field Atlas", a night-sky observation plate with every resource inline and nothing fetched from anywhere. Paint a deep navy radial background and a full-bleed canvas starfield of several thousand procedurally placed stars with size, brightness and independent twinkle frequencies; seven named bodies are drawn larger with a warm radial halo and four-point diffraction spikes. A second transparent canvas sits above it and draws the interaction layer: while the pointer is anywhere on the page, every star within 230px of it draws filaments to every other nearby star within 150px, fading with distance and meeting at glowing midpoints — so attention literally constructs the constellation. Overlay a serif editorial interface: a survey header, a numbered "Named bodies" catalogue list with magnitudes, an observer's note panel with a pull-quote, action buttons, and a footer HUD showing fps and capture time. Name labels float next to their stars when the pointer is near.
+
+INTENDED DESIGN DESCRIPTION:
+The result should feel like a copperplate astronomical engraving that has come alive under the observer's hand — scholarly, quiet and immense. The layout frames the full-screen sky with content pinned to the corners and a two-panel instrument block near the bottom: catalogue on the left, prose on the right, both on translucent navy plates with hairline rules. Gold (#ffcf6b) is the only accent and marks anything the observer has touched or named. Type pairs a refined serif display with a tracked-out sans for instrumentation.
+
+MAJOR VISUAL TECHNIQUES:
+- Two stacked canvases separating the static sky render from the per-frame interaction layer
+- Per-star twinkle driven by individual phase and speed values
+- Radial-gradient halos and diffraction spikes for named stars
+- Proximity graph: pairwise distance test between pointer-neighbour stars for filament edges
+- Absolutely positioned HTML name labels anchored to canvas coordinates
+- Live fps, limiting-magnitude and star-count readouts computed at runtime
+
+INTENDED INTERACTION MODEL:
+Sweeping the pointer across the field lights an expanding halo and draws temporary asterisms that exist only while hovering; moving into the catalogue list jumps the pointer to that star so its label and connections light up. The "Redraw the sky" button rebuilds the entire star field with a new limiting magnitude, while "Toggle asterisms" turns the connection layer off and on. Reduced-motion users get a static twinkle, and the panels stack vertically below 820px.

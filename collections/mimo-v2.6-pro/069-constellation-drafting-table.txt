@@ -1,0 +1,18 @@
+TITLE: Constellation Drafting Table — Draft Lines on a Live Sky
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Constellation Drafting Table". Show a rich night-sky canvas (seeded pseudo-random 230-star field with magnitude-based sizing, twinkle phase per star, radial nebula washes, a rotated Milky-Way band, and bright-star cross spikes) inside a full-width stage. Hovering a star pops a positioned tooltip with its HIP id, magnitude, pseudo RA/DEC coordinates and dashed guide lines to the frame edges; clicking arms a star (gold ring, LINK status updates), clicking a second star draws a glowing line between them, and the arm follows the last-clicked star so constellations can be chained in one gesture — empty-sky click or ESC disarms. Every drawn line lands in a SKETCHED LINES panel showing its id pair and computed light-year distance with a × to delete, and CLEAR LINES wipes them. A GRID toggle overlays gently curved RA/DEC graticule lines with hour/degree labels, two sample buttons (ORION, BIG DIPPER) load named star patterns, and a SAVE box snapshots the current sky into clickable constellation cards that can be reloaded or deleted. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is an astronomer's drafting desk drawn in code: ink-navy sky, violet and teal nebulae, gold constellation lines with a soft bloom, and pale-blue inspection chrome. The craft is the layering — atmosphere, graticule, line work, twinkling stars and hover reticles all composite in one rAF loop, while every interaction feeds a small document model (stars + lines) that can be snapshotted, reloaded and edited like a real star chart.
+
+MAJOR VISUAL TECHNIQUES:
+- Layered canvas composition: linear sky gradient, screen-blended radial nebulae, rotated Milky-Way band with a soft alpha gradient
+- Seeded LCG star generation with per-star twinkle phase/speed, magnitude-driven radius, shadowBlur glow and cross spikes for bright stars
+- Hover reticle with dashed edge guides, canvas-drawn distance labels and a DOM tooltip positioned from pointer coordinates
+- Graticule mode with sinusoidally curved meridians to suggest a projected celestial sphere
+- Arm-and-chain linking model with duplicate suppression, and line distances derived from normalized coordinates
+- Snapshot/restore system that deep-copies the star+line document into reloadable cards
+
+INTENDED INTERACTION MODEL:
+Hover to read a star, click pairs to draft gold links (chaining automatically), toggle the graticule, load a sample pattern, save your sky under a name and click saved cards to bring them back; delete any line or saved chart with its ×.

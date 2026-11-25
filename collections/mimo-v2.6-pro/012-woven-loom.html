@@ -1,0 +1,376 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>012 · Woven Loom</title>
+<style>
+:root{--bg:#171310;--panel:#211a15;--rule:#3a2e25;--txt:#f0e6da;--mute:#a89685;--acc:#e8a33d}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:
+    radial-gradient(120% 80% at 15% 0%,#2a211a,#171310 60%),
+    var(--bg);
+  color:var(--txt);min-height:100vh;font-family:Georgia,"Times New Roman",serif}
+body::after{content:"";position:fixed;inset:0;pointer-events:none;opacity:.35;
+  background-image:repeating-linear-gradient(0deg,rgba(255,255,255,.02) 0 1px,transparent 1px 3px)}
+.wrap{max-width:1320px;margin:0 auto;padding:28px 24px 54px;position:relative;z-index:2}
+.top{display:flex;justify-content:space-between;gap:22px;flex-wrap:wrap;align-items:flex-end;
+  border-bottom:1px solid var(--rule);padding-bottom:16px}
+.top h1{margin:0;font-size:clamp(34px,5.4vw,64px);line-height:.95;font-weight:400;letter-spacing:-.02em}
+.top h1 em{font-style:italic;color:var(--acc)}
+.kicker{font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.4em;
+  text-transform:uppercase;color:var(--mute);display:block;margin-bottom:10px}
+.side-note{text-align:right;font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;
+  letter-spacing:.22em;text-transform:uppercase;color:var(--mute);line-height:2}
+.side-note b{color:var(--acc);font-weight:700}
+.board{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:22px;margin-top:22px}
+.cloth{border:1px solid var(--rule);background:#0f0c0a;padding:14px;position:relative}
+.cloth canvas{display:block;width:100%;height:auto;border:1px solid #000}
+.tag{position:absolute;left:24px;top:24px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.3em;text-transform:uppercase;color:rgba(255,255,255,.5);pointer-events:none}
+.ctrl{display:flex;flex-direction:column;gap:18px}
+.panel{border:1px solid var(--rule);background:var(--panel);padding:16px 16px 18px}
+.panel h2{margin:0 0 12px;font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;
+  letter-spacing:.34em;text-transform:uppercase;color:var(--mute)}
+.drafts{display:flex;gap:9px;flex-wrap:wrap}
+.draft{font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.18em;
+  text-transform:uppercase;font-weight:700;padding:9px 13px;cursor:pointer;
+  border:1.5px solid var(--rule);background:transparent;color:var(--txt);transition:.2s}
+.draft:hover{border-color:var(--acc);color:var(--acc)}
+.draft.on{background:var(--acc);border-color:var(--acc);color:#221704}
+.pairs{display:flex;gap:9px;flex-wrap:wrap}
+.pair{width:74px;height:38px;border:1.5px solid var(--rule);cursor:pointer;padding:0;overflow:hidden;
+  display:flex;transition:.2s;position:relative}
+.pair span{flex:1}
+.pair:hover{transform:translateY(-2px);border-color:var(--txt)}
+.pair.on{outline:2px solid var(--acc);outline-offset:2px;border-color:var(--acc)}
+label.row{display:flex;justify-content:space-between;align-items:center;gap:12px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:11px;letter-spacing:.18em;
+  text-transform:uppercase;color:var(--mute);margin:12px 0 6px}
+label.row b{color:var(--txt);font-variant-numeric:tabular-nums}
+input[type=range]{width:100%;accent-color:var(--acc);background:transparent}
+.grid-draft{display:grid;grid-template-columns:repeat(8,1fr);gap:3px;width:100%;max-width:250px}
+.grid-draft i{aspect-ratio:1;background:#2b211a;border:1px solid var(--rule)}
+.grid-draft i.up{background:var(--acc)}
+.loupe{margin-top:14px;display:flex;gap:14px;align-items:center}
+.loupe canvas{border:1px solid var(--rule);background:#0f0c0a;flex:none}
+.loupe p{margin:0;font-family:"Segoe UI",system-ui,sans-serif;font-size:11.5px;line-height:1.7;
+  color:var(--mute)}
+.loupe p b{display:block;color:var(--txt);font-size:13px;margin-bottom:4px;letter-spacing:.04em}
+.swatchline{display:flex;gap:6px;margin-top:10px}
+.swatchline i{width:26px;height:26px;border:1px solid var(--rule)}
+.foot{display:flex;justify-content:space-between;gap:16px;flex-wrap:wrap;margin-top:20px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)}
+@media(max-width:980px){.board{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header class="top">
+    <div>
+      <span class="kicker">Bench 012 · hand loom simulator</span>
+      <h1>Warp &amp; <em>Weft</em></h1>
+    </div>
+    <div class="side-note">
+      Shaft count <b id="shaftTxt">2</b><br>
+      Picks per inch <b id="ppiTxt">24</b><br>
+      Cloth state <b id="stateTxt">balanced</b>
+    </div>
+  </header>
+
+  <div class="board">
+    <div class="cloth" id="cloth">
+      <span class="tag">Cloth face · warp vertical, weft horizontal · hover to magnify</span>
+      <canvas id="loom" width="900" height="560" aria-label="Woven cloth simulation"></canvas>
+      <div class="loupe">
+        <canvas id="loupe" width="132" height="132"></canvas>
+        <p id="loupeTxt"><b>Cell read-out</b>Move the pointer over the cloth. The loupe shows a single
+          crossing — which yarn is on top, and where you are in the repeat.</p>
+      </div>
+    </div>
+
+    <div class="ctrl">
+      <section class="panel">
+        <h2>Weave draft</h2>
+        <div class="drafts" id="drafts">
+          <button class="draft on" data-p="plain">Plain</button>
+          <button class="draft" data-p="twill">Twill 2/2</button>
+          <button class="draft" data-p="satin">Satin 5</button>
+          <button class="draft" data-p="basket">Basket</button>
+          <button class="draft" data-p="herring">Herringbone</button>
+        </div>
+        <div class="grid-draft" id="gridDraft" aria-hidden="true"></div>
+        <label class="row">Warp ends <b id="warpVal">56</b></label>
+        <input type="range" id="warp" min="24" max="110" value="56">
+        <label class="row">Weft tension <b id="tenVal">50</b></label>
+        <input type="range" id="ten" min="0" max="100" value="50">
+      </section>
+
+      <section class="panel">
+        <h2>Yarn pair</h2>
+        <div class="pairs" id="pairs"></div>
+        <div class="swatchline" id="swatch"><i></i><i></i></div>
+        <p style="margin:12px 0 0;font-size:13px;line-height:1.7;color:var(--mute)" id="pairNote">
+          Indigo warp against an ochre weft — the classic balanced plain weave.</p>
+      </section>
+
+      <section class="panel">
+        <h2>Finish</h2>
+        <div class="drafts">
+          <button class="draft on" id="bSelvage">Selvage</button>
+          <button class="draft" id="bSlub">Slub</button>
+          <button class="draft" id="bCloth">Cloth pull</button>
+        </div>
+        <p style="margin:12px 0 0;font-size:13px;line-height:1.7;color:var(--mute)">
+          Selvage keeps clean edges; Slub injects irregular thickness into the yarn; Cloth pull flattens
+          the crossing angles for a tighter sett.</p>
+      </section>
+    </div>
+  </div>
+
+  <footer class="foot">
+    <span>Woven loom · canvas threads, no images</span>
+    <span>012 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("loom"), ctx=cv.getContext("2d");
+  var lp=document.getElementById("loupe"), lctx=lp.getContext("2d");
+  var draft="plain", warpCount=56, tension=0.5, selvage=true, slub=false, pull=false;
+  var PAIRS=[
+    {a:"#2f4a8c",b:"#e8a33d",n:"Indigo warp against an ochre weft — the classic balanced plain weave."},
+    {a:"#b0472f",b:"#efe3cf",n:"Turkey red on unbleached cotton, the palette of a nineteenth-century coverlet."},
+    {a:"#4a6b48",b:"#c9c2ae",n:"Moss and slate: a quiet pair that reads almost grey at a distance."},
+    {a:"#1d1d20",b:"#d9c67a",n:"Black warp with a gold weft, drawn as a mourning band for the selvage."},
+    {a:"#7a4a8c",b:"#7fd0c9",n:"Plum and sea-glass — deliberately discordant, so the crossing points sparkle."}
+  ];
+  var pair=0;
+  var cellUp=null;
+
+  /* draft: does the warp float on top at cell (i,j)? */
+  function warpUp(i,j){
+    var i2=i, m;
+    switch(draft){
+      case "plain":   return (i+j)%2===0;
+      case "twill":   return (((i-j)%4)+4)%4<2;
+      case "satin":   return ((i+2*j)%5)===0;
+      case "basket":  return ((Math.floor(i/2)+Math.floor(j/2))%2)===0;
+      case "herring":
+        var block=Math.floor(i/8)%2;
+        var dir=block? -1:1;
+        m=(((i*dir-j)%4)+4)%4;
+        return m<2;
+    }
+    return false;
+  }
+
+  function shade(hex,t){
+    var n=parseInt(hex.slice(1),16), r=(n>>16)&255, g=(n>>8)&255, b=n&255;
+    r=Math.round(r*t); g=Math.round(g*t); b=Math.round(b*t);
+    return "rgb("+r+","+g+","+b+")";
+  }
+
+  function drawThread(vertical,pos,from,to,color,width,slack,phase){
+    var grad;
+    if(vertical){
+      grad=ctx.createLinearGradient(pos-width/2,0,pos+width/2,0);
+    }else{
+      grad=ctx.createLinearGradient(0,pos-width/2,0,pos+width/2);
+    }
+    grad.addColorStop(0,shade(color,.55));
+    grad.addColorStop(.42,color);
+    grad.addColorStop(.55,shade(color,1.25>1?1:1.18));
+    grad.addColorStop(1,shade(color,.48));
+    ctx.strokeStyle=grad;
+    ctx.lineWidth=width;
+    ctx.lineCap="butt";
+    ctx.beginPath();
+    var steps=26;
+    for(var k=0;k<=steps;k++){
+      var t=k/steps;
+      var v=from+(to-from)*t;
+      var wob=Math.sin(t*Math.PI*3+phase)*slack;
+      if(vertical){
+        var x=pos+wob;
+        if(k===0) ctx.moveTo(x,v); else ctx.lineTo(x,v);
+      }else{
+        var y=pos+wob;
+        if(k===0) ctx.moveTo(v,y); else ctx.lineTo(v,y);
+      }
+    }
+    ctx.stroke();
+  }
+
+  function slubJitter(i,j){
+    if(!slub) return 1;
+    var n=Math.sin(i*12.9898+j*78.233)*43758.5453;
+    return 0.72+0.5*Math.abs(n-Math.floor(n));
+  }
+
+  function render(){
+    var W=cv.width, H=cv.height;
+    var p=PAIRS[pair];
+    var cw=W/warpCount;                  /* warp spacing */
+    var picks=Math.max(10,Math.round(H/(cw*1.15)));
+    var ch=H/picks;
+    var warpW=cw*(pull?0.94:0.78);
+    var weftW=ch*(pull?0.94:0.78);
+    var slack=(1-tension)*cw*0.16;
+
+    ctx.fillStyle="#12100e";
+    ctx.fillRect(0,0,W,H);
+
+    /* pass 1: all warp */
+    for(var i=0;i<warpCount;i++){
+      var x=(i+0.5)*cw;
+      drawThread(true,x,0,H,p.a,warpW*slubJitter(i,0),slack*0.5,i*0.7);
+    }
+    /* pass 2: all weft */
+    for(var j=0;j<picks;j++){
+      var y=(j+0.5)*ch;
+      drawThread(false,y,0,W,p.b,weftW*slubJitter(0,j),slack*0.5,j*0.9);
+    }
+    /* pass 3: warp floats redrawn on top */
+    for(i=0;i<warpCount;i++){
+      for(j=0;j<picks;j++){
+        if(warpUp(i,j)){
+          var px=(i+0.5)*cw, py=(j+0.5)*ch;
+          var pad=weftW*0.55;
+          ctx.save();
+          ctx.beginPath();
+          ctx.rect(px-warpW/2-1,py-pad,warpW+2,ch+pad*2);
+          ctx.clip();
+          drawThread(true,px,py-ch/2-1,py+ch/2+1,p.a,warpW*slubJitter(i,j),slack*0.5,i*0.7);
+          ctx.restore();
+        }
+      }
+    }
+    /* selvage: clean bound edges */
+    if(selvage){
+      ctx.fillStyle=p.a;
+      ctx.fillRect(0,0,7,H);
+      ctx.fillRect(W-7,0,7,H);
+      ctx.fillStyle="rgba(0,0,0,.35)";
+      ctx.fillRect(7,0,2,H); ctx.fillRect(W-9,0,2,H);
+    }
+    /* corner shadow so the cloth sits in the frame */
+    var vg=ctx.createRadialGradient(W/2,H/2,H*0.3,W/2,H/2,H*0.95);
+    vg.addColorStop(0,"rgba(0,0,0,0)");
+    vg.addColorStop(1,"rgba(0,0,0,.42)");
+    ctx.fillStyle=vg; ctx.fillRect(0,0,W,H);
+
+    return {cw:cw,ch:ch,picks:picks,warpW:warpW,weftW:weftW,p:p};
+  }
+
+  var meta=null;
+  function refresh(){ meta=render(); drawDraftGrid(); }
+
+  /* draft mini-grid */
+  function drawDraftGrid(){
+    var g=document.getElementById("gridDraft");
+    g.innerHTML="";
+    for(var j=0;j<8;j++){
+      for(var i=0;i<8;i++){
+        var c=document.createElement("i");
+        if(warpUp(i,j)) c.className="up";
+        g.appendChild(c);
+      }
+    }
+  }
+
+  /* loupe */
+  var loupeTxt=document.getElementById("loupeTxt");
+  cv.addEventListener("pointermove",function(e){
+    if(!meta) return;
+    var r=cv.getBoundingClientRect();
+    var sx=(e.clientX-r.left)*(cv.width/r.width);
+    var sy=(e.clientY-r.top)*(cv.height/r.height);
+    var i=Math.floor(sx/meta.cw), j=Math.floor(sy/meta.ch);
+    cellUp=warpUp(i,j);
+    lctx.fillStyle="#0f0c0a"; lctx.fillRect(0,0,132,132);
+    var zoom=8;
+    lctx.imageSmoothingEnabled=false;
+    lctx.drawImage(cv, sx-132/zoom, sy-132/zoom, 132/zoom, 132/zoom, 0,0,132,132);
+    lctx.strokeStyle="rgba(232,163,61,.9)"; lctx.lineWidth=2;
+    lctx.strokeRect(1,1,130,130);
+    lctx.beginPath(); lctx.moveTo(66,54); lctx.lineTo(66,78);
+    lctx.moveTo(54,66); lctx.lineTo(78,66); lctx.stroke();
+    loupeTxt.innerHTML="<b>End "+(i+1)+" / pick "+(j+1)+"</b>"+
+      (cellUp?"Warp floats on top.":"Weft floats on top.")+
+      " Repeat: "+(meta.cw).toFixed(1)+" × "+(meta.ch).toFixed(1)+" px per cell.";
+  },{passive:true});
+
+  cv.addEventListener("pointerleave",function(){
+    loupeTxt.innerHTML="<b>Cell read-out</b>Move the pointer over the cloth. The loupe shows a single "+
+      "crossing — which yarn is on top, and where you are in the repeat.";
+  });
+
+  /* controls */
+  document.getElementById("drafts").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    draft=b.dataset.p;
+    this.querySelectorAll("button").forEach(function(x){ x.classList.toggle("on",x===b); });
+    document.getElementById("shaftTxt").textContent=
+      draft==="plain"?"2":draft==="twill"?"4":draft==="satin"?"5":draft==="basket"?"4":"4";
+    refresh();
+  });
+
+  var warpEl=document.getElementById("warp"), tenEl=document.getElementById("ten");
+  warpEl.addEventListener("input",function(){
+    warpCount=+this.value;
+    document.getElementById("warpVal").textContent=warpCount;
+    document.getElementById("ppiTxt").textContent=Math.round(warpCount*0.43);
+    refresh();
+  });
+  tenEl.addEventListener("input",function(){
+    tension=+this.value/100;
+    document.getElementById("tenVal").textContent=this.value;
+    document.getElementById("stateTxt").textContent=
+      tension<0.3?"slack":tension>0.72?"board-like":"balanced";
+    refresh();
+  });
+
+  var pairsEl=document.getElementById("pairs");
+  PAIRS.forEach(function(P,i){
+    var b=document.createElement("button");
+    b.className="pair"+(i===0?" on":"");
+    b.innerHTML='<span style="background:'+P.a+'"></span><span style="background:'+P.b+'"></span>';
+    b.title=P.n;
+    b.addEventListener("click",function(){
+      pair=i;
+      pairsEl.querySelectorAll(".pair").forEach(function(x,k){ x.classList.toggle("on",k===i); });
+      var sw=document.getElementById("swatch").children;
+      sw[0].style.background=P.a; sw[1].style.background=P.b;
+      document.getElementById("pairNote").textContent=P.n;
+      refresh();
+    });
+    pairsEl.appendChild(b);
+  });
+  (function(){ var sw=document.getElementById("swatch").children;
+    sw[0].style.background=PAIRS[0].a; sw[1].style.background=PAIRS[0].b; })();
+
+  function toggle(btn,fn){
+    btn.addEventListener("click",function(){
+      var on=!btn.classList.contains("on");
+      btn.classList.toggle("on",on);
+      fn(on);
+      refresh();
+    });
+  }
+  toggle(document.getElementById("bSelvage"),function(on){ selvage=on; });
+  toggle(document.getElementById("bSlub"),function(on){ slub=on; });
+  toggle(document.getElementById("bCloth"),function(on){ pull=on; });
+
+  refresh();
+  if(reduce){ /* nothing animates on this page by design */ }
+})();
+</script>
+</body>
+</html>

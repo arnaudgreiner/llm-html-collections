@@ -1,0 +1,18 @@
+TITLE: Logic Gate Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Logic Gate Bench". On a dark blueprint-dot board (660×430), lay out draggable AND / OR / XOR / NOT gates, three clickable source switches A·B·C on the left (they light gold when HIGH) and two output lamps X·Y on the right. Bezier wires on an SVG layer connect pin to pin, recomputed as gates are dragged. Clicking any output pin starts a dashed pending wire that follows the cursor until you click a gate input or an output node — which replaces whatever wire already landed there; CUT MODE makes wires clickable to delete. A three-pass evaluator propagates switch values through the topology (AND/OR/XOR/NOT), repaints gates high/low and writes a settled summary into the status line; if the wiring contains a cycle, the evaluator reports the feedback loop instead of hanging. Buttons: introduce feedback loop (creates a genuine g2⇄g3 cycle), unwire everything, restore starter circuit, cut mode toggle. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a lab bench seen from above at night: slate grid, teal pin markers, wires in instrument blue that glide with the gates as you rearrange them. The craft is making the circuit honestly editable — real pin-level rewiring and deletion with live re-evaluation — and making cycles a visible, named outcome rather than a frozen page. Flipping A/B/C and watching values ripple gate by gate to X and Y is the whole experience.
+
+MAJOR VISUAL TECHNIQUES:
+- SVG cubic-bezier wire layer rebuilt from live pin coordinates during gate drags
+- Pin-level wiring protocol: pending dashed wire tracking the cursor, commit on input click, per-input replacement
+- Iterative truth propagation with pass limit for cycle detection (feedback loop reporting)
+- CSS pin states: hover, armed/pending blink animation, HIGH glow borders on gates and switches
+- Pointer capture drag with board-bounds clamping for gate elements
+- Cut mode toggling SVG pointer-events so wires themselves become the hit targets
+
+INTENDED INTERACTION MODEL:
+Click A, B or C to flip a switch and watch values propagate through the starter circuit to lamps X and Y. Drag any gate around the board — wires follow. Click an output pin (gold blink), then a gate input or an output node, to wire them; hit CUT MODE and click a wire to remove it; use the panel buttons to blow the bench clear, restore the starter circuit, or deliberately wire a feedback loop and read the warning the evaluator produces instead of the settled values.

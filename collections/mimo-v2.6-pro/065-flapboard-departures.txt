@@ -1,0 +1,18 @@
+TITLE: Flapboard — Split-Flap Departures
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Flapboard — Split-Flap Departures". Render a railway station split-flap departure board as a grid of physical flip cells — one dark rounded card per character with a hairline split across its middle — showing nine departures with TIME, DEPARTURE, GATE and STATUS columns under a real ticking station clock with blinking colons. Every character animates the way real flap hardware does: on load and on each update the cells clatter through random glyphs at ~45ms per flap, staggered across columns and rows, before landing on their target; status cells land in semantic colors (green ON TIME, blue BOARDING, amber DELAYED, red CANCELLED). A filter input hides non-matching rows instantly, RE-FLIP BOARD re-runs the full clatter, AUTO (on by default) mutates two to four rows every 15 seconds and re-flips just the gate and status columns, and clicking any row pins it with an amber outline and corner marker. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+The page is a concourse board photographed at dusk: near-black cabinet, warm amber characters, matte cards with a real seam line and a soft shadow under each lip. The craft is in the motion — a two-phase flap animation with landing finality, staggered like a real board waking up, plus colors that only appear after a cell has finished its run so the board always reads as mechanical rather than digital.
+
+MAJOR VISUAL TECHNIQUES:
+- One span per character in fixed 24×32px flap cards, ::after hairline seam at 50% height, gradient card face and inset top highlight
+- @keyframes scaleY flap squash fired by re-adding the .fl class after a forced reflow
+- Generation-token flip engine: each cell carries a gen counter so overlapping flip requests cancel the old chain instead of racing it
+- Stagger delays computed per column index so boards resolve left-to-right, row-by-row
+- Field gap rhythm (16px margins) with fixed-width padded strings keeping columns aligned without tables
+- Header clock with step-animated blinking colons and a 15s mutator interval driving partial column re-flips
+
+INTENDED INTERACTION MODEL:
+Type in the filter to narrow destinations live, click rows to pin important departures, hit RE-FLIP BOARD to hear the whole board clatter, or toggle AUTO off to hold the schedule still. Nothing else needs touching — the board keeps itself current and the clock keeps real time.

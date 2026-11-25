@@ -1,0 +1,19 @@
+TITLE: Studio Kanban — Drag-and-Drop Workflow Board
+
+FULL PROMPT:
+Write exactly one self-contained HTML page, "Studio Kanban", using no external resources. Set a deep slate background (#101418) with two soft corner washes (blue top-left, mint top-right). The header holds an uppercase kicker, a two-tone light/heavy title, a pill search input with a ⌕ glyph and a mint "New card" button. Under it a four-card stat strip (backlog, in progress, overdue in red, shipped in mint) with 26px tabular figures. The board is a four-column grid — Backlog (amber dot), In progress (blue), Review (violet), Shipped (mint) — each a rounded panel with a dashed header rule, a pill count and a dashed "+ add card" footer button. Cards carry priority/area tags, a title, a supporting line, an initialled avatar circle in the owner's colour and a due date that turns into a red "overdue" chip. Empty columns show a dashed placeholder. Add a fixed bottom toast that slides up to confirm every move, and a thin footer line.
+
+INTENDED DESIGN DESCRIPTION:
+A calm, dim engineering console: surfaces are dark and recessed, colour is spent only where it carries meaning — priority borders, owner avatars, overdue reds — so the board stays legible at a glance even when it is full.
+
+MAJOR VISUAL TECHNIQUES:
+- Native HTML5 drag and drop with drop-column highlight via .over inset ring
+- Drag ghost dimming plus a slight rotation on .drag
+- Border-left colour derived from the card's own priority tag
+- A single render() that rebuilds all four columns from one array and recomputes stats
+- Case-insensitive substring filter across title, body, tags and owner
+- Toast with a transform+opacity transition and a cleared timeout to avoid stacking
+- Grid that collapses 4 → 2 → 1 columns at 1050px and 640px
+
+INTENDED INTERACTION MODEL:
+Drag a card onto any column and it moves, recounting columns and stats; clicking a card advances it one column, so the board works on touch devices too. The search box filters live and reports when nothing matches. "+ New card" and each column's add button push a fresh card into that column. Shipping a card clears its overdue flag. Every mutation runs one render(), so counts, stats and lists can never disagree.

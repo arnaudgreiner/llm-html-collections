@@ -1,0 +1,180 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Fraction Foundry</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#efe7d6;font-family:Georgia,"Times New Roman",serif;color:#2a2620;
+  background-image:radial-gradient(circle at 20% 10%,rgba(255,255,255,.7),transparent 60%);display:flex;justify-content:center;padding:34px 16px}
+#sheet{width:100%;max-width:760px;background:#faf5ea;border:1px solid #cbbfa6;box-shadow:0 18px 44px rgba(60,45,20,.18);padding:30px 34px 36px;position:relative}
+#sheet:before{content:"WORKSHEET 12-B";position:absolute;right:18px;top:14px;font:10px ui-monospace,monospace;letter-spacing:.2em;color:#a4937a}
+h1{font-size:30px;letter-spacing:.04em;margin-bottom:2px}
+#sub{font-size:12px;color:#8b7d63;letter-spacing:.22em;text-transform:uppercase;font-family:ui-monospace,monospace;margin-bottom:24px}
+.card{border:1px solid #d6cbb2;border-radius:10px;padding:16px 18px;margin-bottom:16px;background:#fffdf7}
+.tag{font:11px ui-monospace,monospace;letter-spacing:.2em;color:#a4937a;text-transform:uppercase;margin-bottom:10px}
+.steppers{display:flex;align-items:center;gap:10px;font-size:26px;margin-bottom:12px}
+.frac{display:inline-flex;flex-direction:column;align-items:center;min-width:64px}
+.frac .num{border-bottom:2px solid #2a2620;padding:0 8px}
+.frac .den{padding:0 8px}
+.step{width:26px;height:26px;border:1px solid #b8a986;background:#f4eddc;color:#5a4f38;border-radius:6px;cursor:pointer;font:14px ui-monospace,monospace}
+.step:hover{background:#e9dfc8}
+.bar{display:flex;height:34px;border:2px solid #2a2620;border-radius:5px;overflow:hidden;margin:6px 0 8px}
+.cell{flex:1;border-right:1px solid rgba(42,38,32,.45);transition:background .4s}
+.cell:last-child{border-right:none}
+.cell.on{background:#e0654f}
+.b .cell.on{background:#3f7fae}
+.meta{font:12px ui-monospace,monospace;color:#7a6e57;display:flex;justify-content:space-between}
+.pies{display:flex;gap:18px;align-items:center;margin-top:4px}
+svg.pie{width:92px;height:92px}
+.ring{fill:none;stroke:#e4dcc8;stroke-width:14}
+.fillA,.fillB,.fillS{fill:none;stroke-width:14;stroke-linecap:butt;transition:stroke-dasharray .55s ease}
+.fillA{stroke:#e0654f}.fillB{stroke:#3f7fae}.fillS{stroke:#6b8f3a}
+#res{background:#f6f1e2}
+#resBar{position:relative;border:2px solid #2a2620;border-radius:5px;height:44px;display:flex;overflow:hidden;background:#fffdf7}
+.tick{position:absolute;top:0;bottom:0;width:1px;background:#2a2620;opacity:0;transition:opacity .5s}
+.tickA{background:#e0654f;height:14px;top:auto;bottom:0}
+.tickB{background:#3f7fae;height:14px;top:0;bottom:auto}
+.tickL{background:rgba(42,38,32,.35)}
+.on{opacity:1 !important}
+#btns{display:flex;gap:10px;margin-top:14px}
+button{background:#2a2620;border:none;color:#f6f1e2;font:12px ui-monospace,monospace;letter-spacing:.12em;padding:9px 16px;border-radius:7px;cursor:pointer}
+button.alt{background:#8b7d63}
+button:hover{opacity:.88}
+#sumLine{font-size:27px;margin-top:14px;display:flex;align-items:center;gap:14px;flex-wrap:wrap}
+#pct{font:12px ui-monospace,monospace;color:#8b7d63}
+</style>
+</head>
+<body>
+<div id="sheet">
+  <h1>Fraction Foundry</h1>
+  <div id="sub">cast two parts · pour a sum · align the grids</div>
+  <div class="card" id="cardA">
+    <div class="tag">part A</div>
+    <div class="steppers">
+      <button class="step" data-t="an" data-d="-1">−</button><span class="frac"><span class="num" id="aN">1</span><span class="den" id="aD">4</span></span><button class="step" data-t="an" data-d="1">+</button>
+      <span style="font-size:18px;color:#a4937a">denominator</span>
+      <button class="step" data-t="ad" data-d="-1">−</button><span style="font-size:20px" id="aDv">4</span><button class="step" data-t="ad" data-d="1">+</button>
+      <span class="meta" style="margin-left:auto"><span id="aPct">25%</span></span>
+    </div>
+    <div class="bar" id="aBar"></div>
+    <div class="meta"><span id="aCells">1 of 4 cells</span><span id="aDec">0.25</span></div>
+  </div>
+  <div class="card" id="cardB">
+    <div class="tag">part B</div>
+    <div class="steppers">
+      <button class="step" data-t="bn" data-d="-1">−</button><span class="frac"><span class="num" id="bN">2</span><span class="den" id="bD">5</span></span><button class="step" data-t="bn" data-d="1">+</button>
+      <span style="font-size:18px;color:#a4937a">denominator</span>
+      <button class="step" data-t="bd" data-d="-1">−</button><span style="font-size:20px" id="bDv">5</span><button class="step" data-t="bd" data-d="1">+</button>
+      <span class="meta" style="margin-left:auto"><span id="bPct">40%</span></span>
+    </div>
+    <div class="bar b" id="bBar"></div>
+    <div class="meta"><span id="bCells">2 of 5 cells</span><span id="bDec">0.4</span></div>
+  </div>
+  <div class="card" id="res">
+    <div class="tag">the pour — common denominator <span id="lcmV">20</span></div>
+    <div id="resBar"></div>
+    <div class="pies">
+      <svg class="pie" viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="42"></circle><circle class="fillA" id="pieA" cx="50" cy="50" r="42" transform="rotate(-90 50 50)"></circle></svg>
+      <svg class="pie" viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="42"></circle><circle class="fillB" id="pieB" cx="50" cy="50" r="42" transform="rotate(-90 50 50)"></circle></svg>
+      <svg class="pie" viewBox="0 0 100 100"><circle class="ring" cx="50" cy="50" r="42"></circle><circle class="fillS" id="pieS" cx="50" cy="50" r="42" transform="rotate(-90 50 50)"></circle></svg>
+      <div id="sumLine"><span id="sumFrac">7⁄20</span><span id="sumMixed">7⁄20 whole</span><span id="pct">35% of one whole</span></div>
+    </div>
+    <div id="btns"><button id="align">align grids</button><button id="random" class="alt">random pour</button></div>
+  </div>
+</div>
+<script>
+(function(){
+"use strict";
+var A={n:1,d:4},B={n:2,d:5},aligned=false;
+function gcd(a,b){while(b){var t=a%b;a=b;b=t;}return a;}
+function lcm(a,b){return a*b/gcd(a,b);}
+function $(id){return document.getElementById(id);}
+function bar(el,n,d,cls){
+  el.innerHTML="";
+  for(var i=0;i<d;i++){
+    var c=document.createElement("div");
+    c.className="cell"+(i<n?" on":"");
+    el.appendChild(c);
+  }
+}
+function setPie(el,frac){
+  var C=2*Math.PI*42;
+  var f=Math.max(0,Math.min(1,frac));
+  el.setAttribute("stroke-dasharray",(f*C).toFixed(2)+" "+C.toFixed(2));
+}
+function tickLayer(cls,d,color){
+  var out=[];
+  for(var k=1;k<d;k++){
+    out.push('<div class="tick '+cls+'" style="left:'+(k/d*100).toFixed(3)+'%"></div>');
+  }
+  return out.join("");
+}
+function render(){
+  A.n=Math.max(0,Math.min(A.d,A.n));B.n=Math.max(0,Math.min(B.d,B.n));
+  $("aN").textContent=A.n;$("aD").textContent=A.d;$("aDv").textContent=A.d;
+  $("bN").textContent=B.n;$("bD").textContent=B.d;$("bDv").textContent=B.d;
+  bar($("aBar"),A.n,A.d,"");
+  bar($("bBar"),B.n,B.d,"");
+  $("aPct").textContent=Math.round(A.n/A.d*100)+"%";
+  $("bPct").textContent=Math.round(B.n/B.d*100)+"%";
+  $("aCells").textContent=A.n+" of "+A.d+" cells";
+  $("bCells").textContent=B.n+" of "+B.d+" cells";
+  $("aDec").textContent=(A.n/A.d).toFixed(3);
+  $("bDec").textContent=(B.n/B.d).toFixed(3);
+  setPie($("pieA"),A.n/A.d);setPie($("pieB"),B.n/B.d);
+  var L=lcm(A.d,B.d),cells=A.n*(L/A.d)+B.n*(L/B.d);
+  $("lcmV").textContent=L;
+  var res=$("resBar");
+  res.innerHTML="";
+  var fill=Math.min(cells,L);
+  for(var i=0;i<L;i++){
+    var c=document.createElement("div");
+    c.className="cell"+(i<fill?" on":"");
+    c.style.background=i<fill?"#6b8f3a":"";
+    c.style.borderRight="1px solid rgba(42,38,32,.3)";
+    res.appendChild(c);
+  }
+  res.insertAdjacentHTML("beforeend",
+    '<div class="tick tickL" style="left:0%"></div>'+
+    '<div class="tick tickL" style="left:100%"></div>'+
+    tickLayer("tickL",L,"")+
+    tickLayer("tickA",A.d,"")+
+    tickLayer("tickB",B.d,""));
+  var tog=aligned?" on":"";
+  var ticks=res.querySelectorAll(".tickL");
+  for(var t=0;t<ticks.length;t++)ticks[t].className="tick tickL"+(aligned?" on":"");
+  var tA=res.querySelectorAll(".tickA"),tB=res.querySelectorAll(".tickB");
+  for(var x=0;x<tA.length;x++)tA[x].className="tick tickA"+tog;
+  for(var y=0;y<tB.length;y++)tB[y].className="tick tickB"+tog;
+  var num=A.n*(L/A.d)+B.n*(L/B.d),den=L,g=gcd(num,den)||1;
+  $("sumFrac").textContent=num+"/"+den;
+  var whole=Math.floor(num/den),rem=num%den,r2=gcd(rem,den)||1;
+  $("sumMixed").textContent=whole>0?(whole+" + "+(rem/r2)+"/"+(den/r2)):((rem/r2)+"/"+(den/r2)+" whole");
+  $("pct").textContent=Math.round(num/den*100)+"% of one whole";
+  setPie($("pieS"),(num%den)/den);
+  $("align").textContent=aligned?"grids aligned":"align grids";
+}
+document.addEventListener("click",function(e){
+  var t=e.target;
+  if(t.classList&&t.classList.contains("step")){
+    var k=t.dataset.t,dd=+t.dataset.d;
+    if(k==="an")A.n+=dd;
+    if(k==="ad"){A.d=Math.max(2,Math.min(16,A.d+dd));}
+    if(k==="bn")B.n+=dd;
+    if(k==="bd"){B.d=Math.max(2,Math.min(16,B.d+dd));}
+    render();
+  }
+});
+$("align").addEventListener("click",function(){aligned=!aligned;render();});
+$("random").addEventListener("click",function(){
+  A.d=2+Math.floor(Math.random()*11);A.n=1+Math.floor(Math.random()*(A.d-1));
+  B.d=2+Math.floor(Math.random()*11);B.n=1+Math.floor(Math.random()*(B.d-1));
+  aligned=false;render();
+});
+render();
+})();
+</script>
+</body>
+</html>

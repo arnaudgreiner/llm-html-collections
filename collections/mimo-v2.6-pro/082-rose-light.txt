@@ -1,0 +1,17 @@
+TITLE: Rose Light — Stained Glass Window
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Rose Light: Stained Glass Window". Render a 900×560 gothic rose window tessellated into four polar rings (6/10/14/18 jittered sectors) plus a twelve-lobed central boss, on a dark plaster wall. Each pane carries a palette colour from three glass sets (MEDIEVAL primaries, grisaille greys, Tiffany jewel tones). A sun-azimuth slider sets each pane's transmission: panes whose mid-angle faces the sun ignite with additive shadow glow and a diagonal glass highlight gradient; panes turned away fall to soot. A day slider walks the whole light from noon to candle hour. Lead-came rendering strokes every polygon with heavy black; a dust field drifts along the beam angle. Clicking a pane cycles its glass colour and outlines it in cream; stats show pane count, mean lumen and last pane picked. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+Cathedral tracery holding coloured light over a dim wall — the craft is transmission physics as composition: one azimuth value rearranges the whole colour balance, and the picture is never twice the same.
+
+MAJOR VISUAL TECHNIQUES:
+- Polar tessellation (ring × sector) with jittered boundaries and a lobed core
+- Per-pane transmission model from sun azimuth · mid-angle
+- Glass bloom via per-polygon shadowBlur plus luminance-graded highlight gradient
+- Drifting dust motes advected along the beam vector
+- Point-in-polygon hit testing for pane-level interaction
+
+INTENDED INTERACTION MODEL:
+Swing the sun, slide toward evening, swap glass sets, repaint or click individual panes, toggle lead and dust — a lighting desk for one stained window.

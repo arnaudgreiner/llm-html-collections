@@ -1,0 +1,310 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>029 · Twenty-Six</title>
+<style>
+:root{--bg:#faf7f0;--ink:#221f1a;--mute:#9a917f;--line:#e2dccd;--good:#1f9d6d;
+  --bad:#d1495b;--acc:#b98a2e}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:
+  linear-gradient(180deg,#fdfbf6,#f4efe3);color:var(--ink);
+  font-family:Georgia,"Times New Roman",serif;padding-bottom:50px}
+.wrap{max-width:940px;margin:0 auto;padding:34px 20px}
+header{text-align:center}
+.kicker{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.5em;
+  text-transform:uppercase;color:var(--mute)}
+h1{margin:12px 0 4px;font-size:clamp(34px,6vw,58px);font-weight:400;letter-spacing:.01em}
+h1 i{font-style:italic;color:var(--acc)}
+.sub{font-family:"Segoe UI",system-ui,sans-serif;color:var(--mute);font-size:13.5px;
+  max-width:52ch;margin:8px auto 0;line-height:1.65}
+
+.meters{display:grid;grid-template-columns:repeat(4,1fr);gap:12px;margin:26px 0 4px}
+@media(max-width:640px){.meters{grid-template-columns:repeat(2,1fr)}}
+.meter{background:#fff;border:1px solid var(--line);border-radius:14px;padding:13px 14px;
+  text-align:center;box-shadow:0 4px 14px rgba(90,70,30,.05)}
+.meter span{font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--mute)}
+.meter b{display:block;margin-top:5px;font-size:34px;font-weight:700;
+  font-variant-numeric:tabular-nums;line-height:1.05}
+.meter b i{font-style:normal;font-size:14px;color:var(--mute)}
+.meter.wpm b{color:var(--good)} .meter.acc b{color:var(--acc)} .meter.err b{color:var(--bad)}
+
+.sheet{position:relative;margin-top:18px;background:#fff;border:1px solid var(--line);
+  border-radius:18px;padding:30px 34px 24px;box-shadow:0 22px 50px rgba(90,70,30,.08);
+  overflow:hidden}
+.sheet::before{content:"";position:absolute;left:44px;top:0;bottom:0;width:1px;
+  background:rgba(209,73,91,.35)}
+.ghost{font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute);display:flex;justify-content:space-between;
+  border-bottom:1px dashed var(--line);padding-bottom:10px;margin-bottom:20px}
+#type{font-size:clamp(19px,2.4vw,25px);line-height:2.05;letter-spacing:.005em;
+  word-break:break-word;cursor:text;user-select:none}
+#type span{position:relative;color:#bdb5a3;transition:color .08s}
+#type span.ok{color:var(--ink)}
+#type span.no{color:var(--bad);background:rgba(209,73,91,.12);border-radius:3px}
+#type span.cur{color:#8b8371}
+#type span.cur::after{content:"";position:absolute;left:-1px;top:.14em;bottom:.1em;width:2px;
+  background:var(--acc);animation:blink 1.05s steps(1) infinite}
+@keyframes blink{50%{opacity:0}}
+.caret-block{box-shadow:-2px 0 0 var(--acc)}
+
+.hiddenInput{position:absolute;opacity:0;left:-9999px;width:1px;height:1px}
+.taps{margin-top:22px;text-align:center}
+#tap{font-family:"Segoe UI",system-ui,sans-serif;background:var(--ink);color:#fdfbf6;border:0;
+  border-radius:30px;padding:14px 30px;font-size:12px;letter-spacing:.24em;text-transform:uppercase;
+  cursor:pointer;transition:.2s}
+#tap:hover{background:var(--acc);transform:translateY(-1px)}
+.legend{font-family:"Segoe UI",system-ui,sans-serif;font-size:11.5px;color:var(--mute);
+  margin-top:14px;line-height:1.7}
+.legend kbd{font-family:inherit;background:#fff;border:1px solid var(--line);border-radius:6px;
+  padding:2px 8px;font-size:10.5px;color:var(--ink)}
+
+.shelf{display:grid;grid-template-columns:1fr 1.4fr;gap:16px;margin-top:20px}
+@media(max-width:720px){.shelf{grid-template-columns:1fr}}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;padding:16px 18px}
+.card h2{margin:0 0 12px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.3em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.pass{display:flex;justify-content:space-between;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:13px;padding:7px 0;border-bottom:1px dashed var(--line);gap:10px;
+  font-variant-numeric:tabular-nums}
+.pass:last-child{border-bottom:0}
+.pass b{color:var(--good)}
+.pass.none{color:var(--mute);border:0;justify-content:center;letter-spacing:.2em;
+  text-transform:uppercase;font-size:10.5px;padding-top:16px}
+svg{display:block;width:100%;height:auto}
+.bars{display:flex;align-items:flex-end;gap:5px;height:120px;margin-top:6px}
+.bars div{flex:1;background:linear-gradient(180deg,var(--acc),#e4d3a8);border-radius:4px 4px 0 0;
+  min-height:3px;transition:height .4s}
+.bars div.hi{background:linear-gradient(180deg,var(--good),#a8e0c9)}
+.axis{display:flex;justify-content:space-between;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:9px;letter-spacing:.16em;text-transform:uppercase;color:var(--mute);margin-top:7px}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:26px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <span class="kicker">Folio 029 · typing discipline</span>
+    <h1>Twenty-<i>Six</i></h1>
+    <p class="sub">A typing trial: type the line exactly as set. Correct letters darken,
+      mistakes flash red, and the meters run from your first keystroke.</p>
+  </header>
+
+  <div class="meters">
+    <div class="meter wpm"><span>Words / min</span><b id="mWpm">0</b></div>
+    <div class="meter acc"><span>Accuracy</span><b id="mAcc">100<i>%</i></b></div>
+    <div class="meter"><span>Characters</span><b id="mChars">0</b></div>
+    <div class="meter err"><span>Misses</span><b id="mErr">0</b></div>
+  </div>
+
+  <section class="sheet">
+    <div class="ghost"><span id="gLabel">Pass 1 of 5</span><span id="gProg">0 / 0</span></div>
+    <div id="type" tabindex="0" aria-label="typing passage"></div>
+    <input class="hiddenInput" id="capture" type="text" autocomplete="off" autocapitalize="off"
+      spellcheck="false" aria-hidden="true" tabindex="-1">
+  </section>
+
+  <div class="taps">
+    <button id="tap" type="button">Start pass</button>
+    <p class="legend">or click the line and type · <kbd>Tab</kbd> after finishing moves on ·
+      <kbd>R</kbd> restarts the pass when idle</p>
+  </div>
+
+  <div class="shelf">
+    <section class="card">
+      <h2>Recent passes</h2>
+      <div id="passes"><div class="pass none">no passes yet</div></div>
+    </section>
+    <section class="card">
+      <h2>Words per minute across this session</h2>
+      <div class="bars" id="bars" aria-hidden="true"></div>
+      <div class="axis"><span>first</span><span>latest</span></div>
+    </section>
+  </div>
+
+  <footer class="foot"><span>timings measured in this tab · nothing leaves the page</span>
+    <span>029 / 100</span></footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var PASSAGE=[
+    "The press room was quiet except for the ticking of the drying rack and the soft knock of setters placing type one letter at a time.",
+    "A proof pulled cleanly is a small mercy: ink even, registration true, no ghosting where the plate had been lifted and set down again.",
+    "Good spacing is invisible until it fails, and then every eye in the room finds the wide gap at once.",
+    "Count the strokes rather than the letters; speed follows accuracy the way a shadow follows a hand held up to the window.",
+    "Type the line exactly as it is set — punctuation, capitals, and the single space between each word."
+  ];
+  var targets=[], idx=0, misses=0, started=0, timer=null, pass=0, results=[];
+
+  var el=document.getElementById("type");
+  var cap=document.getElementById("capture");
+
+  function loadPass(i){
+    pass=i;
+    targets=PASSAGE[i].split("");
+    idx=0; misses=0; started=0;
+    if(timer){ clearInterval(timer); timer=null; }
+    el.innerHTML="";
+    var frag=document.createDocumentFragment();
+    targets.forEach(function(ch,k){
+      var s=document.createElement("span");
+      s.textContent = ch===" " ? "\u00A0" : ch;
+      if(k===0) s.className="cur";
+      frag.appendChild(s);
+    });
+    el.appendChild(frag);
+    document.getElementById("gLabel").textContent="Pass "+(i+1)+" of "+PASSAGE.length;
+    document.getElementById("gProg").textContent="0 / "+targets.length;
+    document.getElementById("mWpm").textContent="0";
+    document.getElementById("mAcc").textContent="100<i>%</i>";
+    document.getElementById("mChars").textContent="0";
+    document.getElementById("mErr").textContent="0";
+    document.getElementById("tap").textContent="Start pass";
+  }
+
+  function start(){
+    if(!started){
+      started=Date.now();
+      document.getElementById("tap").textContent="Typing…";
+      timer=setInterval(paint,250);
+    }
+    cap.focus();
+  }
+
+  function wpm(){
+    if(!started) return 0;
+    var mins=(Date.now()-started)/60000;
+    if(mins<=0.0005) return 0;
+    return Math.max(0, Math.round((idx/5)/mins));
+  }
+
+  function paint(){
+    document.getElementById("mWpm").textContent=wpm();
+    var typed=idx+misses;
+    var acc= typed? Math.round(idx/(typed)*100) : 100;
+    document.getElementById("mAcc").innerHTML=acc+"<i>%</i>";
+    document.getElementById("mChars").textContent=typed;
+    document.getElementById("mErr").textContent=misses;
+    document.getElementById("gProg").textContent=idx+" / "+targets.length;
+  }
+
+  function finish(){
+    if(timer){ clearInterval(timer); timer=null; }
+    var speed=wpm();
+    var typed=idx+misses;
+    var acc= typed? Math.round(idx/typed*100) : 100;
+    results.push({wpm:speed, acc:acc, miss:misses});
+    document.getElementById("tap").textContent="Next pass";
+    document.getElementById("mWpm").textContent=speed;
+    renderShelf();
+    pass++;
+    if(pass>=PASSAGE.length){
+      document.getElementById("gLabel").textContent="All passes complete";
+      document.getElementById("tap").textContent="Restart set";
+      pass=0;
+    }else{
+      setTimeout(function(){ loadPass(pass); }, 700);
+    }
+  }
+
+  function renderShelf(){
+    var box=document.getElementById("passes");
+    box.innerHTML="";
+    if(!results.length){
+      box.innerHTML='<div class="pass none">no passes yet</div>';
+    }else{
+      results.slice(-6).reverse().forEach(function(r,k){
+        var d=document.createElement("div");
+        d.className="pass";
+        d.innerHTML="<span>pass "+(results.length-k)+"</span><span>"+
+          r.acc+"% accuracy · "+r.miss+" miss</span><b>"+r.wpm+" wpm</b>";
+        box.appendChild(d);
+      });
+    }
+    var bars=document.getElementById("bars");
+    bars.innerHTML="";
+    var max=Math.max(40, Math.max.apply(null, results.map(function(r){return r.wpm;})));
+    var last=results.length? results[results.length-1].wpm : 0;
+    results.forEach(function(r){
+      var b=document.createElement("div");
+      b.style.height=Math.round(r.wpm/max*100)+"%";
+      if(r.wpm===last) b.className="hi";
+      bars.appendChild(b);
+    });
+  }
+
+  function onKey(e){
+    if(!targets.length) return;
+    if(e.key.length===1 || e.key==="Backspace"){
+      e.preventDefault();
+      start();
+    }
+    if(e.key==="Backspace"){
+      if(idx>0){
+        var prev=el.children[idx-1];
+        prev.className="cur";
+        idx--;
+        paint();
+      }
+      return;
+    }
+    if(e.key.length!==1) return;
+
+    if(idx>=targets.length) return;
+    var want=targets[idx];
+    var node=el.children[idx];
+    if(e.key===want){
+      node.className="ok";
+      idx++;
+      if(idx<targets.length){
+        el.children[idx].className="cur";
+      }
+      paint();
+      if(idx>=targets.length) finish();
+    }else{
+      misses++;
+      node.className="no";
+      if(!reduce){
+        node.animate(
+          [{transform:"translateX(0)"},{transform:"translateX(-4px)"},
+           {transform:"translateX(4px)"},{transform:"translateX(0)"}],
+          {duration:180}
+        );
+      }
+      setTimeout(function(){
+        if(idx<targets.length && el.children[idx]===node) node.className="cur";
+        else if(idx<targets.length) el.children[idx].className="cur";
+      },120);
+      paint();
+    }
+  }
+
+  document.addEventListener("keydown",function(e){
+    if(e.target===cap){ onKey(e); return; }
+    if(e.key==="Tab"){ return; }
+    if(e.key===" "||e.key.length===1){ onKey(e); }
+    else if((e.key==="r"||e.key==="R") && !started){ loadPass(pass); }
+  });
+
+  el.addEventListener("click",function(){ cap.focus(); start(); });
+  document.getElementById("tap").addEventListener("click",function(){
+    if(!started){ start(); }
+    else if(idx>=targets.length){ loadPass(pass); }
+    else { cap.focus(); }
+  });
+
+  loadPass(0);
+  renderShelf();
+})();
+</script>
+</body>
+</html>

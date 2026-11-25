@@ -1,0 +1,19 @@
+TITLE: Weather Radar — Sweeping Canvas Scope with Storm Cells
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Weather Radar", a WSR-88D-style plan-position indicator with no external resources whatsoever. Ground it in a deep instrument navy (#050e1c, panels #0a1728, rules #16273f) with cyan accents. The header carries a kicker line (site, model), a large two-tone title and a right-hand meta stack ending in a live UTC clock. The control strip offers three layer buttons (Reflectivity, Velocity, Temperature), Hold sweep, Speed ×4 and Range rings. The scope is a 660×660 canvas inside a bordered panel with an azimuth read-out pinned bottom-left and a colour ramp with four tick labels pinned bottom-right. The right column holds three panels: a five-row tracked-cell list with coloured dots and dBZ values, a surface observation table with four columns, and three warnings colour-coded by severity.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a duty desk in a weather office at night: everything is dark, cold and ruled with hairlines, and the only motion is the beam. The scope reads as real — rings, spokes, bearings, ground clutter, hard white cores in the strongest echoes — while the panels stay flat and legible.
+
+MAJOR VISUAL TECHNIQUES:
+- A rotating sweep drawn as forty stacked arcs with squared-off alpha falloff
+- Cells brightened only when the beam crosses them, then decaying at 0.42 per second
+- Radial-gradient echo blobs coloured from a per-layer palette function, with an elliptical white core above 55 dBZ
+- Ring labels, 30° spokes and padded bearing numbers drawn directly in canvas
+- A vignette gradient to seat the scope inside its frame
+- Random-walk surface observations and cell intensities on an interval
+- Reduced-motion start: beam parked at azimuth 63° with cell A already lit
+
+INTENDED INTERACTION MODEL:
+Layer buttons swap the palette, ramp labels and unit suffixes everywhere at once. Hold sweep freezes the beam (cells then freeze mid-decay); Speed ×4 multiplies rotation; Range rings removes the polar grid. The azimuth read-out updates from the live sweep angle, the UTC clock ticks each second, and every few seconds wind, gust, pressure, reflectivity and hail probability drift so the board is never static.

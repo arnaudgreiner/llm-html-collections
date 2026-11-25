@@ -1,0 +1,17 @@
+TITLE: Torque Bench — A Beam Balance You Load By Hand
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Torque Bench", with no external resources. Workshop palette: charcoal green-black, wood-gradient beam, brass masses and pivot, warm amber counters; header with kicker, thin/accent title, net-torque and tilt readouts (tinted red/green by state). Stage: left a 760×430 SVG bench — bench top, wooden pillar, a #beam group whose pivot is at (380,236) carrying a 620px bar, end caps, six hooks (L3/L2/L1 at 3.0/2.0/1.0m left, R1/R2/R3 right) with label text and transparent grip circles, a brass pointer rising from the pivot, and an arc scale with ticks drawn behind; a #weights group holds the hung masses, #ghost is a floating drag preview. Right rail: torque table (left, right, net, count) with a verdict line, a mass shelf of four buttons (50/100/200/500 g), and a bench card with auto-balance, clear beam, challenge and lock-pivot buttons.
+
+INTENDED DESIGN DESCRIPTION:
+It should feel like a physics lab demonstration bench: heavy, warm and mechanical, with the beam visibly hunting for level and the numbers proving why.
+
+MAJOR VISUAL TECHNIQUES:
+- Rotation about a shared pivot point via rotate(angle cx cy) on a single group, driven by a rAF spring (tilt eases 12% toward its target each frame)
+- Torque computed from data (mass × 9.81 × hook distance) and mirrored into both the readouts and the tilt angle
+- SVG pointer drag converting client coordinates through getBoundingClientRect into the 760×430 viewBox, with a ghost circle following the pointer
+- Mass radii derived from kilograms so heavier brass is visibly larger
+- Class-tinted result lines: red when unbalanced, green at equilibrium
+
+INTENDED INTERACTION MODEL:
+Drag a hung mass off the beam to unload it (dropping above y=200 or below y=420 returns it to the shelf), or drop it onto a highlighted hook to move it; clicking a shelf row hangs the mass on the next free hook and clicking a hung mass takes it down. Auto-balance hangs a matched pair, challenge picks a hidden target torque that must be met within 0.10 N·m, and lock pivot damps the beam to level. Under reduced motion the spring snaps instead of easing, with every calculation unchanged.

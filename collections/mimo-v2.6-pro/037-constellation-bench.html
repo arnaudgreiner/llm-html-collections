@@ -1,0 +1,443 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>037 · Constellation Bench</title>
+<style>
+:root{--bg:#0b0e18;--panel:#121728;--line:#242c47;--ink:#e6e9f5;--mute:#8e95b3;
+  --star:#ffd9a0;--acc:#7fe0d4}
+*{box-sizing:border-box}
+body{margin:0;background:
+  radial-gradient(1000px 700px at 70% 10%,#161d38,transparent),
+  var(--bg);color:var(--ink);min-height:100vh;
+  font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif;padding-bottom:44px}
+header{display:flex;align-items:baseline;gap:14px;flex-wrap:wrap;padding:20px 28px 13px;
+  border-bottom:1px solid var(--line)}
+.kicker{font-size:9.5px;letter-spacing:.4em;text-transform:uppercase;color:var(--mute)}
+h1{margin:0;font-size:26px;font-weight:300}
+h1 b{font-weight:700;color:var(--acc)}
+.hint{margin-left:auto;font-size:10px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+
+.stage{display:grid;grid-template-columns:minmax(0,1fr) 300px;gap:22px;padding:20px 28px 0}
+@media(max-width:940px){.stage{grid-template-columns:1fr}}
+.chartBox{position:relative;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  background:linear-gradient(160deg,#0d1222,#0a0d18 60%,#0c0f1e)}
+canvas{display:block;width:100%;height:auto;cursor:crosshair;touch-action:none}
+.hud{position:absolute;left:14px;bottom:12px;font-size:9.5px;letter-spacing:.24em;
+  text-transform:uppercase;color:var(--mute);pointer-events:none}
+.hud b{color:var(--acc);font-variant-numeric:tabular-nums}
+.tip{position:absolute;padding:7px 10px;border-radius:7px;background:rgba(10,13,26,.92);
+  border:1px solid var(--acc);font-size:11.5px;pointer-events:none;display:none;white-space:nowrap;
+  box-shadow:0 10px 26px rgba(0,0,0,.5);z-index:4}
+.tip span{display:block;font-size:9px;letter-spacing:.2em;text-transform:uppercase;color:var(--mute)}
+
+.rig{display:flex;flex-direction:column;gap:15px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:15px}
+.card h2{margin:0 0 11px;font-size:9.5px;letter-spacing:.32em;text-transform:uppercase;color:var(--mute)}
+.plates{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.chip{font:inherit;font-size:10.5px;letter-spacing:.13em;text-transform:uppercase;font-weight:700;
+  padding:9px 6px;border-radius:7px;border:1px solid var(--line);background:#1a2038;
+  color:var(--ink);cursor:pointer;transition:.16s}
+.chip:hover{transform:translateY(-2px);border-color:var(--acc)}
+.chip.on{background:var(--acc);border-color:var(--acc);color:#0b0e18}
+.slab{display:flex;align-items:center;gap:9px;margin-top:11px;font-size:10px;
+  letter-spacing:.16em;text-transform:uppercase;color:var(--mute)}
+.slab input{flex:1;accent-color:var(--acc)}
+.slab b{color:var(--ink);width:36px;text-align:right;font-variant-numeric:tabular-nums}
+.info h3{margin:4px 0 3px;font-size:21px;font-weight:400;font-family:Georgia,serif}
+.info .cat{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--acc)}
+.info p{font-size:12.5px;line-height:1.7;color:#b9bfd6;margin:9px 0 0}
+.facts{list-style:none;margin:11px 0 0;padding:0;font-size:11.5px}
+.facts li{display:flex;justify-content:space-between;gap:8px;padding:5px 0;
+  border-bottom:1px dotted var(--line);letter-spacing:.06em}
+.facts b{color:var(--star);font-weight:600;font-variant-numeric:tabular-nums}
+.log{list-style:none;margin:0;padding:0;font-family:Consolas,monospace;font-size:11px;
+  line-height:1.85;color:#9aa2c0;max-height:110px;overflow:auto}
+.log b{color:var(--acc);font-weight:400}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;padding:19px 28px 0;
+  font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<header>
+  <span class="kicker">deep-sky table</span>
+  <h1>Constellation <b>Bench</b></h1>
+  <span class="hint">tap a star to plot · drag the field to pan</span>
+</header>
+
+<div class="stage">
+  <div class="chartBox" id="chartBox">
+    <canvas id="sky" width="760" height="470"></canvas>
+    <div class="tip" id="tip"></div>
+    <div class="hud">objects <b id="hObj">0</b> · lines <b id="hLine">0</b> · scale <b id="hScale">1.00×</b> · field <b id="hField">889</b></div>
+  </div>
+
+  <aside class="rig">
+    <div class="card">
+      <h2>Catalogue plate</h2>
+      <div class="plates" id="plates">
+        <button class="chip on" data-p="messier" type="button">messier 40</button>
+        <button class="chip" data-p="bright" type="button">bright stars</button>
+        <button class="chip" data-p="nearsun" type="button">solar club</button>
+        <button class="chip" data-p="faint" type="button">faint show</button>
+      </div>
+      <label class="slab">limit mag <input id="mag" type="range" min="3" max="11" step="0.5" value="8"><b id="magOut">8.0</b></label>
+      <label class="slab">label density <input id="dens" type="range" min="0" max="100" step="10" value="50"><b id="densOut">50</b></label>
+      <div class="plates" style="margin-top:12px">
+        <button class="chip" id="reset" type="button">reset view</button>
+        <button class="chip" id="clear" type="button">clear lines</button>
+      </div>
+    </div>
+
+    <div class="card info" id="infoCard">
+      <h2>Object card</h2>
+      <div class="cat" id="oCat">nothing selected</div>
+      <h3 id="oName">Pick a star</h3>
+      <p id="oDesc">Click any star on the plate to draw your own figure; click a second one to
+        join them. Hover a star to read its entry from the catalogue.</p>
+      <ul class="facts" id="oFacts">
+        <li><span>designation</span><b>—</b></li>
+        <li><span>magnitude</span><b>—</b></li>
+        <li><span>distance</span><b>—</b></li>
+        <li><span>spectral</span><b>—</b></li>
+      </ul>
+    </div>
+
+    <div class="card">
+      <h2>Plot log</h2>
+      <ul class="log" id="log"><li>awaiting first plot…</li></ul>
+    </div>
+  </aside>
+</div>
+
+<footer class="foot"><span>procedural sky · hit-testing by screen distance</span><span>037 / 100</span></footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("sky"), ctx=cv.getContext("2d");
+  var W=cv.width, H=cv.height;
+  var G=function(id){return document.getElementById(id);};
+
+  var PLATES={
+    messier:{field:"M40 field", objs:[
+      ["Alphirk","URSA MAJOR",7.8,1.9,"G9","A wandering giant, yellow as late corn."],
+      ["Merak","URSA MAJOR",2.4,4.1,"A0","The pointer star — line it through Dubhe to find Polaris."],
+      ["Phecda","URSA MAJOR",2.5,3.4,"F7","Wing feather of the Great Bear, 84 light years out."],
+      ["Megrez","URSA MAJOR",3.4,2.1,"A0","The quiet joint of the bowl; the faintest of the seven."],
+      ["Alioth","URSA MAJOR",1.8,1.2,"A2","Brightest of the seven; a rapidly spinning variable."],
+      ["Mizar","URSA MAJOR",2.3,0.6,"A2","Look beside it for Alcor — the test of good eyes."],
+      ["Dubhe","URSA MAJOR",1.9,-1.1,"K0","The upper pointer, holding the pole at arm's length."],
+      ["Rasalhague","OPHIUCHUS",2.1,-3.6,"A5","A white star at the head of the serpent-bearer."],
+      ["Etamin","DRACO",2.4,-5.2,"K5","Once the pole star's rival, now four thousand years late."],
+      ["Vega","LYRA",0.0,2.8,"A0","The standard by which every other brightness is judged."],
+      ["Sheliak","LYRA",3.6,4.4,"B8","An eclipsing pair that never quite touches."],
+      ["Sulafat","LYRA",3.3,5.9,"B9","Blue-white, marking the far side of the harp."],
+      ["Deneb","CYGNUS",1.3,8.1,"A2","Two hundred thousand suns of light; still a naked eye."],
+      ["Sadr","CYGNUS",2.2,7.1,"F8","The crossroads of the Swan, buried in star clouds."],
+      ["Gienah","CYGNUS",2.5,9.3,"K3","A sunset-coloured giant closing the wing."],
+      ["Albireo","CYGNUS",3.1,8.7,"K3","The finest colour contrast in the sky at any magnification."],
+      ["Rasalgethi","HERCULES",3.5,3.4,"M5","A red supergiant that swallows Mars if they meet."],
+      ["Kornephoros","HERCULES",2.8,4.9,"G7","The burden-bearer, dimming through dust."],
+      ["Zeta Lyrae","LYRA",4.4,5.2,"B4","A pole star for small instruments."],
+      ["Polaris Minor","URSA MINOR",4.9,-9.0,"F7","Not the pole star — it just wants to be."],
+      ["Kochab","URSA MINOR",2.1,-11.2,"K4","The old guardian; held the pole ten thousand years ago."],
+      ["Pherkad","URSA MINOR",3.0,-10.1,"A3","Bows with Kochab around the empty pole."],
+      ["Errai","CYGNUS",3.2,11.4,"K5","In twelve centuries it will be the pole star."],
+      ["Errai's Twin","CYGNUS",4.6,12.0,"F2","A faint rehearsal for the same position."],
+      ["Alderamin","CEPHEUS",2.5,6.6,"A7","Precessing toward the honour now."],
+      ["Gamma Cep","CEPHENS",3.2,7.8,"K1","Patient, and already practicing."]
+    ]},
+    bright:{field:"brightest", objs:[
+      ["Sirius","CANIS MAJOR",-1.4,-6.2,"A1","The brightest star, and still only eight light years away."],
+      ["Canopus","CARINA",-0.7,10.5,"F0","Second brightest; a navigation star for spacecraft."],
+      ["Rigil Kent","CENTAURUS",-0.3,8.9,"G2","The nearest system, only visible from southern roads."],
+      ["Arcturus","BOOTES",0.0,1.4,"K1","An orange runaway, escaping the galactic plane."],
+      ["Vega","LYRA",0.0,2.8,"A0","The first star ever photographed, in 1850."],
+      ["Capella","AURIGA",0.1,4.6,"G8","Two giants in a slow, close waltz."],
+      ["Rigel","ORION",0.2,-1.6,"B8","A blue supergiant lighting the dust it will one day scatter."],
+      ["Procyon","CANIS MINOR",0.4,-2.3,"F5","The dog that arrives before the dog."],
+      ["Achernar","ERIDANUS",-0.6,-8.4,"B6","Spinning so fast it is visibly flattened."],
+      ["Betelgeuse","ORION",0.5,-0.4,"M1","Variable, swollen, and due to be a supernova sometime."],
+      ["Altair","AQUILA",0.8,0.9,"A7","A star flattened by its own two-day year."],
+      ["Aldebaran","TAURUS",0.9,-0.9,"K5","A red eye moving through the Hyades cluster."],
+      ["Antares","SCORPIUS",1.1,3.9,"M1","The rival of Mars, sixty times the sun's width."],
+      ["Spica","VIRGO",1.0,6.8,"B1","Two hot stars sharing one envelope of gas."],
+      ["Pollux","GEMINI",1.1,-1.9,"K0","The closer twin, with a planet in tow."],
+      ["Fomalhaut","PISCIS AUSTRINUS",1.2,-4.4,"A3","A single ring of debris, tidy as a plate."],
+      ["Deneb","CYGNUS",1.3,8.1,"A2","Perhaps the most luminous star visible to the eye."],
+      ["Regulus","LEO",1.4,-0.7,"B7","Spinning at the point of flying apart."]
+    ]},
+    nearsun:{field:"solar club", objs:[
+      ["Proxima","CENTAURUS",2.8,7.4,"M5","The nearest star; quiet, flaring, patient."],
+      ["Barnard's Star","OPHIUCHUS",9.5,-1.5,"M4","Fastest proper motion in the sky — 10° a century."],
+      ["Wolf 359","LEO",13.4,3.1,"M6","A faint ember at the edge of the Sun's company."],
+      ["Lalande 21185","URSA MAJOR",7.5,-4.7,"M2","A quiet red dwarf with at least one planet."],
+      ["Sirius B","CANIS MINOR",-1.4,-6.0,"DA","A white dwarf the size of Earth with the Sun's mass."],
+      ["Epsilon Eridani","ERIDANUS",1.2,-0.8,"K2","Young, dusty, sixteen light years out."],
+      ["Tau Ceti","CETUS",0.6,-1.8,"G8","A sun that never had a rough adolescence."],
+      ["Luyten's Star","CANIS MINOR",7.3,-1.0,"M3","Closing on us at 6 km/s, politely."],
+      ["Kapteyn","PICTOR",10.6,6.5,"M1","An old stream of stars falling through the galaxy."],
+      ["van Maanen","PICTUS",12.1,9.0,"DZ","A lone white dwarf with a metal-polluted atmosphere."],
+      ["Ross 154","SAGITTARIUS",10.6,4.4,"M5","A flare star 9.7 light years out."],
+      ["Ross 248","ANDROMEDA",14.9,8.7,"M6","Will pass within two light years in 36,000 years."],
+      ["61 Cygni","CYGNUS",5.2,-0.9,"K5","Bessel's 1838 measurement that opened the distance ladder."],
+      ["Struve 2398","DRACO",8.9,3.8,"M3","A twin pair drifting together."],
+      ["Groombridge 34","ANDROMEDA",8.1,-7.6,"M5","One of Pleiades' faint neighbours."]
+    ]},
+    faint:{field:"faint show", objs:[
+      ["M13","HERCULES",5.6,3.0,"—","A quarter of a million stars in one loose sphere."],
+      ["M57","LYRA",4.2,4.7,"—","A smoke ring from a sun like ours, in a hurry."],
+      ["M27","VULPULA",4.8,5.1,"—","The dumbbell, glowing at five magnitudes."],
+      ["M51","CANES VENATICI",8.4,-1.0,"—","The whirlpool, pulling a smaller galaxy out of shape."],
+      ["M81","URSA MAJOR",6.9,9.6,"—","A bright spiral twenty million light years out."],
+      ["M104","VIRGO",8.0,7.9,"—","The sombrero, in edge-on dust."],
+      ["NGC 7331","PEGASUS",7.1,5.5,"—","Our spiral's near twin, tilted for inspection."],
+      ["M33","TRIANGULUM",4.7,8.4,"—","Third galaxy of the local group; wide and patient."],
+      ["M15","PEGASUS",6.2,8.0,"—","A globular with a black hole where its heart was."],
+      ["M22","SAGITTARIUS",5.1,6.3,"—","Almost close enough to resolve with binoculars."],
+      ["NGC 253","SCULPTOR",7.2,-9.4,"—","A starburst galaxy running far too hot."],
+      ["M64","COMA BERENICES",8.5,4.0,"—","The black-eye galaxy; dust rolling backwards."]
+    ]}
+  };
+
+  var state={plate:"messier", mag:8, dens:50, zoom:1, panX:0, panY:0,
+    sel:-1, hover:-1, first:-1};
+  var stars=[]; var lines=[];
+
+  function hashStr(s){
+    var h=2166136261;
+    for(var i=0;i<s.length;i++){ h=(h^s.charCodeAt(i))*16777619>>>0; }
+    return h>>>0;
+  }
+
+  /* deterministic pseudo-random star speckle */
+  var seed=1337;
+  function srand(){ seed=(seed*16807)%2147483647; return (seed-1)/2147483646; }
+
+  var speckle=null;
+  function makeSpeckle(){
+    speckle=[];
+    seed=20260922;
+    for(var i=0;i<340;i++){
+      speckle.push({x:srand(), y:srand(), m:srand()*10+2});
+    }
+  }
+  makeSpeckle();
+
+  function load(){
+    var p=PLATES[state.plate];
+    stars=p.objs.map(function(o,i){
+      /* deterministic position from a name hash, so every load is identical */
+      var hx=((hashStr(o[0])%1000)/1000-0.5)*19;
+      var hy=((hashStr(o[1]+o[0])%1000)/1000-0.5)*12.4;
+      return {name:o[0], cat:o[1], mag:Math.min(11,o[2]), off:hx, dec:hy,
+        spec:o[4], desc:o[5], dist:(2+((i*37)%90)).toFixed(1)};
+    });
+    lines=[]; state.sel=-1; state.hover=-1; state.first=-1;
+    G("hField").textContent=p.field;
+    render();
+    logLine("plate loaded · "+p.field);
+  }
+
+  function toScreen(s){
+    return {
+      x: W/2 + s.off*state.zoom*34 + state.panX,
+      y: H/2 + s.dec*state.zoom*30 + state.panY
+    };
+  }
+
+  function render(){
+    ctx.clearRect(0,0,W,H);
+    /* faint background speckle */
+    for(var i=0;i<speckle.length;i++){
+      var sp=speckle[i];
+      var a=0.16+ (10-sp.m)/10*0.4;
+      ctx.fillStyle="rgba(214,224,255,"+a.toFixed(2)+")";
+      var sx=((sp.x*W)+state.panX*0.15%W+W)%W;
+      var sy=((sp.y*H)+state.panY*0.15%H+H)%H;
+      ctx.fillRect(sx, sy, 1.4, 1.4);
+    }
+    /* coordinate grid */
+    ctx.strokeStyle="rgba(127,224,212,.14)";
+    ctx.lineWidth=1;
+    for(var gx=0;gx<=W;gx+=W/8){
+      ctx.beginPath(); ctx.moveTo(gx+.5,0); ctx.lineTo(gx+.5,H); ctx.stroke();
+    }
+    for(var gy=0;gy<=H;gy+=H/5){
+      ctx.beginPath(); ctx.moveTo(0,gy+.5); ctx.lineTo(W,gy+.5); ctx.stroke();
+    }
+
+    /* user lines */
+    ctx.strokeStyle="rgba(127,224,212,.85)";
+    ctx.lineWidth=1.4;
+    ctx.setLineDash([6,5]);
+    for(var l=0;l<lines.length;l++){
+      var a1=toScreen(stars[lines[l][0]]), b1=toScreen(stars[lines[l][1]]);
+      ctx.beginPath(); ctx.moveTo(a1.x,a1.y); ctx.lineTo(b1.x,b1.y); ctx.stroke();
+    }
+    ctx.setLineDash([]);
+
+    var visible=0;
+    stars.forEach(function(s,idx){
+      var p=toScreen(s);
+      if(s.mag>state.mag) return;
+      visible++;
+      var r=Math.max(1.6, 7-s.mag);
+      var g=ctx.createRadialGradient(p.x,p.y,0,p.x,p.y,r*3.4);
+      g.addColorStop(0,"rgba(255,241,214,.95)");
+      g.addColorStop(.35,"rgba(255,217,160,.5)");
+      g.addColorStop(1,"rgba(255,217,160,0)");
+      ctx.fillStyle=g;
+      ctx.beginPath(); ctx.arc(p.x,p.y,r*3.4,0,Math.PI*2); ctx.fill();
+      ctx.fillStyle="#fff6e6";
+      ctx.beginPath(); ctx.arc(p.x,p.y,r*0.75,0,Math.PI*2); ctx.fill();
+
+      if(idx===state.sel || idx===state.first){
+        ctx.strokeStyle="#7fe0d4"; ctx.lineWidth=1.6;
+        ctx.beginPath(); ctx.arc(p.x,p.y,r+7,0,Math.PI*2); ctx.stroke();
+      }else if(idx===state.hover){
+        ctx.strokeStyle="rgba(255,217,160,.8)"; ctx.lineWidth=1;
+        ctx.beginPath(); ctx.arc(p.x,p.y,r+5,0,Math.PI*2); ctx.stroke();
+      }
+      var showLabel=state.dens>0 && (idx%10)>=(100-state.dens+9)/10;
+      if(showLabel){
+        ctx.font="10.5px 'Segoe UI',sans-serif";
+        ctx.fillStyle="rgba(230,233,245,.82)";
+        ctx.fillText(s.name, p.x+r+6, p.y+3.5);
+      }
+    });
+    G("hObj").textContent=visible;
+    G("hLine").textContent=lines.length;
+    G("hScale").textContent=state.zoom.toFixed(2)+"×";
+  }
+
+  function pick(clientX,clientY){
+    var r=cv.getBoundingClientRect();
+    var x=(clientX-r.left)*W/r.width, y=(clientY-r.top)*H/r.height;
+    var best=-1, bd=16;
+    stars.forEach(function(s,i){
+      if(s.mag>state.mag) return;
+      var p=toScreen(s);
+      var d=Math.hypot(p.x-x,p.y-y);
+      if(d<bd){ bd=d; best=i; }
+    });
+    return {i:best, x:x, y:y, rect:r};
+  }
+
+  function showTip(i,clientX,clientY){
+    var tip=G("tip");
+    if(i<0){ tip.style.display="none"; return; }
+    var s=stars[i];
+    tip.innerHTML="<span>"+s.cat+"</span>"+s.name+" · mag "+s.mag.toFixed(1);
+    tip.style.display="block";
+    var box=document.getElementById("chartBox").getBoundingClientRect();
+    var left=clientX-box.left+14, top=clientY-box.top-10;
+    if(left+tip.offsetWidth>box.width-8) left=clientX-box.left-tip.offsetWidth-14;
+    tip.style.left=left+"px"; tip.style.top=top+"px";
+  }
+
+  function selectStar(i){
+    state.sel=i;
+    var s=stars[i];
+    G("oCat").textContent=s.cat;
+    G("oName").textContent=s.name;
+    G("oDesc").textContent=s.desc;
+    var f=G("oFacts");
+    f.innerHTML='<li><span>designation</span><b>'+s.name+'</b></li>'+
+      '<li><span>magnitude</span><b>'+s.mag.toFixed(1)+'</b></li>'+
+      '<li><span>distance</span><b>'+s.dist+' ly</b></li>'+
+      '<li><span>spectral</span><b>'+s.spec+'</b></li>';
+    if(state.first<0){
+      state.first=i;
+      logLine("anchor · "+s.name);
+    }else if(state.first!==i){
+      lines.push([state.first,i]);
+      logLine(stars[state.first].name+" → "+s.name);
+      state.first=i;
+    }else{
+      state.first=-1;
+      logLine("anchor released · "+s.name);
+    }
+    render();
+  }
+
+  function logLine(t){
+    var el=G("log");
+    if(el.children.length===1 && el.textContent.indexOf("awaiting")===0) el.innerHTML="";
+    var li=document.createElement("li");
+    var d=new Date(), p=function(v){return (v<10?"0":"")+v;};
+    li.innerHTML=p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds())+" <b>"+t+"</b>";
+    el.insertBefore(li,el.firstChild);
+    while(el.children.length>6) el.removeChild(el.lastChild);
+  }
+
+  /* pointer */
+  var panning=false, moved=false, lastX=0, lastY=0;
+  cv.addEventListener("pointerdown",function(e){
+    panning=true; moved=false; lastX=e.clientX; lastY=e.clientY;
+    cv.setPointerCapture(e.pointerId);
+  });
+  cv.addEventListener("pointermove",function(e){
+    if(panning){
+      var dx=e.clientX-lastX, dy=e.clientY-lastY;
+      if(Math.abs(dx)+Math.abs(dy)>3) moved=true;
+      if(moved){ state.panX+=dx; state.panY+=dy; lastX=e.clientX; lastY=e.clientY; render(); }
+      return;
+    }
+    var hit=pick(e.clientX,e.clientY);
+    if(hit.i!==state.hover){ state.hover=hit.i; render(); }
+    showTip(hit.i,e.clientX,e.clientY);
+    cv.style.cursor=hit.i>=0?"pointer":"crosshair";
+  });
+  cv.addEventListener("pointerup",function(e){
+    panning=false;
+    if(!moved){
+      var hit=pick(e.clientX,e.clientY);
+      if(hit.i>=0) selectStar(hit.i);
+    }
+  });
+  cv.addEventListener("pointerleave",function(){
+    state.hover=-1; showTip(-1); render();
+  });
+  cv.addEventListener("wheel",function(e){
+    e.preventDefault();
+    state.zoom=Math.min(3.2,Math.max(0.55,state.zoom*(e.deltaY<0?1.12:0.9)));
+    render();
+  },{passive:false});
+
+  /* controls */
+  document.getElementById("plates").addEventListener("click",function(e){
+    var b=e.target.closest("button"); if(!b) return;
+    [].forEach.call(this.querySelectorAll(".chip"),function(c){c.classList.remove("on");});
+    b.classList.add("on");
+    state.plate=b.dataset.p;
+    load();
+  });
+  G("mag").addEventListener("input",function(){
+    state.mag=parseFloat(this.value);
+    G("magOut").textContent=state.mag.toFixed(1);
+    render();
+  });
+  G("dens").addEventListener("input",function(){
+    state.dens=parseInt(this.value,10);
+    G("densOut").textContent=state.dens;
+    render();
+  });
+  G("reset").addEventListener("click",function(){
+    state.zoom=1; state.panX=0; state.panY=0; render(); logLine("view reset");
+  });
+  G("clear").addEventListener("click",function(){
+    lines=[]; state.first=-1; render(); logLine("lines cleared");
+  });
+
+  if(reduce){ /* nothing autonomous anyway */ }
+  load();
+})();
+</script>
+</body>
+</html>

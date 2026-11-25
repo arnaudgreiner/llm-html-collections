@@ -1,0 +1,232 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>007 · Synth Sunset</title>
+<style>
+:root{
+  --sky1:#2b0a4d;--sky2:#7d1e6b;--sky3:#ff5b7f;
+  --sun1:#ffe66d;--sun2:#ff3d81;--grid:#4de3ff;--neon:#ff4fd8;
+  --road1:#120426;--road2:#1d0637;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:#0a0118;color:#fff;min-height:100vh;overflow-x:hidden;
+  font-family:"Segoe UI",system-ui,-apple-system,Helvetica,Arial,sans-serif}
+.scene{position:fixed;inset:0;overflow:hidden;z-index:0}
+.sky{position:absolute;inset:0;background:linear-gradient(180deg,var(--sky1) 0%,var(--sky2) 46%,var(--sky3) 68%,#ffb26b 72%,#2b0620 72.2%);}
+#art{position:absolute;left:0;right:0;top:0;height:74%;width:100%}
+/* road */
+.road{position:absolute;left:-60%;right:-60%;bottom:-4vh;height:44vh;
+  background:
+    repeating-linear-gradient(to bottom,rgba(77,227,255,.45) 0 2px,transparent 2px 46px),
+    linear-gradient(180deg,var(--road1),var(--road2));
+  transform:perspective(300px) rotateX(72deg);transform-origin:top center;
+  animation:drive 1.5s linear infinite}
+.road::after{content:"";position:absolute;inset:0;
+  background:repeating-linear-gradient(to right,rgba(77,227,255,.28) 0 2px,transparent 2px 100px);
+  animation:pan 3s linear infinite}
+@keyframes drive{from{background-position:0 0,0 0}to{background-position:0 46px,0 0}}
+@keyframes pan{from{transform:translateX(0)}to{transform:translateX(100px)}}
+.hzline{position:absolute;left:0;right:0;top:72%;height:3px;background:var(--neon);
+  box-shadow:0 0 18px var(--neon),0 0 60px var(--neon);z-index:2}
+.sunwrap{position:absolute;left:50%;top:72%;width:min(46vw,420px);aspect-ratio:1;
+  transform:translate(-50%,-96%);z-index:1;pointer-events:none;filter:drop-shadow(0 0 40px rgba(255,80,150,.55))}
+/* title over scene */
+.ui{position:relative;z-index:5;max-width:1140px;margin:0 auto;padding:64px 24px 60px;text-align:center}
+.kicker{font-size:11px;letter-spacing:.5em;text-transform:uppercase;color:#8de9ff}
+.neon{font-size:clamp(46px,11vw,138px);line-height:.84;margin:16px 0 0;font-weight:900;
+  letter-spacing:-.03em;text-transform:uppercase;
+  background:linear-gradient(180deg,#fff 0%,#ffd1ec 34%,var(--neon) 62%,#7a1bff 100%);
+  -webkit-background-clip:text;background-clip:text;color:transparent;
+  filter:drop-shadow(0 0 16px rgba(255,79,216,.75)) drop-shadow(0 0 44px rgba(122,27,255,.5))}
+.neon span{display:block}
+.tag{margin:20px auto 0;max-width:560px;color:#d9c7ff;font-size:15.5px;line-height:1.7}
+.dash{display:flex;gap:10px;justify-content:center;flex-wrap:wrap;margin-top:30px}
+.dash i{font-style:normal;border:1px solid rgba(141,233,255,.45);color:#8de9ff;padding:8px 16px;
+  font-size:11px;letter-spacing:.3em;text-transform:uppercase;background:rgba(8,2,24,.5);
+  backdrop-filter:blur(6px)}
+.panel{margin:46px auto 0;max-width:840px;background:rgba(10,4,28,.72);
+  border:1px solid rgba(255,79,216,.35);padding:24px;text-align:left;
+  box-shadow:0 0 34px rgba(255,79,216,.18),inset 0 0 40px rgba(77,227,255,.06);
+  backdrop-filter:blur(10px)}
+.panel h3{margin:0 0 16px;font-size:11px;letter-spacing:.4em;text-transform:uppercase;color:var(--neon)}
+.pal{display:flex;gap:12px;flex-wrap:wrap}
+.sw{flex:1;min-width:150px;border:1px solid rgba(255,255,255,.18);background:rgba(255,255,255,.05);
+  padding:14px;cursor:pointer;text-align:left;font:inherit;color:#fff;transition:.25s}
+.sw:hover{transform:translateY(-4px);border-color:var(--neon);box-shadow:0 8px 24px rgba(255,79,216,.3)}
+.sw b{display:block;font-size:12px;letter-spacing:.2em;text-transform:uppercase;margin-bottom:8px}
+.sw u{display:flex;height:16px;text-decoration:none}
+.sw u i{flex:1}
+.sw.on{border-color:var(--neon);background:rgba(255,79,216,.14)}
+.row{display:flex;align-items:center;gap:16px;margin-top:20px;font-size:12px;letter-spacing:.2em;
+  text-transform:uppercase;color:#8de9ff}
+input[type=range]{flex:1;-webkit-appearance:none;appearance:none;height:4px;border-radius:99px;
+  background:linear-gradient(90deg,#8de9ff,var(--neon));outline:0}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;height:20px;border-radius:50%;
+  background:#fff;box-shadow:0 0 14px var(--neon);cursor:pointer}
+input[type=range]::-moz-range-thumb{width:20px;height:20px;border-radius:50%;background:#fff;border:0;
+  box-shadow:0 0 14px var(--neon);cursor:pointer}
+.feat{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:16px;margin-top:26px;
+  text-align:left}
+.feat div{border-left:2px solid var(--neon);padding:4px 0 4px 14px}
+.feat b{display:block;font-size:11.5px;letter-spacing:.26em;text-transform:uppercase;color:#8de9ff;
+  margin-bottom:6px}
+.feat p{margin:0;color:#cbb8ee;font-size:14px;line-height:1.65}
+footer{position:relative;z-index:5;text-align:center;padding:0 24px 46px;font-size:11px;
+  letter-spacing:.34em;text-transform:uppercase;color:rgba(255,255,255,.5)}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="scene" aria-hidden="true">
+  <div class="sky"></div>
+  <canvas id="art"></canvas>
+  <div class="sunwrap" id="sun"></div>
+  <div class="road"></div>
+  <div class="hzline"></div>
+</div>
+
+<main class="ui">
+  <div class="kicker">Spectre Drive · side a · 1986</div>
+  <h1 class="neon"><span>Sunset</span><span>Protocol</span></h1>
+  <p class="tag">An endless horizon, a striped sun and a road that never arrives. Everything here is
+  drawn with gradients and one canvas — no images, no fonts, no requests.</p>
+  <div class="dash"><i>retrowave</i><i>procedural</i><i>self-contained</i></div>
+
+  <section class="panel">
+    <h3>Palette deck</h3>
+    <div class="pal" id="pal">
+      <button class="sw on" data-p="0"><b>Miami</b><u><i style="background:#2b0a4d"></i><i style="background:#7d1e6b"></i><i style="background:#ff3d81"></i></u></button>
+      <button class="sw" data-p="1"><b>Ice Coast</b><u><i style="background:#02123a"></i><i style="background:#0b3f7d"></i><i style="background:#39d6ff"></i></u></button>
+      <button class="sw" data-p="2"><b>Burnout</b><u><i style="background:#1a0500"></i><i style="background:#7a1f00"></i><i style="background:#ffb020"></i></u></button>
+    </div>
+    <div class="row"><label for="spd">Cruise</label>
+      <input type="range" id="spd" min="0" max="100" value="45"><output id="oSpd">45</output></div>
+    <div class="feat">
+      <div><b>Striped sun</b><p>Drawn arc-band by arc-band, the cuts widen toward the bottom of the disc.</p></div>
+      <div><b>Ridge silhouette</b><p>Three seeded mountain layers with a magenta rim light on their tops.</p></div>
+      <div><b>Scanning grid</b><p>A perspective plane whose horizontal bands scroll toward the viewer.</p></div>
+      <div><b>Parallax</b><p>Pointer position drifts the sun and ridge sideways against the road.</p></div>
+    </div>
+  </section>
+</main>
+
+<footer>007 / 100 · move the pointer to steer · pick a palette</footer>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("art"), ctx=cv.getContext("2d");
+  var sunHost=document.getElementById("sun");
+  var W=0,H=0,horizon=0,t=0;
+  var PALETTES=[
+    {sky:["#2b0a4d","#7d1e6b","#ff5b7f"],sun:["#ffe66d","#ff3d81"],ridge:"#2a0833",rim:"#ff7ad9"},
+    {sky:["#02123a","#0b3f7d","#39d6ff"],sun:["#eaffff","#39d6ff"],ridge:"#041024",rim:"#8de9ff"},
+    {sky:["#1a0500","#7a1f00","#ffb020"],sun:["#fff3b0","#ff7a1a"],ridge:"#170400",rim:"#ffd166"}
+  ];
+  var current=0, speed=.45, driftX=0, targetDrift=0;
+
+  function size(){
+    W=cv.width=cv.offsetWidth;
+    H=cv.height=cv.offsetHeight;
+    horizon=Math.round(H*0.97);
+    draw(0);
+  }
+
+  function ridge(baseY,amp,step,seed,col,rim){
+    ctx.beginPath(); ctx.moveTo(-20,H+20);
+    var x=-20, s=seed;
+    while(x<W+40){
+      s=(s*9301+49297)%233280;
+      var r=s/233280;
+      var peak=baseY-Math.pow(r,1.6)*amp;
+      ctx.lineTo(x,peak);
+      x+=step;
+    }
+    ctx.lineTo(W+40,H+20); ctx.closePath();
+    ctx.fillStyle=col; ctx.fill();
+    ctx.strokeStyle=rim; ctx.lineWidth=1.4; ctx.globalAlpha=.65; ctx.stroke(); ctx.globalAlpha=1;
+  }
+
+  function draw(dt){
+    var p=PALETTES[current];
+    ctx.clearRect(0,0,W,H);
+    /* striped sun */
+    var cx=W/2+driftX, cy=H*0.97-H*0.30, R=Math.min(W*0.22,210);
+    var g=ctx.createLinearGradient(0,cy-R,0,cy+R);
+    g.addColorStop(0,p.sun[0]); g.addColorStop(1,p.sun[1]);
+    ctx.save();
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,6.284); ctx.clip();
+    ctx.fillStyle=g; ctx.fillRect(cx-R,cy-R,R*2,R*2);
+    /* horizontal cut bands, widening downward */
+    ctx.globalCompositeOperation="destination-out";
+    var y=cy-R*0.05, gap=6, i=0;
+    while(y<cy+R){
+      ctx.fillRect(cx-R,y,R*2,gap);
+      y+=gap+8; gap*=1.35; i++;
+      if(i>40) break;
+    }
+    ctx.globalCompositeOperation="source-over";
+    ctx.restore();
+    /* glow ring */
+    ctx.beginPath(); ctx.arc(cx,cy,R,0,6.284);
+    ctx.strokeStyle=p.rim; ctx.globalAlpha=.35; ctx.lineWidth=6; ctx.stroke(); ctx.globalAlpha=1;
+    /* ridges */
+    ridge(horizon,72,54,7,p.ridge,p.rim);
+    ridge(horizon,118,88,1337,"#170726",p.rim);
+    /* stars */
+    ctx.fillStyle="rgba(255,255,255,.75)";
+    for(var s=0;s<70;s++){
+      var sx=((s*379)%W), sy=((s*191)%(H*0.5));
+      var tw=reduce?0.8:(0.55+0.45*Math.sin(t*2+s));
+      ctx.globalAlpha=tw*0.8;
+      ctx.fillRect(sx+driftX*0.4,sy,1.6,1.6);
+    }
+    ctx.globalAlpha=1;
+    /* sun DOM glow sync */
+    sunHost.style.left=(50+ (driftX/W)*6 )+"%";
+    sunHost.style.background="radial-gradient(circle at 50% 45%,"+p.sun[0]+","+p.sun[1]+" 70%,rgba(0,0,0,0) 72%)";
+    sunHost.style.opacity="0";
+  }
+
+  function loop(){
+    t+=0.016;
+    driftX+=(targetDrift-driftX)*0.06;
+    draw();
+    requestAnimationFrame(loop);
+  }
+
+  addEventListener("resize",size);
+  document.addEventListener("pointermove",function(e){
+    targetDrift=((e.clientX/innerWidth)-.5)*Math.min(W*0.16,120);
+  },{passive:true});
+
+  document.getElementById("pal").addEventListener("click",function(e){
+    var b=e.target.closest(".sw"); if(!b) return;
+    current=+b.dataset.p;
+    document.querySelectorAll(".sw").forEach(function(s){ s.classList.remove("on"); });
+    b.classList.add("on");
+    var p=PALETTES[current];
+    document.documentElement.style.setProperty("--sky1",p.sky[0]);
+    document.documentElement.style.setProperty("--sky2",p.sky[1]);
+    document.documentElement.style.setProperty("--sky3",p.sky[2]);
+    document.documentElement.style.setProperty("--neon",p.sun[1]);
+    document.documentElement.style.setProperty("--grid",p.sun[1]);
+    draw();
+  });
+
+  var spd=document.getElementById("spd"), oSpd=document.getElementById("oSpd");
+  spd.addEventListener("input",function(){
+    oSpd.value=spd.value; speed=spd.value/100;
+    document.querySelector(".road").style.animationDuration=(1.9-speed*1.7).toFixed(2)+"s";
+    document.querySelector(".road").style.animationPlayState=reduce?"paused":"running";
+  });
+
+  size(); requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

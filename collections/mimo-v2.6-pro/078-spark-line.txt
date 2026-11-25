@@ -1,0 +1,17 @@
+TITLE: Spark Line — Morse Telegraph Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Spark Line: Morse Telegraph Bench". Render a 940×380 canvas bench holding an animated brass telegraph key (lever tilts on press, spring, contact spark), a spark lamp whose radial halo eases with the signal, a sounder block, curved connecting wires, and a scrolling paper tape along the bottom that prints every dot, dash and red letter tick as it passes. TRANMIT builds a unit-timed sequence from the typed message (ITU Morse, dot=1u, dash=3u, letter gap=3u, word gap=7u) and drives lamp, WebAudio square-wave tone and tape from one rAF accumulator at the chosen WPM. Practice mode decodes the user's own key taps by held duration (short = dot, hold = dash) with 2.5-unit letter flush and 6.5-unit word gap. Everything inline, no external resources; audio is created lazily on first gesture.
+
+INTENDED DESIGN DESCRIPTION:
+A night-shift telegraph office: warm amber signal light against near-black, cream tape crawling with ink. The craft is protocol made visible — timing itself is the interface; the same unit clock renders sound, light and print at once.
+
+MAJOR VISUAL TECHNIQUES:
+- Single rAF time-accumulator driving a symbolic transmission sequence (no timers)
+- Eased lamp intensity + radial halo bloom from signal state
+- Scrolling tape strip with mark widths proportional to held duration
+- Lazily-created WebAudio square oscillator gated to signal envelope
+- Duration-threshold Morse decoder (dot/dash/letter/word gaps)
+
+INTENDED INTERACTION MODEL:
+Type a message (or draw a random word) and transmit at 5–30 WPM with tone on/off; or tap the key yourself — short tap for dot, held for dash — and watch letters decode live; clear the decode buffer and read the tape history.

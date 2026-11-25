@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>031 · Rain Window</title>
+<style>
+:root{--ink:#dce7f4;--mute:#8ea6c2;--line:rgba(180,210,240,.22);--pane:rgba(14,22,36,.55);
+  --acc:#7fd4ff}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%;overflow:hidden}
+body{background:linear-gradient(180deg,#101a2c 0%,#1a2740 46%,#2a2f45 74%,#3a3348 100%);
+  color:var(--ink);font-family:"Segoe UI",system-ui,Helvetica,Arial,sans-serif}
+
+/* --- city behind the glass --- */
+.city{position:fixed;inset:0;overflow:hidden}
+.bokeh{position:absolute;border-radius:50%;filter:blur(14px);opacity:.5;animation:drift 14s ease-in-out infinite alternate}
+@keyframes drift{to{transform:translate3d(14px,-10px,0)}}
+.skyline{position:absolute;left:0;right:0;bottom:0;height:38vh;pointer-events:none}
+.bldg{position:absolute;bottom:0;background:linear-gradient(180deg,#141b2c,#0b1018);
+  box-shadow:0 -2px 0 rgba(160,200,255,.10)}
+.bldg .win{position:absolute;width:6px;height:8px;background:#ffd9a0;opacity:.75;
+  box-shadow:0 0 8px rgba(255,200,130,.75);animation:tgl 7s steps(1) infinite}
+@keyframes tgl{0%,60%{opacity:.75}61%,100%{opacity:.12}}
+
+/* --- glass layers --- */
+canvas{position:fixed;inset:0;width:100%;height:100%;display:block}
+#fog{pointer-events:auto;cursor:crosshair}
+
+/* --- interface --- */
+.hud{position:fixed;top:26px;left:26px;width:308px;max-width:calc(100vw - 40px);
+  background:var(--pane);backdrop-filter:blur(9px);
+  border:1px solid var(--line);border-radius:16px;padding:18px 18px 16px;
+  box-shadow:0 24px 60px rgba(0,0,0,.42);z-index:5}
+.kicker{font-size:9.5px;letter-spacing:.42em;text-transform:uppercase;color:var(--mute)}
+h1{margin:8px 0 2px;font-size:30px;font-weight:300;letter-spacing:-.02em}
+h1 b{font-weight:700;color:var(--acc)}
+.temp{font-size:58px;font-weight:200;letter-spacing:-.05em;line-height:1;margin:8px 0 2px;
+  font-variant-numeric:tabular-nums}
+.temp sup{font-size:20px;vertical-align:top;color:var(--mute);font-weight:300}
+.cond{font-size:12.5px;color:var(--mute);letter-spacing:.08em}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:14px}
+.stat{background:rgba(255,255,255,.05);border:1px solid var(--line);border-radius:10px;padding:9px 10px}
+.stat span{display:block;font-size:9px;letter-spacing:.24em;text-transform:uppercase;color:var(--mute)}
+.stat b{font-size:16px;font-weight:600;font-variant-numeric:tabular-nums}
+.ctrl{margin-top:14px;border-top:1px solid var(--line);padding-top:13px;
+  display:flex;flex-direction:column;gap:11px}
+.slab{display:flex;align-items:center;gap:10px;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--mute)}
+.slab input{flex:1;accent-color:var(--acc)}
+.slab b{color:var(--ink);width:36px;text-align:right;font-variant-numeric:tabular-nums}
+.rowbtn{display:flex;gap:9px}
+.btn{flex:1;font:inherit;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  font-weight:700;padding:10px 8px;border:1px solid var(--line);background:rgba(255,255,255,.05);
+  color:var(--ink);border-radius:9px;cursor:pointer;transition:.18s}
+.btn:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-2px)}
+.btn.on{background:rgba(127,212,255,.18);border-color:var(--acc);color:var(--acc)}
+.hint{position:fixed;left:26px;bottom:22px;font-size:10px;letter-spacing:.3em;text-transform:uppercase;
+  color:var(--mute);z-index:5;text-align:left}
+.hint b{color:var(--acc)}
+.drops{position:fixed;right:26px;top:26px;z-index:5;text-align:right}
+.drops span{font-size:9.5px;letter-spacing:.3em;text-transform:uppercase;color:var(--mute)}
+.drops b{display:block;font-size:34px;font-weight:200;font-variant-numeric:tabular-nums;letter-spacing:-.02em}
+@media(max-width:700px){.drops{display:none}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+
+<div class="city" aria-hidden="true">
+  <div class="bokeh" style="left:12%;top:22%;width:120px;height:120px;background:#ffb37a"></div>
+  <div class="bokeh" style="left:64%;top:14%;width:170px;height:170px;background:#8fd0ff;animation-delay:-4s"></div>
+  <div class="bokeh" style="left:40%;top:38%;width:90px;height:90px;background:#ffd48a;animation-delay:-8s"></div>
+  <div class="bokeh" style="left:84%;top:34%;width:140px;height:140px;background:#ff9fb8;animation-delay:-2s"></div>
+  <div class="skyline" id="skyline"></div>
+</div>
+
+<canvas id="rain"></canvas>
+<canvas id="fog" title="drag across the glass to wipe the condensation"></canvas>
+
+<section class="hud" aria-label="weather console">
+  <span class="kicker">Station 031 · looking out</span>
+  <h1>Rain <b>Window</b></h1>
+  <div class="temp" id="temp">9<sup>°C</sup></div>
+  <div class="cond" id="cond">Steady rain on cold glass · dusk</div>
+
+  <div class="stats">
+    <div class="stat"><span>humidity</span><b id="rh">94%</b></div>
+    <div class="stat"><span>wind</span><b id="wind">18 km/h</b></div>
+    <div class="stat"><span>visibility</span><b id="vis">1.4 km</b></div>
+    <div class="stat"><span>glass</span><b id="glass">11.2 °C</b></div>
+  </div>
+
+  <div class="ctrl">
+    <label class="slab">downpour <input id="inten" type="range" min="10" max="100" step="5" value="55"><b id="intenOut">55</b></label>
+    <div class="rowbtn">
+      <button class="btn on" id="fogBtn" type="button">condensation</button>
+      <button class="btn" id="breathe" type="button">breathe</button>
+    </div>
+  </div>
+</section>
+
+<div class="drops"><span>on the pane</span><b id="dropCount">0</b></div>
+<div class="hint">drag across the glass to <b>wipe it clear</b></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var rain=document.getElementById("rain"), rc=rain.getContext("2d");
+  var fog=document.getElementById("fog"), fc=fog.getContext("2d");
+  var W=0,H=0,DPR=Math.min(window.devicePixelRatio||1,2);
+
+  /* ---------- skyline ---------- */
+  (function skyline(){
+    var host=document.getElementById("skyline"), spec=[], x=0;
+    while(x<window.innerWidth+80){
+      var w=44+Math.floor(Math.random()*70);
+      var h=70+Math.floor(Math.random()*170);
+      spec.push([x,w,h]); x+=w+4+Math.floor(Math.random()*10);
+    }
+    spec.forEach(function(s){
+      var d=document.createElement("div");
+      d.className="bldg";
+      d.style.left=s[0]+"px"; d.style.width=s[1]+"px"; d.style.height=s[2]+"px";
+      for(var i=0;i<Math.floor(s[1]*s[2]/380);i++){
+        var win=document.createElement("i");
+        win.className="win";
+        win.style.left=(6+Math.floor(Math.random()*(s[1]-14)))+"px";
+        win.style.top=(8+Math.floor(Math.random()*(s[2]-18)))+"px";
+        win.style.animationDelay=(-Math.random()*7).toFixed(2)+"s";
+        d.appendChild(win);
+      }
+      host.appendChild(d);
+    });
+  })();
+
+  /* ---------- sizing ---------- */
+  function size(){
+    W=window.innerWidth; H=window.innerHeight;
+    [rain,fog].forEach(function(c){
+      c.width=Math.floor(W*DPR); c.height=Math.floor(H*DPR);
+      c.getContext("2d").setTransform(DPR,0,0,DPR,0,0);
+    });
+    paintFog(1);
+  }
+
+  /* ---------- condensation ---------- */
+  var fogged=true, fogAmt=0;
+  function paintFog(amount){
+    fc.clearRect(0,0,W,H);
+    if(amount<=0) return;
+    fc.fillStyle="rgba(196,214,232,"+(0.46*amount).toFixed(3)+")";
+    fc.fillRect(0,0,W,H);
+    for(var i=0;i<700;i++){
+      var x=Math.random()*W, y=Math.random()*H, r=6+Math.random()*40;
+      var g=fc.createRadialGradient(x,y,0,x,y,r);
+      g.addColorStop(0,"rgba(255,255,255,"+(0.05*amount)+")");
+      g.addColorStop(1,"rgba(255,255,255,0)");
+      fc.fillStyle=g; fc.beginPath(); fc.arc(x,y,r,0,6.2832); fc.fill();
+    }
+  }
+
+  function wipe(x,y){
+    if(fogAmt<=0) return;
+    var r=Math.max(48,Math.min(W,H)*0.085);
+    fc.save();
+    fc.globalCompositeOperation="destination-out";
+    var g=fc.createRadialGradient(x,y,0,x,y,r);
+    g.addColorStop(0,"rgba(0,0,0,1)");
+    g.addColorStop(0.65,"rgba(0,0,0,0.85)");
+    g.addColorStop(1,"rgba(0,0,0,0)");
+    fc.fillStyle=g;
+    fc.beginPath(); fc.arc(x,y,r,0,6.2832); fc.fill();
+    fc.restore();
+  }
+
+  var lastW=0;
+  fog.addEventListener("pointermove",function(e){
+    var dx=e.clientX-lastW, dy=e.clientY-(lastY||e.clientY);
+    lastW=e.clientX; lastY=e.clientY;
+    if(Math.hypot(dx,dy)<6) return;
+    wipe(e.clientX,e.clientY);
+  });
+  fog.addEventListener("pointerdown",function(e){
+    lastW=e.clientX; lastY=e.clientY; wipe(e.clientX,e.clientY);
+  });
+  fog.addEventListener("touchmove",function(e){
+    var t=e.touches[0]; if(t) wipe(t.clientX,t.clientY);
+  },{passive:true});
+  var lastY=0;
+
+  /* ---------- rain ---------- */
+  var INTEN=55;
+  var drops=[], streaks=[];
+  function makeDrop(){
+    var r=1.4+Math.random()*3.4;
+    return {x:Math.random()*W, y:Math.random()*H, r:r,
+      v:0.12+r*0.05, hold:Math.random()*120, rest:0, sq:0.6+Math.random()*0.7};
+  }
+  function makeStreak(){
+    return {x:Math.random()*W, y:Math.random()*H, len:8+Math.random()*26,
+      v:5+Math.random()*9, a:0.10+Math.random()*0.22, wind:-0.9-Math.random()*0.8};
+  }
+  function seed(){
+    var n=Math.round(60+INTEN*2.4), m=Math.round(40+INTEN*1.6);
+    drops=[]; for(var i=0;i<n;i++) drops.push(makeDrop());
+    streaks=[]; for(var j=0;j<m;j++) streaks.push(makeStreak());
+    document.getElementById("dropCount").textContent=n;
+  }
+
+  function frame(){
+    rc.clearRect(0,0,W,H);
+
+    /* far rain */
+    rc.lineCap="round";
+    for(var i=0;i<streaks.length;i++){
+      var s=streaks[i];
+      rc.strokeStyle="rgba(190,215,245,"+s.a+")";
+      rc.lineWidth=1.1;
+      rc.beginPath();
+      rc.moveTo(s.x,s.y); rc.lineTo(s.x+s.wind*2.4,s.y+s.len);
+      rc.stroke();
+      if(!reduce){ s.y+=s.v; s.x+=s.wind*0.6; }
+      if(s.y>H){ s.y=-s.len; s.x=Math.random()*W; }
+    }
+
+    /* droplets clinging to the pane */
+    for(var k=0;k<drops.length;k++){
+      var d=drops[k];
+      if(d.rest>0){ d.rest--; }
+      else if(d.hold>0){ d.hold--; }
+      else{
+        d.y+=d.v;
+        d.v*=1.018;
+        if(d.v>3.2){ d.hold=40+Math.random()*90; d.v=0.12+d.r*0.05; }
+        if(Math.random()<0.004) d.r+=0.14;
+      }
+      if(d.y-d.r>H){
+        d.y=-d.r-20; d.x=Math.random()*W; d.v=0.12+d.r*0.05;
+        d.r=1.4+Math.random()*3.4; d.hold=Math.random()*80;
+      }
+      /* bead body */
+      var g=rc.createRadialGradient(d.x-d.r*0.35,d.y-d.r*0.45,d.r*0.15,d.x,d.y,d.r);
+      g.addColorStop(0,"rgba(255,255,255,.85)");
+      g.addColorStop(0.35,"rgba(190,220,250,.34)");
+      g.addColorStop(1,"rgba(140,180,220,.16)");
+      rc.fillStyle=g;
+      rc.save(); rc.translate(d.x,d.y); rc.scale(1,d.sq);
+      rc.beginPath(); rc.arc(0,0,d.r,0,6.2832); rc.fill();
+      rc.restore();
+      /* trailing streak behind a sliding bead */
+      if(d.v>1.4){
+        rc.strokeStyle="rgba(215,235,255,.24)";
+        rc.lineWidth=d.r*0.72;
+        rc.beginPath(); rc.moveTo(d.x,d.y-d.r);
+        rc.lineTo(d.x,d.y-d.r-8-d.v*4); rc.stroke();
+      }
+    }
+
+    if(fogged && fogAmt<1 && !reduce){
+      fogAmt=Math.min(1,fogAmt+0.006);
+      if(Math.random()<0.35) paintFog(fogAmt);
+    }
+    requestAnimationFrame(frame);
+  }
+
+  /* ---------- controls ---------- */
+  var slider=document.getElementById("inten");
+  slider.addEventListener("input",function(){
+    INTEN=parseInt(slider.value,10);
+    document.getElementById("intenOut").textContent=INTEN;
+    var cond=INTEN<35?"Drizzle on cold glass · dusk":
+             INTEN<70?"Steady rain on cold glass · dusk":
+                      "Heavy rain, wind rising · dusk";
+    document.getElementById("cond").textContent=cond;
+    document.getElementById("wind").textContent=Math.round(6+INTEN*0.32)+" km/h";
+    document.getElementById("vis").textContent=(3.4-INTEN*0.032).toFixed(1)+" km";
+    document.getElementById("rh").textContent=Math.min(99,70+Math.round(INTEN*0.3))+"%";
+    document.getElementById("glass").textContent=(8+INTEN*0.055).toFixed(1)+" °C";
+    seed();
+  });
+
+  document.getElementById("fogBtn").addEventListener("click",function(){
+    fogged=!fogged;
+    this.classList.toggle("on",fogged);
+    if(fogged){ fogAmt=0; paintFog(0); } else { fogAmt=0; fc.clearRect(0,0,W,H); }
+  });
+
+  document.getElementById("breathe").addEventListener("click",function(){
+    if(!fogged){ fogged=true; document.getElementById("fogBtn").classList.add("on"); }
+    fogAmt=0;
+    var iv=setInterval(function(){
+      fogAmt+=0.08;
+      paintFog(Math.min(1,fogAmt));
+      if(fogAmt>=1) clearInterval(iv);
+    },50);
+  });
+
+  window.addEventListener("resize",size);
+  size(); seed(); requestAnimationFrame(frame);
+})();
+</script>
+</body>
+</html>

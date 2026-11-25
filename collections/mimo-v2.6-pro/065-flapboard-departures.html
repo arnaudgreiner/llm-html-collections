@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Flapboard — Departures</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0b0d10;color:#8b98a6;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:16px;padding:24px 14px}
+header{display:flex;justify-content:space-between;align-items:baseline;width:100%;max-width:980px;gap:14px;flex-wrap:wrap}
+.stn{font-size:12px;letter-spacing:.4em;color:#ffb454;text-transform:uppercase}
+#clk{font-size:26px;color:#e9eef4;letter-spacing:.08em}
+#clk i{font-style:normal;animation:tick 1s steps(2) infinite}
+@keyframes tick{50%{opacity:.25}}
+.board{width:100%;max-width:980px;background:#0e1116;border:1px solid #1d232b;border-radius:12px;padding:16px 18px;box-shadow:0 24px 60px rgba(0,0,0,.55)}
+.head{display:flex;gap:3px;margin-bottom:10px}
+.head span{font-size:9.5px;letter-spacing:.24em;color:#556373;display:block}
+.hd{display:flex;align-items:center;justify-content:center;height:20px;background:#151a21;border-radius:3px;font-size:9px;letter-spacing:.16em;color:#5b6a7a}
+#rows{overflow-x:auto;padding-bottom:4px}
+.row{display:flex;gap:3px;margin-bottom:6px;width:max-content}
+.cell{position:relative;width:24px;height:32px;background:linear-gradient(#181d24,#0f1318);border-radius:3px;color:#ffb454;font-size:15px;display:flex;align-items:center;justify-content:center;overflow:hidden;flex:none;box-shadow:0 1px 0 #000,inset 0 1px 0 rgba(255,255,255,.05);transition:color .2s}
+.cell.gap{margin-left:16px}
+.cell::after{content:"";position:absolute;left:0;right:0;top:50%;height:1px;background:rgba(0,0,0,.8);z-index:2}
+.cell span{display:block;line-height:1;position:relative;z-index:1}
+.cell.fl span{animation:flp .09s linear}
+@keyframes flp{50%{transform:scaleY(.1)}}
+.row.pinned .cell{box-shadow:0 0 0 1px #ffb454,0 1px 0 #000}
+.row.pinned .cell::before{content:"";position:absolute;left:2px;top:2px;border:4px solid transparent;border-top-color:#ffb454;z-index:3}
+.row:hover .cell{filter:brightness(1.18)}
+.bar{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center;width:100%;max-width:980px;background:#0e1116;border:1px solid #1d232b;border-radius:12px;padding:13px 16px}
+input{background:#12161c;border:1px solid #262e38;border-radius:7px;color:#e9eef4;font:inherit;font-size:12px;padding:9px 13px;width:240px;letter-spacing:.1em;outline:none}
+input:focus{border-color:#ffb454}
+button{background:#161b22;border:1px solid #2a323d;color:#9fb0c2;font:inherit;font-size:11px;padding:9px 15px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{background:#1e242d;border-color:#3d4753}
+button.on{background:#ffb454;border-color:#ffb454;color:#0b0d10;font-weight:700}
+.hint{font-size:10px;color:#4e5a68;letter-spacing:.06em}
+#empty{display:none;font-size:12px;letter-spacing:.3em;color:#ff6b5a;padding:24px 6px;text-align:center}
+#empty.show{display:block}
+</style>
+</head>
+<body>
+<header>
+  <div class="stn">Central Station · Platform Departures</div>
+  <div id="clk">--<i>:</i>--<i>:</i>--</div>
+</header>
+<div class="board">
+  <div class="head">
+    <span class="hd" style="width:132px">TIME</span>
+    <span class="hd" style="width:464px;margin-left:16px">DEPARTURE</span>
+    <span class="hd" style="width:90px;margin-left:16px">GATE</span>
+    <span class="hd" style="width:234px;margin-left:16px">STATUS</span>
+  </div>
+  <div id="rows"></div>
+  <div id="empty">NO MATCHING DEPARTURES</div>
+</div>
+<div class="bar">
+  <input id="q" placeholder="FILTER DESTINATION…" autocomplete="off" spellcheck="false">
+  <button id="refresh">RE-FLIP BOARD</button>
+  <button id="auto" class="on">AUTO: ON</button>
+  <span class="hint">click a row to pin it · board updates every 15s</span>
+</div>
+<script>
+(function(){
+"use strict";
+var CHARS="ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789 ·—:";
+var DESTS=["AMSTERDAM CENTRAAL","BERLIN HAUPTBAHNHOF","PARIS GARE DU NORD","ZURICH HB","VIENNA HBF","COPENHAGEN H","OSLO S","PRAGUE HL.N.","BRUSSELS-MIDI","MILANO CENTRALE","MADRID ATOCHA","WARSAW CENTRAL","LISBOA ORIENTAL","LONDON ST PANCRAS","MUNCHEN HBF","STOCKHOLM C"];
+var STATUSES=["ON TIME","ON TIME","ON TIME","BOARDING","DELAYED","CANCELLED"];
+var STATUSCOL={"ON TIME":"#7fd7a8","BOARDING":"#5fa8d6","DELAYED":"#ffb454","CANCELLED":"#ff6b5a"};
+var rowsBox=document.getElementById("rows"),emptyEl=document.getElementById("empty");
+var rows=[],auto=true,seed=0;
+function pad(s,len){s=String(s==null?"":s);while(s.length<len)s+=" ";return s.slice(0,len);}
+function pick(a){return a[(Math.random()*a.length)|0];}
+function randGate(){var g=pick(["A","B","C","D","F"]);return g+(((Math.random()*9)|0)+1);}
+function nextTime(i){
+  var mins=(17*60+5)+i*7+(seed%3)*11;
+  var h=Math.floor(mins/60)%24,m=mins%60;
+  return (h<10?"0":"")+h+":"+(m<10?"0":"")+m;
+}
+function makeCell(txt,role,gap){
+  var c=document.createElement("span");c.className="cell"+(gap?" gap":"");
+  var s=document.createElement("span");s.textContent=" ";
+  c.appendChild(s);
+  return {cell:c,sp:s,role:role,gen:0};
+}
+function addField(row,text,role,gap){
+  var arr=[];
+  for(var i=0;i<text.length;i++){var o=makeCell(text[i],role,gap&&i===0);row.appendChild(o.cell);arr.push(o);}
+  row._cells= row._cells||[]; row._cells.push(arr);
+}
+function flipCell(o,target,delay){
+  var my=++o.gen;
+  function tick(){
+    if(o.gen!==my)return;
+    o.sp.textContent=CHARS[(Math.random()*CHARS.length)|0];
+    o.cell.classList.remove("fl");void o.cell.offsetWidth;o.cell.classList.add("fl");
+    if(o.role==="status")o.cell.style.color="#ffb454";
+    setTimeout(tick,42);
+  }
+  setTimeout(function(){
+    if(o.gen!==my)return;
+    var steps=7+((Math.random()*9)|0),i=0;
+    (function inner(){
+      if(o.gen!==my)return;
+      if(i<steps){
+        o.sp.textContent=CHARS[(Math.random()*CHARS.length)|0];
+        o.cell.classList.remove("fl");void o.cell.offsetWidth;o.cell.classList.add("fl");
+        if(o.role==="status")o.cell.style.color="#ffb454";
+        i++;setTimeout(inner,44);
+      }else{
+        o.sp.textContent=target;
+        o.cell.classList.remove("fl");void o.cell.offsetWidth;o.cell.classList.add("fl");
+        if(o.role==="status")o.cell.style.color=STATUSCOL[target]||"#ffb454";
+      }
+    })();
+  },delay);
+  void tick;
+}
+function flipRow(r,offset,fields){
+  for(var f=0;f<r._cells.length;f++){
+    if(fields&&fields.indexOf(f)<0)continue;
+    var col=r._cells[f];
+    for(var i=0;i<col.length;i++)flipCell(col[i],col[i].sp._target||" ",offset+i*24+f*40);
+  }
+}
+function setTargets(r){
+  var vals=r._vals;
+  for(var f=0;f<r._cells.length;f++){
+    var col=r._cells[f];
+    for(var i=0;i<col.length;i++)col[i].sp._target=vals[f][i]||" ";
+  }
+}
+function mutate(r){
+  r._vals[3]=pad(pick(STATUSES),9);
+  if(Math.random()<0.5)r._vals[2]=pad(randGate(),3);
+}
+function buildBoard(){
+  rowsBox.innerHTML="";rows=[];
+  for(var i=0;i<9;i++){
+    var r=document.createElement("div");r.className="row";
+    r._vals=[pad(nextTime(i),5),pad(DESTS[(i*5+seed)%DESTS.length],18),pad(randGate(),3),pad("ON TIME",9)];
+    addField(r,r._vals[0],"time",false);
+    addField(r,r._vals[1],"dest",true);
+    addField(r,r._vals[2],"gate",true);
+    addField(r,r._vals[3],"status",true);
+    setTargets(r);
+    r.addEventListener("click",function(){this.classList.toggle("pinned");});
+    rowsBox.appendChild(r);rows.push(r);
+  }
+}
+function flipAll(){
+  for(var i=0;i<rows.length;i++)flipRow(rows[i],i*80);
+}
+function updateClock(){
+  var d=new Date(),h=d.getHours(),m=d.getMinutes(),s=d.getSeconds();
+  document.getElementById("clk").innerHTML=(h<10?"0":"")+h+'<i>:</i>'+(m<10?"0":"")+m+'<i>:</i>'+(s<10?"0":"")+s;
+}
+function autoTick(){
+  if(!auto)return;
+  seed++;
+  var n=2+((Math.random()*3)|0);
+  for(var k=0;k<n;k++)mutate(rows[(Math.random()*rows.length)|0]);
+  for(var i=0;i<rows.length;i++)flipRow(rows[i],k*0+i*70,[2,3]);
+  applyFilter();
+}
+function applyFilter(){
+  var q=document.getElementById("q").value.toUpperCase().trim(),any=false;
+  for(var i=0;i<rows.length;i++){
+    var txt=rows[i]._vals.join(" ");
+    var show=!q||txt.indexOf(q)>=0;
+    rows[i].style.display=show?"":"none";
+    if(show)any=true;
+  }
+  emptyEl.classList.toggle("show",!any);
+}
+document.getElementById("q").addEventListener("input",applyFilter);
+document.getElementById("refresh").addEventListener("click",function(){seed++;flipAll();});
+document.getElementById("auto").addEventListener("click",function(){
+  auto=!auto;this.textContent="AUTO: "+(auto?"ON":"OFF");this.className=auto?"on":"";
+});
+buildBoard();
+flipAll();
+updateClock();
+setInterval(updateClock,1000);
+setInterval(autoTick,15000);
+})();
+</script>
+</body>
+</html>

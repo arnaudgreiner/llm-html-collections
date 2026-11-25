@@ -1,0 +1,497 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>030 · Hedge Maze Lab</title>
+<style>
+:root{--bg:#efe8d9;--paper:#f8f4ea;--ink:#2a2c24;--mute:#8b8874;--line:#d8d0bc;
+  --hedge:#41573f;--acc:#c07a24;--acc2:#7a8f4e}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;background:
+  radial-gradient(900px 520px at 15% -10%, #f7f2e6, transparent 60%), var(--bg);
+  color:var(--ink);font-family:Georgia,"Times New Roman",serif;padding-bottom:44px}
+.wrap{max-width:1120px;margin:0 auto;padding:26px 20px}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:2px solid var(--ink);padding-bottom:14px}
+.kicker{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.5em;
+  text-transform:uppercase;color:var(--mute)}
+h1{margin:9px 0 0;font-size:clamp(30px,5vw,50px);font-weight:400;letter-spacing:-.01em}
+h1 i{font-style:italic;color:var(--hedge)}
+.sub{font-family:"Segoe UI",system-ui,sans-serif;color:var(--mute);font-size:13px;
+  max-width:44ch;line-height:1.65;margin:7px 0 0}
+.seedbox{text-align:right;font-family:"Segoe UI",system-ui,sans-serif}
+.seedbox span{font-size:9.5px;letter-spacing:.28em;text-transform:uppercase;color:var(--mute)}
+.seedbox b{display:block;font-size:26px;font-weight:700;letter-spacing:.08em;margin-top:4px;
+  font-variant-numeric:tabular-nums}
+
+.bar{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin:18px 0;
+  font-family:"Segoe UI",system-ui,sans-serif;background:var(--paper);
+  border:1px solid var(--line);border-radius:14px;padding:12px 14px}
+.chip{background:#efe9db;border:1px solid var(--line);color:var(--ink);border-radius:30px;
+  padding:8px 15px;font:inherit;font-size:10.5px;letter-spacing:.18em;text-transform:uppercase;
+  cursor:pointer;transition:.16s}
+.chip:hover{border-color:var(--hedge);color:var(--hedge)}
+.chip.on{background:var(--hedge);border-color:var(--hedge);color:#f6f3e8;font-weight:700}
+.btn{font:inherit;font-size:11px;letter-spacing:.2em;text-transform:uppercase;font-weight:700;
+  padding:11px 18px;border:1.5px solid var(--ink);background:transparent;color:var(--ink);
+  border-radius:4px;cursor:pointer;transition:.18s}
+.btn:hover{transform:translateY(-2px)}
+.btn.accent{background:var(--acc);border-color:var(--acc);color:#241704}
+.btn.green{background:var(--hedge);border-color:var(--hedge);color:#f6f3e8}
+.sdiv{width:1px;align-self:stretch;background:var(--line)}
+.slid{display:flex;align-items:center;gap:10px;font-size:10.5px;letter-spacing:.16em;
+  text-transform:uppercase;color:var(--mute)}
+.slid input{width:132px;accent-color:var(--hedge)}
+.slid b{color:var(--ink);font-variant-numeric:tabular-nums;width:34px;text-align:right}
+
+.split{display:grid;grid-template-columns:1fr 264px;gap:16px;align-items:start}
+@media(max-width:880px){.split{grid-template-columns:1fr}}
+.plate{background:var(--paper);border:1px solid var(--line);border-radius:6px;padding:14px;
+  box-shadow:0 16px 34px rgba(60,50,20,.10);position:relative}
+.plate::after{content:"plan of the hedge, drawn to the cell";position:absolute;right:16px;
+  bottom:8px;font-family:"Segoe UI",system-ui,sans-serif;font-size:8.5px;letter-spacing:.28em;
+  text-transform:uppercase;color:#b9b19a}
+canvas{display:block;width:100%;height:auto;background:#f4efe2;cursor:crosshair;touch-action:manipulation}
+.keys{display:flex;gap:14px;flex-wrap:wrap;margin-top:10px;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:11.5px;color:var(--mute)}
+.keys kbd{font-family:inherit;background:#fff;border:1px solid var(--line);border-radius:5px;
+  padding:2px 7px;font-size:10.5px;color:var(--ink)}
+
+.side{display:flex;flex-direction:column;gap:14px}
+.card{background:var(--paper);border:1px solid var(--line);border-radius:14px;padding:15px 16px}
+.card h2{margin:0 0 11px;font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;
+  letter-spacing:.32em;text-transform:uppercase;color:var(--mute);font-weight:600}
+.row{display:flex;justify-content:space-between;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:13px;padding:8px 0;border-bottom:1px dashed var(--line);gap:8px}
+.row:last-child{border-bottom:0}
+.row b{font-variant-numeric:tabular-nums;color:var(--hedge);font-weight:700}
+.legend{list-style:none;margin:0;padding:0;font-family:"Segoe UI",system-ui,sans-serif;font-size:12.5px}
+.legend li{display:flex;align-items:center;gap:10px;padding:6px 0;color:var(--ink)}
+.key{width:22px;height:12px;border-radius:3px;flex:none}
+.k-in{background:var(--acc)} .k-out{background:#2f3f52}
+.k-visited{background:#e6d3ae} .k-path{background:var(--acc);height:4px;border-radius:2px}
+.k-hedge{background:var(--hedge)}
+.note{font-family:"Segoe UI",system-ui,sans-serif;font-size:12px;line-height:1.7;color:var(--mute)}
+.note b{color:var(--ink)}
+#state{font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.26em;
+  text-transform:uppercase;color:var(--mute);margin-top:12px;text-align:center}
+#state b{color:var(--acc2)}
+.foot{display:flex;justify-content:space-between;gap:12px;flex-wrap:wrap;margin-top:24px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:9.5px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)}
+@media(prefers-reduced-motion:reduce){*{transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 030 · generated hedge plan</span>
+      <h1>Hedge Maze <i>Lab</i></h1>
+      <p class="sub">A perfect maze cut by recursive backtracker, then braided with loops.
+        The solver walks breadth-first and paints its search before the route.</p>
+    </div>
+    <div class="seedbox">
+      <span>seed</span><b id="seedOut">—</b>
+    </div>
+  </header>
+
+  <div class="bar" role="group" aria-label="maze controls">
+    <button class="chip on" data-size="15" type="button">15 × 15</button>
+    <button class="chip" data-size="25" type="button">25 × 25</button>
+    <button class="chip" data-size="35" type="button">35 × 35</button>
+    <span class="sdiv"></span>
+    <label class="slid">braid <input id="loops" type="range" min="0" max="45" step="1" value="18">
+      <b id="loopOut">18%</b></label>
+    <span class="sdiv"></span>
+    <button class="btn accent" id="gen" type="button">Cut a new maze</button>
+    <button class="btn green" id="solve" type="button">Solve</button>
+    <button class="btn" id="clear" type="button">Clear trail</button>
+  </div>
+
+  <div class="split">
+    <section class="plate">
+      <canvas id="maze" width="720" height="720" aria-label="generated maze plan"></canvas>
+      <div class="keys">
+        <span><kbd>R</kbd> new maze</span>
+        <span><kbd>S</kbd> solve</span>
+        <span><kbd>C</kbd> clear trail</span>
+        <span>click the plan to solve from that cell</span>
+      </div>
+      <div id="state">idle · <b>press solve</b></div>
+    </section>
+
+    <aside class="side">
+      <section class="card">
+        <h2>Cut statistics</h2>
+        <div class="row"><span>cells</span><b id="rCells">0</b></div>
+        <div class="row"><span>wall runs</span><b id="rWalls">0</b></div>
+        <div class="row"><span>loops braided</span><b id="rLoops">0</b></div>
+        <div class="row"><span>solution steps</span><b id="rLen">—</b></div>
+        <div class="row"><span>cells searched</span><b id="rVis">—</b></div>
+      </section>
+
+      <section class="card">
+        <h2>Plan key</h2>
+        <ul class="legend">
+          <li><span class="key k-hedge"></span>hedge wall</li>
+          <li><span class="key k-in"></span>entrance</li>
+          <li><span class="key k-out"></span>exit</li>
+          <li><span class="key k-visited"></span>searched by solver</li>
+          <li><span class="key k-path"></span>shortest route</li>
+        </ul>
+      </section>
+
+      <section class="card">
+        <h2>Method</h2>
+        <p class="note">The cutter walks a stack, knocking down walls it has not met.
+          <b>Braid</b> reopens random interior walls so the plan has choices instead of one
+          spine. The solver floods outward in rings: amber cells are the flood, the solid
+          amber line is the way back.</p>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="foot"><span>drawn on canvas · seeded PRNG · no two cuts alike</span>
+    <span>030 / 100</span></footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var cv=document.getElementById("maze");
+  var ctx=cv.getContext("2d");
+  var S=cv.width;
+
+  var SIZE=15, BRAID=18;
+  var cols=15, rows=15, cw=0;
+  var cells=[], order=[], seed=0, rnd=null;
+  var trail=null;      /* {vis:[], path:[], anim:0, raf:0} */
+
+  function mulberry(a){
+    return function(){
+      a|=0; a=a+0x6D2B79F5|0;
+      var t=Math.imul(a^a>>>15, 1|a);
+      t=t+Math.imul(t^t>>>7, 61|t)^t;
+      return ((t^t>>>14)>>>0)/4294967296;
+    };
+  }
+
+  function idx(x,y){ return y*cols+x; }
+
+  function build(){
+    cols=rows=SIZE;
+    cw=Math.floor(S/cols);
+    seed=(Math.random()*0xffffffff)>>>0;
+    rnd=mulberry(seed);
+    document.getElementById("seedOut").textContent=
+      ("00000000"+seed.toString(16).toUpperCase()).slice(-8);
+
+    cells=[];
+    for(var i=0;i<cols*rows;i++){
+      cells.push({n:true,e:true,s:true,w:true,v:false});
+    }
+
+    /* recursive backtracker, iterative stack */
+    var start=idx(0,0);
+    cells[start].v=true;
+    var stack=[start], visited=1;
+    var dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+    while(stack.length){
+      var cur=stack[stack.length-1];
+      var cx=cur%cols, cy=Math.floor(cur/cols);
+      var opts=[];
+      for(var d=0;d<4;d++){
+        var nx=cx+dirs[d][0], ny=cy+dirs[d][1];
+        if(nx<0||ny<0||nx>=cols||ny>=rows) continue;
+        if(!cells[idx(nx,ny)].v) opts.push([nx,ny,d]);
+      }
+      if(!opts.length){ stack.pop(); continue; }
+      var pick=opts[Math.floor(rnd()*opts.length)];
+      var ni=idx(pick[0],pick[1]);
+      knock(cur, ni, pick[2]);
+      cells[ni].v=true;
+      visited++;
+      stack.push(ni);
+    }
+    cells.forEach(function(c){ c.v=false; });
+
+    /* braid: reopen interior walls to create loops */
+    var target=Math.round((cols*rows-1)*BRAID/100);
+    var made=0, guard=0;
+    while(made<target && guard<target*40){
+      guard++;
+      var x=Math.floor(rnd()*cols), y=Math.floor(rnd()*rows);
+      var d2=Math.floor(rnd()*4);
+      var ax=x+dirs[d2][0], ay=y+dirs[d2][1];
+      if(ax<0||ay<0||ax>=cols||ay>=rows) continue;
+      knock(idx(x,y), idx(ax,ay), d2);
+      made++;
+    }
+
+    /* entrance / exit */
+    cells[idx(0,0)].w=false;
+    cells[idx(cols-1,rows-1)].e=false;
+
+    trail=null;
+    document.getElementById("rCells").textContent=cols*rows;
+    document.getElementById("rWalls").textContent=countWalls();
+    document.getElementById("rLoops").textContent=made;
+    document.getElementById("rLen").textContent="—";
+    document.getElementById("rVis").textContent="—";
+    setState("cut complete", "press solve");
+    draw();
+  }
+
+  function knock(a,b,d){
+    var A=cells[a], B=cells[b];
+    if(d===0){ A.w=false; B.e=false; }        /* left */
+    if(d===1){ A.e=false; B.w=false; }        /* right */
+    if(d===2){ A.n=false; B.s=false; }        /* up */
+    if(d===3){ A.s=false; B.n=false; }        /* down */
+  }
+
+  function countWalls(){
+    var n=0;
+    for(var y=0;y<rows;y++){
+      for(var x=0;x<cols;x++){
+        var c=cells[idx(x,y)];
+        if(c.n) n++;
+        if(c.w) n++;
+        if(x===cols-1 && c.e) n++;
+        if(y===rows-1 && c.s) n++;
+      }
+    }
+    return n;
+  }
+
+  /* deterministic per-wall wobble so the plan looks hand-inked */
+  function wob(x,y,d){
+    var h=(x*73856093 ^ y*19349663 ^ d*83492791)>>>0;
+    h=(h^(h>>>13))>>>0;
+    return ((h%1000)/1000-0.5)*3.2;
+  }
+
+  function px(v){ return v*cw; }
+
+  function draw(){
+    ctx.clearRect(0,0,S,S);
+    ctx.fillStyle="#f4efe2";
+    ctx.fillRect(0,0,S,S);
+
+    /* faint cell grid */
+    ctx.strokeStyle="rgba(42,44,36,.07)";
+    ctx.lineWidth=1;
+    for(var g=1;g<cols;g++){
+      ctx.beginPath();
+      ctx.moveTo(px(g)+.5,0); ctx.lineTo(px(g)+.5,px(rows));
+      ctx.stroke();
+      ctx.beginPath();
+      ctx.moveTo(0,px(g)+.5); ctx.lineTo(px(cols),px(g)+.5);
+      ctx.stroke();
+    }
+
+    /* searched cells */
+    if(trail){
+      ctx.fillStyle="#e6d3ae";
+      trail.vis.forEach(function(i){
+        ctx.fillRect(px(i%cols)+1, px(Math.floor(i/cols))+1, cw-1, cw-1);
+      });
+    }
+
+    /* walls: thick hedge pass + thin ink pass */
+    ctx.lineCap="round";
+    for(var y=0;y<rows;y++){
+      for(var x=0;x<cols;x++){
+        var c=cells[idx(x,y)];
+        if(c.n) wall(x,y,0,x+1,y);
+        if(c.w) wall(x,y,1,x,y+1);
+        if(x===cols-1 && c.e) wall(x+1,y,2,x+1,y+1);
+        if(y===rows-1 && c.s) wall(x,y+1,3,x+1,y+1);
+      }
+    }
+
+    /* entrance & exit markers */
+    mark(0,0,0,"#c07a24");
+    mark(cols-1,rows-1,1,"#2f3f52");
+
+    /* solution path */
+    if(trail && trail.path.length>1){
+      ctx.strokeStyle="#c07a24";
+      ctx.lineWidth=Math.max(3, cw*0.28);
+      ctx.beginPath();
+      trail.path.forEach(function(i,k){
+        var x=(i%cols)+0.5, y=Math.floor(i/cols)+0.5;
+        if(k===0) ctx.moveTo(px(x),px(y)); else ctx.lineTo(px(x),px(y));
+      });
+      ctx.stroke();
+    }
+
+    /* marching ants over the route while solving */
+    if(trail && trail.anim<1 && trail.path.length>1 && !reduce){
+      ctx.save();
+      ctx.setLineDash([6,7]);
+      ctx.lineDashOffset=-(performance.now()/40)%13;
+      ctx.strokeStyle="rgba(255,255,255,.75)";
+      ctx.lineWidth=1.6;
+      ctx.beginPath();
+      trail.path.forEach(function(i,k){
+        var x=(i%cols)+0.5, y=Math.floor(i/cols)+0.5;
+        if(k===0) ctx.moveTo(px(x),px(y)); else ctx.lineTo(px(x),px(y));
+      });
+      ctx.stroke();
+      ctx.restore();
+    }
+  }
+
+  function wall(x,y,d,x2,y2){
+    var j1=wob(x,y,d), j2=wob(x2,y2,d+4);
+    var ax=px(x), ay=px(y), bx=px(x2), by=px(y2);
+    var ox=(y===y2)?0:j1, oy=(x===x2)?0:j1;
+    var o2x=(y===y2)?0:j2, o2y=(x===x2)?0:j2;
+    ctx.strokeStyle="rgba(65,87,63,.34)";
+    ctx.lineWidth=Math.max(4, cw*0.36);
+    ctx.beginPath();
+    ctx.moveTo(ax+ox, ay+oy); ctx.lineTo(bx+o2x, by+o2y);
+    ctx.stroke();
+    ctx.strokeStyle="#41573f";
+    ctx.lineWidth=Math.max(1.4, cw*0.16);
+    ctx.beginPath();
+    ctx.moveTo(ax+ox, ay+oy); ctx.lineTo(bx+o2x, by+o2y);
+    ctx.stroke();
+  }
+
+  function mark(x,y,dir,color){
+    var c=cw;
+    ctx.fillStyle=color;
+    if(dir===0) ctx.fillRect(px(x), px(y), Math.max(3,c*0.2), c);
+    else ctx.fillRect(px(x+1)-Math.max(3,c*0.2), px(y), Math.max(3,c*0.2), c);
+  }
+
+  function setState(a,b){
+    document.getElementById("state").innerHTML=a+" · <b>"+b+"</b>";
+  }
+
+  /* --- breadth-first solver --- */
+  function solve(from){
+    if(trail && trail.raf) cancelAnimationFrame(trail.raf);
+    var src=(from==null)? idx(0,0) : from;
+    var dst=idx(cols-1,rows-1);
+    var prev=new Array(cols*rows).fill(-1);
+    var seen=new Array(cols*rows).fill(false);
+    var q=[src], head=0, order=[];
+    seen[src]=true;
+    var dirs=[[-1,0],[1,0],[0,-1],[0,1]];
+    var found=false;
+    while(head<q.length){
+      var cur=q[head++];
+      order.push(cur);
+      if(cur===dst){ found=true; break; }
+      var cx=cur%cols, cy=Math.floor(cur/cols);
+      var c=cells[cur];
+      var open=[!c.w,!c.e,!c.n,!c.s];   /* order matches dirs (L,R,U,D) */
+      var nb=[[cx-1,cy],[cx+1,cy],[cx,cy-1],[cx,cy+1]];
+      for(var k=0;k<4;k++){
+        if(!open[k]) continue;
+        var nx=nb[k][0], ny=nb[k][1];
+        if(nx<0||ny<0||nx>=cols||ny>=rows) continue;
+        var ni=idx(nx,ny);
+        if(seen[ni]) continue;
+        seen[ni]=true; prev[ni]=cur;
+        q.push(ni);
+      }
+    }
+    if(!found){
+      setState("no route", "entrance sealed");
+      return;
+    }
+    var path=[], at=dst;
+    while(at!==-1){ path.push(at); at=prev[at]; }
+    path.reverse();
+
+    var T={vis:[], path:path, anim:0, raf:0};
+    trail=T;
+    document.getElementById("rLen").textContent=path.length;
+    document.getElementById("rVis").textContent=order.length;
+
+    if(reduce){
+      T.vis=order;
+      T.anim=1;
+      draw();
+      setState("solved", "shortest route "+path.length+" steps");
+      return;
+    }
+
+    setState("searching", "flood in progress");
+    var i=0;
+    var per=Math.max(2, Math.ceil(order.length/70));
+    function step(){
+      if(trail!==T) return;               /* a new cut replaced this solve */
+      for(var k=0;k<per && i<order.length;k++,i++) T.vis.push(order[i]);
+      draw();
+      if(i<order.length){
+        T.raf=requestAnimationFrame(step);
+      }else{
+        T.anim=1;
+        draw();
+        setState("solved", "shortest route "+path.length+" steps");
+      }
+    }
+    T.raf=requestAnimationFrame(step);
+  }
+
+  function clearTrail(){
+    if(trail && trail.raf) cancelAnimationFrame(trail.raf);
+    trail=null;
+    document.getElementById("rLen").textContent="—";
+    document.getElementById("rVis").textContent="—";
+    setState("trail cleared", "ready");
+    draw();
+  }
+
+  /* --- controls --- */
+  document.getElementById("gen").addEventListener("click",build);
+  document.getElementById("solve").addEventListener("click",function(){ solve(null); });
+  document.getElementById("clear").addEventListener("click",clearTrail);
+
+  [].slice.call(document.querySelectorAll(".chip[data-size]")).forEach(function(b){
+    b.addEventListener("click",function(){
+      SIZE=parseInt(b.dataset.size,10);
+      [].slice.call(document.querySelectorAll(".chip[data-size]")).forEach(function(o){
+        o.classList.toggle("on",o===b);
+      });
+      build();
+    });
+  });
+
+  var slider=document.getElementById("loops");
+  slider.addEventListener("input",function(){
+    BRAID=parseInt(slider.value,10);
+    document.getElementById("loopOut").textContent=BRAID+"%";
+  });
+  slider.addEventListener("change",build);
+
+  cv.addEventListener("click",function(e){
+    var r=cv.getBoundingClientRect();
+    var x=Math.floor((e.clientX-r.left)/r.width*cols);
+    var y=Math.floor((e.clientY-r.top)/r.height*rows);
+    if(x<0||y<0||x>=cols||y>=rows) return;
+    solve(idx(x,y));
+  });
+
+  document.addEventListener("keydown",function(e){
+    if(e.target && (e.target.tagName==="INPUT"||e.target.tagName==="BUTTON")) return;
+    var k=e.key.toLowerCase();
+    if(k==="r"){ build(); }
+    else if(k==="s"){ solve(null); }
+    else if(k==="c"){ clearTrail(); }
+  });
+
+  build();
+})();
+</script>
+</body>
+</html>

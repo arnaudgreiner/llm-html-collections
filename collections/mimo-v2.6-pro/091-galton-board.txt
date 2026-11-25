@@ -1,0 +1,17 @@
+TITLE: Galton Board — Falling Into The Curve
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Galton Board: Falling Into The Curve". Simulate Francis Galton's bean machine: a hopper drops beads one at a time through twelve staggered peg rows (row r centered at cx+(m−r/2)·40, row y=70+26r, alternating half-spacing stagger). Each bead deflects ±S/2 when it passes a peg row, accumulating lateral offset d; after 12 rows parity guarantees it lands in bin (d+12)/2, easing into a stacked sand bar whose unit height rescales (min(9,100/maxCount)) so tall stacks fit. Bars render as sand-gradient columns with deterministic grain dots; the exact binomial(12,½) prediction for the drop total is overlaid as a dashed curve. Controls: DROP ONE, AUTO (170 ms cadence), ×50 burst, RESET; live stats show count, mean and σ. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark instrument board where individual randomness is invisible and collective order is unmistakable — the bell curve emerges from twelve coin flips per bead with no curve ever drawn by hand.
+
+MAJOR VISUAL TECHNIQUES:
+- Staggered peg lattice with parity-exact bin assignment
+- Self-rescaling sand histogram bars with grain texture
+- Dashed closed-form binomial overlay vs empirical pile
+- Batched autos stepper with frame-time accumulator
+- Live mean/σ telemetry
+
+INTENDED INTERACTION MODEL:
+Drop beads singly to watch chaos, unleash AUTO or ×50 to let the pile settle into the predicted curve, reset and race the dashed line.

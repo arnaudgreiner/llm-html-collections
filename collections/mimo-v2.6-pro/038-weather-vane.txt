@@ -1,0 +1,18 @@
+TITLE: Weather Vane — Steer the Standing Wind
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Weather Vane", with no external resources. Dark slate-green night palette with warm amber and cool sky-blue accents; header with kicker, thin/accent title and live bearing/gust readouts. Two-column stage. Left rig: a control card (direction 0–359, speed 0–46 kt, gustiness 0–100 sliders plus "veer slowly" and "live gusts" toggle buttons), a compass rose in inline SVG (concentric dashed rings, N/E/S/W ticks, an amber/slate needle group rotated by transform and a blue gust pointer group scaled vertically by current gust), a four-cell readings grid (mean, gust, cardinal, Beaufort) and a "Last hour" list updating every four seconds with timestamps. Right: a bordered ground panel with a 780×540 canvas — grid, three soft hill obstacles drawn from a cached ImageData background, a station mast at centre, ~520 streamer particles advected by a vector field (standing-wind direction + sine-noise wobble + radial deflection around hills), fading tails as line segments with 14% of particles drawn amber; a vane arrow painted above the mast; plus an absolutely positioned flag readout and a legend strip. Footer names the technique.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a cold hilltop station at night: a small instrument panel on one side, and the wind itself drawn as moving threads over a dark survey grid.
+
+MAJOR VISUAL TECHNIQUES:
+- Particle flow field: velocity from heading + trig noise + obstacle repulsion, drawn as fading line segments
+- Background cached as ImageData and re-put every frame so particles never smear the grid
+- Gust signal built from three sine terms at different frequencies for an organic pulse
+- Inline SVG compass rose driven by transform: rotate/scale on group elements
+- Beaufort banding and 16-point cardinal conversion in plain arithmetic
+- Drag-to-steer mapping: atan2 from panel centre to pointer gives the heading, synced to the slider
+
+INTENDED INTERACTION MODEL:
+Drag anywhere on the field (or slide the direction control) to set the standing wind; speed and gustiness sliders change streamer length, density feel and the gust readout live. "veer slowly" creeps the heading round; "live gusts" toggles between pulsing and steady flow. Rose, flag, HUD, Beaufort and cardinal all recompute together (throttled to ~4 Hz); the hour log appends every four seconds. Reduced motion draws one static frame of the field instead of the animation loop while the controls still update every readout.

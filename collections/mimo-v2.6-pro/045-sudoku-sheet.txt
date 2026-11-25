@@ -1,0 +1,17 @@
+TITLE: Sudoku Sheet — Nine-by-Nine Worksheet with Solver
+
+FULL PROMPT:
+Build a single self-contained HTML page, "Sudoku Sheet", with no external resources. Worksheet palette: warm off-white background, a white sheet card with a fine border, soft shadow and a 2px ruled masthead; grid lines in slate, selection blue, error red, given numbers in grey on a tinted background; header with kicker, thin/accent title and elapsed/errors counters. Stage: left the sheet — masthead with puzzle number and difficulty, a 9×9 board built as a CSS grid where every third cell carries a 2.5px box rule and each cell has an aspect-ratio square, plus a number pad (1–9, erase, pencil-marks toggle) under it; right rig: a session card (filled, errors, pencil marks, elapsed, check/reset/reveal/new-puzzle buttons, live message) and a five-point "how this sheet works" card.
+
+INTENDED DESIGN DESCRIPTION:
+It should read like a photocopied newspaper puzzle sheet on a kitchen table — heavy rules, generous margins, and numbers that look stamped rather than typed.
+
+MAJOR VISUAL TECHNIQUES:
+- Recursive backtracking solver that fills `solution` from the givens at load time
+- Candidate generator that scans row, column and 3×3 box at once via a used-set
+- Peer highlighting: computed set of row/column/box indices applied as tint classes on render
+- Corner pencil marks as a nested 3×3 span grid inside the cell, cleared on peers when a correct value lands
+- Cell reflow (void offsetWidth) to re-trigger the stamp keyframe without class juggling
+
+INTENDED INTERACTION MODEL:
+Click a cell then press 1–9 to fill, 0/Backspace to erase, arrows to walk the grid; N or the pencil button toggles pencil-mark mode so numbers write into the corners. CHECK marks every wrong entry red and increments the error counter; REVEAL ONE writes in a true value with the stamp animation; RESET wipes back to givens; NEW PUZZLE cycles three generated-valid grids with different difficulties. A timer runs from load and stops on a completed solve. Reduced motion disables the timer interval and all stamp animations while keeping every other interaction.

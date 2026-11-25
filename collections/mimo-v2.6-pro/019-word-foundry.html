@@ -1,0 +1,342 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>019 · Word Foundry</title>
+<style>
+:root{--ink:#1c1a17;--paper:#f4efe4;--paper2:#ece5d6;--line:#c9bfa9;--acc:#c8452f;
+  --teal:#1f6f6b;--mute:#8a7f6c}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{min-height:100vh;color:var(--ink);font-family:Georgia,"Times New Roman",serif;
+  background:
+   repeating-linear-gradient(0deg,rgba(0,0,0,.02) 0 2px,transparent 2px 5px),
+   radial-gradient(120% 90% at 50% 0%,#faf6ec,var(--paper) 55%,#e7dfcd);
+  padding:34px 20px 56px}
+.wrap{max-width:1120px;margin:0 auto}
+header{display:flex;justify-content:space-between;align-items:flex-end;gap:20px;flex-wrap:wrap;
+  border-bottom:3px double var(--line);padding-bottom:16px}
+.kicker{font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.44em;
+  text-transform:uppercase;color:var(--mute)}
+h1{margin:9px 0 0;font-size:clamp(34px,6vw,64px);font-weight:400;letter-spacing:-.01em}
+h1 b{font-weight:900;color:var(--acc)}
+.sub{margin:6px 0 0;font-style:italic;color:var(--mute);font-size:15px}
+.tools{display:flex;gap:9px;flex-wrap:wrap;font-family:"Segoe UI",system-ui,sans-serif}
+.pill{padding:9px 15px;border:1.5px solid var(--line);background:#fffaf0;border-radius:24px;
+  font:600 11px/1 "Segoe UI",system-ui,sans-serif;letter-spacing:.16em;text-transform:uppercase;
+  color:var(--ink);cursor:pointer;transition:.18s}
+.pill:hover{border-color:var(--acc);color:var(--acc);transform:translateY(-2px)}
+.pill.on{background:var(--acc);border-color:var(--acc);color:#fff7ee}
+
+.board{display:grid;grid-template-columns:minmax(0,1fr) 330px;gap:24px;margin-top:24px}
+.sheet{background:#fffdf7;border:1px solid var(--line);box-shadow:0 18px 40px rgba(60,50,30,.14);
+  padding:22px 22px 26px;border-radius:3px;position:relative}
+.sheet::before{content:"";position:absolute;inset:9px;border:1px solid var(--line);pointer-events:none}
+.sheet h2{margin:0 0 16px;font-family:"Segoe UI",system-ui,sans-serif;font-size:10.5px;
+  letter-spacing:.4em;text-transform:uppercase;color:var(--mute);text-align:center}
+.grid{display:grid;gap:2px;justify-content:center;touch-action:none}
+.cell{width:var(--cs,40px);height:var(--cs,40px);display:grid;place-items:center;
+  background:var(--paper2);border:1px solid transparent;border-radius:3px;cursor:pointer;
+  font:700 clamp(15px,2.4vw,20px)/1 Georgia,serif;text-transform:uppercase;
+  user-select:none;-webkit-user-select:none;transition:background .12s,color .12s}
+.cell:hover{background:#fff8e8}
+.cell.sel{background:#ffe9c2;color:#8a5a10}
+.cell.find{background:var(--teal);color:#eafff8;border-color:#175652}
+.cell.bad{background:#f7d9d2;color:var(--acc)}
+.cell.win{background:var(--acc);color:#fff2ec;animation:pop .5s ease}
+@keyframes pop{50%{transform:scale(1.16) rotate(-3deg)}}
+.stamp{position:absolute;right:18px;bottom:14px;font-family:"Segoe UI",system-ui,sans-serif;
+  font-size:9.5px;letter-spacing:.34em;text-transform:uppercase;color:var(--acc);
+  border:2px solid var(--acc);border-radius:4px;padding:5px 9px;transform:rotate(-9deg);
+  opacity:0;transition:.4s;pointer-events:none}
+.stamp.show{opacity:.92}
+
+.rail{display:flex;flex-direction:column;gap:16px}
+.card{background:#fffdf7;border:1px solid var(--line);border-radius:3px;padding:16px 17px;
+  box-shadow:0 8px 22px rgba(60,50,30,.10)}
+.card h3{margin:0 0 11px;font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;
+  letter-spacing:.36em;text-transform:uppercase;color:var(--mute)}
+.words{list-style:none;margin:0;padding:0;display:flex;flex-direction:column;gap:7px}
+.words li{display:flex;justify-content:space-between;gap:10px;align-items:center;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:14px;padding:7px 9px;
+  background:var(--paper);border:1px solid transparent;border-left:3px solid var(--line);
+  transition:.2s;letter-spacing:.04em}
+.words li span:last-child{font-size:9.5px;letter-spacing:.2em;text-transform:uppercase;
+  color:var(--mute)}
+.words li.found{border-left-color:var(--teal);background:#e9f3f1;color:var(--teal);text-decoration:line-through}
+.words li.found span:last-child{color:var(--teal)}
+.prog{margin-top:13px}
+.bar{height:9px;background:var(--paper2);border:1px solid var(--line);border-radius:9px;
+  overflow:hidden}
+.bar i{display:block;height:100%;width:0;
+  background:repeating-linear-gradient(45deg,var(--acc) 0 6px,#a83a27 6px 12px);
+  transition:width .45s ease}
+.prog .cap{display:flex;justify-content:space-between;margin-top:7px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.2em;
+  text-transform:uppercase;color:var(--mute)}
+.prog .cap b{color:var(--acc);font-variant-numeric:tabular-nums}
+.stats{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stx{border:1px solid var(--line);background:var(--paper);border-radius:3px;padding:10px 11px;
+  font-family:"Segoe UI",system-ui,sans-serif}
+.stx b{display:block;font-size:22px;font-weight:800;font-variant-numeric:tabular-nums}
+.stx span{font-size:9px;letter-spacing:.22em;text-transform:uppercase;color:var(--mute)}
+.note{font-size:14.5px;line-height:1.7;color:#5d5342;font-style:italic;margin:0}
+.foot{display:flex;justify-content:space-between;gap:14px;flex-wrap:wrap;margin-top:22px;
+  font-family:"Segoe UI",system-ui,sans-serif;font-size:10px;letter-spacing:.3em;
+  text-transform:uppercase;color:var(--mute)}
+@media(max-width:940px){.board{grid-template-columns:1fr}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <span class="kicker">Folio 019 · letter hunt</span>
+      <h1>Word <b>Foundry</b></h1>
+      <p class="sub">eight words struck into the plate — drag across them to lift them out</p>
+    </div>
+    <div class="tools">
+      <button class="pill on" id="bDrag" type="button">drag select</button>
+      <button class="pill" id="bPeek" type="button">reveal hint</button>
+      <button class="pill" id="bNew" type="button">new plate</button>
+    </div>
+  </header>
+
+  <div class="board">
+    <main class="sheet">
+      <h2>Plate № <span id="plateNo">0142</span> · twelve by twelve · set in Georgia</h2>
+      <div class="grid" id="grid" role="grid" aria-label="Word search grid"></div>
+      <span class="stamp" id="stamp">struck</span>
+    </main>
+
+    <aside class="rail">
+      <section class="card">
+        <h3>Commission</h3>
+        <ul class="words" id="words"></ul>
+        <div class="prog">
+          <div class="bar"><i id="barFill"></i></div>
+          <div class="cap"><span>recovered</span><b id="progTxt">0 / 8</b></div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>Press log</h3>
+        <div class="stats">
+          <div class="stx"><b id="sF">0</b><span>Found</span></div>
+          <div class="stx"><b id="sM">0</b><span>Misfires</span></div>
+        </div>
+        <p class="note" id="note" style="margin-top:12px">Drag from the first letter to the
+          last. Horizontal, vertical and diagonal runs all lock in.</p>
+      </section>
+    </aside>
+  </div>
+
+  <footer class="foot">
+    <span>Word foundry · grid generated in place, all eight words always placed</span>
+    <span>019 / 100</span>
+  </footer>
+</div>
+
+<script>
+(function(){
+  "use strict";
+  var N=12;
+  var DIRS=[[0,1],[1,0],[1,1],[1,-1]];
+  var BANK=["compositor","letterpress","galley","quoin","em dash","serif","ligature",
+            "kerning","pilcrow","italic","typo","proof","slur","brace","furniture",
+            "point","rule","sort","widow","plate","matrix","chase","leading","casing"];
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  var grid=document.getElementById("grid"), wordsEl=document.getElementById("words");
+  var plateNo=document.getElementById("plateNo"), stamp=document.getElementById("stamp");
+  var note=document.getElementById("note");
+
+  var cells=[], placed=[], found=[], misses=0, dragging=false, path=[];
+
+  function rand(a){ return Math.floor(Math.random()*a); }
+
+  function pickWords(){
+    var pool=BANK.slice(), out=[];
+    while(out.length<8 && pool.length){
+      var i=rand(pool.length), w=pool.splice(i,1)[0].replace(/\s+/g,"");
+      if(w.length<=N) out.push(w.toUpperCase());
+    }
+    return out;
+  }
+
+  function newPlate(){
+    placed=[]; found=[]; misses=0;
+    plateNo.textContent=String(100+rand(900));
+    var board=[];
+    for(var r=0;r<N;r++){ board.push(new Array(N).fill("")); }
+
+    var words=pickWords();
+    words.forEach(function(w){
+      for(var tries=0;tries<400;tries++){
+        var d=DIRS[rand(4)], r=rand(N), c=rand(N);
+        var er=r+d[0]*(w.length-1), ec=c+d[1]*(w.length-1);
+        if(er<0||er>=N||ec<0||ec>=N) continue;
+        var ok=true;
+        for(var k=0;k<w.length;k++){
+          var rr=r+d[0]*k, cc=c+d[1]*k;
+          var cell=board[rr][cc];
+          if(cell && cell!==w[k]){ ok=false; break; }
+        }
+        if(!ok) continue;
+        for(var k2=0;k2<w.length;k2++) board[r+d[0]*k2][c+d[1]*k2]=w[k2];
+        placed.push({w:w,r:r,c:c,dr:d[0],dc:d[1],n:w.length});
+        break;
+      }
+    });
+    /* fill the rest */
+    var A="ABCDEFGHIJKLMNOPQRSTUVWXYZ";
+    for(var r2=0;r2<N;r2++) for(var c2=0;c2<N;c2++)
+      if(!board[r2][c2]) board[r2][c2]=A[rand(26)];
+
+    renderGrid(board);
+    renderList();
+    update();
+    note.textContent = placed.length<8
+      ? "The press could only fit "+placed.length+" words into this plate — regenerating for more."
+      : "Drag from the first letter to the last. Horizontal, vertical and diagonal runs all lock in.";
+    stamp.classList.remove("show");
+    if(placed.length<8) setTimeout(newPlate,0);
+  }
+
+  function renderGrid(board){
+    grid.innerHTML="";
+    var size=Math.min(46, Math.max(26, Math.floor((Math.min(window.innerWidth-60,640))/N)-2));
+    grid.style.setProperty("--cs", size+"px");
+    grid.style.gridTemplateColumns="repeat("+N+", var(--cs))";
+    cells=[];
+    board.forEach(function(row,ri){
+      row.forEach(function(ch,ci){
+        var d=document.createElement("div");
+        d.className="cell"; d.textContent=ch;
+        d.dataset.r=ri; d.dataset.c=ci;
+        d.setAttribute("role","gridcell");
+        grid.appendChild(d);
+        cells.push(d);
+      });
+    });
+  }
+  function at(r,c){ return cells[r*N+c]; }
+
+  function clearSel(){ path.forEach(function(d){ d.classList.remove("sel"); }); path=[]; }
+
+  function segment(a,b){
+    /* straight line between two cells, or null when not axis-aligned */
+    var dr=b.r-a.r, dc=b.c-a.c;
+    if(dr===0 && dc===0) return [a];
+    if(!(dr===0||dc===0||Math.abs(dr)===Math.abs(dc))) return null;
+    var stepR=Math.sign(dr), stepC=Math.sign(dc), n=Math.max(Math.abs(dr),Math.abs(dc));
+    var out=[];
+    for(var i=0;i<=n;i++) out.push({r:a.r+stepR*i, c:a.c+stepC*i});
+    return out;
+  }
+
+  function select(a,b){
+    clearSel();
+    var line=segment(a,b);
+    if(!line) return;
+    line.forEach(function(p){ at(p.r,p.c).classList.add("sel"); path.push(at(p.r,p.c)); });
+  }
+
+  function commit(){
+    if(!path.length) return;
+    var s=path.map(function(d){ return d.textContent; }).join("");
+    var rev=s.split("").reverse().join("");
+    var hit=placed.filter(function(p){
+      return !found.includes(p.w) && (p.w===s||p.w===rev); })[0];
+    if(hit){
+      found.push(hit.w);
+      path.forEach(function(d){ d.classList.remove("sel"); d.classList.add("find"); });
+      renderList();
+      update();
+      note.textContent='Locked in “'+hit.w+'” at '+hit.n+' letters.';
+      if(found.length===placed.length){
+        stamp.classList.add("show");
+        cells.forEach(function(d){ d.classList.add("win"); });
+        note.textContent="Every word struck from this plate. A fresh one is one click away.";
+      }
+    }else{
+      var bad=path.slice();
+      path.forEach(function(d){ d.classList.add("bad"); });
+      misses++;
+      setTimeout(function(){
+        bad.forEach(function(d){ d.classList.remove("sel","bad"); });
+      }, reduce?0:380);
+    }
+    path=[];
+    update();
+  }
+
+  function renderList(){
+    wordsEl.innerHTML="";
+    placed.forEach(function(p){
+      var li=document.createElement("li");
+      if(found.includes(p.w)) li.className="found";
+      li.innerHTML="<span>"+p.w.toLowerCase()+"</span><span>"+p.n+"</span>";
+      wordsEl.appendChild(li);
+    });
+  }
+  function update(){
+    var total=placed.length;
+    document.getElementById("sF").textContent=found.length;
+    document.getElementById("sM").textContent=misses;
+    document.getElementById("progTxt").textContent=found.length+" / "+total;
+    document.getElementById("barFill").style.width=
+      (total? (found.length/total*100):0)+"%";
+  }
+
+  /* pointer input */
+  function cellFrom(ev){
+    var t=document.elementFromPoint(ev.clientX,ev.clientY);
+    if(t && t.classList && t.classList.contains("cell")) return t;
+    return null;
+  }
+  grid.addEventListener("pointerdown",function(ev){
+    var d=cellFrom(ev); if(!d) return;
+    dragging=true;
+    path=[d]; d.classList.add("sel");
+    ev.preventDefault();
+  });
+  grid.addEventListener("pointermove",function(ev){
+    if(!dragging) return;
+    var d=cellFrom(ev); if(!d) return;
+    if(path.indexOf(d)>=0) return;
+    var first={r:+path[0].dataset.r, c:+path[0].dataset.c};
+    var last={r:+path[path.length-1].dataset.r, c:+path[path.length-1].dataset.c};
+    select(first,{r:+d.dataset.r, c:+d.dataset.c});
+    if(!path.length){ path=[at(first.r,first.c)]; path[0].classList.add("sel"); }
+  });
+  window.addEventListener("pointerup",function(){
+    if(!dragging) return;
+    dragging=false;
+    commit();
+  });
+
+  document.getElementById("bNew").addEventListener("click",newPlate);
+  document.getElementById("bPeek").addEventListener("click",function(){
+    var next=placed.filter(function(p){ return found.indexOf(p.w)<0; })[0];
+    if(!next){ note.textContent="Nothing left to reveal — the plate is clear."; return; }
+    var cell=at(next.r,next.c);
+    cell.classList.add("sel");
+    note.textContent='First letter of “'+next.w.toLowerCase()+'” is flashing ('+
+      (next.r+1)+', '+(next.c+1)+').';
+    setTimeout(function(){ cell.classList.remove("sel"); }, reduce?0:900);
+  });
+  document.getElementById("bDrag").addEventListener("click",function(){
+    this.classList.toggle("on");
+    note.textContent=this.classList.contains("on")
+      ? "Drag selection armed."
+      : "Drag selection stowed — pointer events still map to a straight run.";
+  });
+
+  newPlate();
+})();
+</script>
+</body>
+</html>

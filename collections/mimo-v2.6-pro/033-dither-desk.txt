@@ -1,0 +1,18 @@
+TITLE: Dither Desk — One-Bit Halftone Reduction Bench
+
+FULL PROMPT:
+Create one self-contained HTML page, "Dither Desk", with zero external resources. Header with kicker, title (thin + accent bold), and a live clock. A two-column stage: left a board panel holding a 460×322 canvas that shows the greyscale source plate on the left of a draggable seam and the reduced one-bit version on the right, with two floating badges (source / dithered), a custom drag handle (accent line, circular ⇄ grabber) and a legend row reading grid, ink, algo. Right rig column of four cards: Source plate (chips: spheres, interference, type block, grey ramp), Reduction (chips: atkinson, floyd–s, bayer 4×4, threshold plus grain, level bias and posterise sliders), Readout (cells, compute ms, black ink %, error ×1000), and an About card explaining error diffusion. Sources are generated procedurally — max of five radial spheres, two-sinusoid + circular interference, text rendered to an offscreen canvas then luminance-sampled, and a vignetted grey ramp. The reducer runs Atkinson (six-way 1/8 spread), Floyd–Steinberg (7/16,3/16,5/16,1/16), a Bayer 4×4 threshold matrix, or a plain bias threshold, all with posterisation into N levels. Results are blitted at nearest-neighbour scale to the board. Pixelated rendering throughout.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a small print shop's bench: dark, quiet, one warm accent — a plate under a magnifier where you drag a seam to see what the reduction throws away.
+
+MAJOR VISUAL TECHNIQUES:
+- Per-pixel error diffusion on Float32Array buffers with posterisation levels
+- Offscreen canvas text sampling as an image source, then nearest-neighbour upscaling
+- Clipped side-by-side composite on one canvas with a draggable seam
+- image-rendering: pixelated for the 1-bit look; accent scan line drawn per compose
+- Chip-button groups with a single 'on' state driving a rebuild
+- Readouts computed in the same pass: cell count, ms, ink coverage, mean squared error
+
+INTENDED INTERACTION MODEL:
+Click a source plate or a reduction chip to rebuild instantly; grain (2–10 px) re-cuts the grid resolution, level nudges the exposure bias, posterise picks 2–6 tones. Drag the ⇄ seam — or click anywhere on the plate — to wipe between source and dithered versions. Live stats and legend update on every rebuild; the header clock ticks once a second. Reduced motion disables transitions only — the tool stays fully interactive.

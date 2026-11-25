@@ -1,0 +1,18 @@
+TITLE: Neon Terminal — Cyberpunk Operations Shell
+
+FULL PROMPT:
+Build a single self-contained HTML page called "Neon Terminal", styled as the operating shell of a night-city hacker rig, with all CSS and JavaScript inline and zero external resources. Use a near-black violet void (#050308) lit by neon magenta (#ff2e97), electric cyan (#00f0ff) and acid yellow (#f5f33c). Render a canvas of falling katakana and ASCII glyphs behind everything, a perspective floor grid receding into the horizon, CRT scanlines and a random flicker overlay. Set a huge uppercase glitch headline whose ::before and ::after copies shear apart in magenta and cyan on a timer. Below it, a two-column arrangement: a telemetry card with live jittering readouts and gradient progress meters, and a working terminal window with a boot sequence, a blinking prompt and a real command parser. Finish with a status bar of pulsing LEDs, a live clock, and an acid-yellow badge pinned to the corner.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like a CRT bolted into a rainy arcade — hostile, humming and alive, with every surface either glowing or in shadow. The layout is a top status rail, an oversized glitch wordmark with a tracked-out subtitle, then an asymmetric two-column body pairing system telemetry with an interactive shell. Monospace type carries everything so the page reads as machine output, while the neon accents are rationed to borders, meters and prompt characters so the black space does the heavy lifting.
+
+MAJOR VISUAL TECHNIQUES:
+- Canvas data-rain with per-column fall speed, bright-head characters and a trailing fade rect
+- CSS perspective-transformed animated floor grid with a mask fade
+- Scanline and CRT flicker overlays using repeating gradients and stepped keyframes
+- Dual pseudo-element glitch typography with inset clip-paths and offset translations
+- Gradient meters animated from a CSS custom property, staggered LED pulses
+- Live jittered telemetry values and a real-time clock via setInterval
+
+INTENDED INTERACTION MODEL:
+The user types into the terminal input; Enter echoes the prompt line and dispatches commands (help, status, scan, whoami, clear), with 'scan' streaming nine progressive result lines. Clicking anywhere in the output focuses the input. The data rain, flicker and grid animate continuously in the background; hovering a card wipes a magenta-to-cyan rule across its top edge. Everything animation-driven is disabled under prefers-reduced-motion, and the columns stack to one column below 880px.

@@ -1,0 +1,18 @@
+TITLE: Lift Directory — Call the Car at Marlowe House
+
+FULL PROMPT:
+Build exactly one self-contained HTML page, "Lift Directory", no external resources. A dark lobby palette (charcoal green panels, brass accent, warm lamp glow) with header: kicker, thin/accent title, right-aligned live status reading "car idle at G" / "car ascending to 9". Two-column stage. Left rail: a Directory card with 12 scrollable rows (floor id in brass, tenant name, category tag), a Tenant card (category, serif name, description, hours, brass "Send lift" + "To lobby" buttons) and a Trip log card with four stats (trips, top floor, door cycles, last run) over a monospace log of the last six runs with timestamps. Right: the tower — a narrow lift shaft column beside twelve stacked floor rows. Each floor row: absolute floor number left, tenant name, three warm window lights right; dim floors lose their glow; hovering nudges the row 4px right. Inside the shaft, a brass-bordered car built from a glow panel plus two sliding door halves (transform: translateX on open) that travels with a transition whose duration scales with floor distance. Floor rows and directory rows both select a floor and call the car.
+
+INTENDED DESIGN DESCRIPTION:
+The page should feel like the brass panel by a 1970s lift: quiet, expensive, mechanical — you press a floor and the whole building answers in sequence.
+
+MAJOR VISUAL TECHNIQUES:
+- Car positioned from the destination row's offsetTop so layout drives the animation, with a transitionless re-sync on resize
+- Two-door open/close using translateX on absolute halves plus an interior glow that fades in while moving
+- Duration computed from floor distance (330 ms per floor, clamped) so long runs read as long runs
+- Selection state mirrored across the directory list and the tower rows in one paint pass
+- Live trip log and counters (trips, top floor, door cycles, last run seconds) fed by a single state machine
+- prefers-reduced-motion collapses travel to near-zero while keeping the whole state machine intact
+
+INTENDED INTERACTION MODEL:
+Click any tower row or directory entry to dispatch the car: it glides, updates status text ("ascending to 9"), opens its doors on arrival, lights that floor and loads the tenant card. Doors close themselves after 1.7 s. "Send lift" re-opens the doors at the current floor (a lobby-style refresh), "To lobby" returns to G. Every trip and door cycle is counted and logged; reduced motion jumps the car instead of gliding.

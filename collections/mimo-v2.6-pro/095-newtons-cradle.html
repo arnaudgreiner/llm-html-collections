@@ -1,0 +1,215 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content=device-width,initial-scale=1">
+<title>Newton's Cradle — Conservation, Repeated</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{min-height:100vh;background:#0d1014;color:#c2c8d2;font-family:ui-monospace,Menlo,Consolas,monospace;display:flex;flex-direction:column;align-items:center;gap:14px;padding:24px 14px}
+h1{font-size:12px;letter-spacing:.4em;color:#9fd0e8;text-transform:uppercase}
+h1 i{font-style:normal;color:#e8b04c}
+#rig{background:#141922;border:1px solid #242c3a;border-radius:12px;padding:15px}
+canvas{display:block;border-radius:8px;box-shadow:0 10px 36px rgba(0,0,0,.55);cursor:grab;touch-action:none}
+canvas:active{cursor:grabbing}
+.bar{display:flex;gap:7px;flex-wrap:wrap;align-items:center;justify-content:center;max-width:760px}
+button{background:#1a2029;border:1px solid #303a4b;color:#c9d1de;font:inherit;font-size:9.5px;padding:8px 13px;border-radius:7px;cursor:pointer;letter-spacing:.14em;transition:.15s}
+button:hover{border-color:#9fd0e8;color:#eaf7ff}
+.stat{font-size:9.5px;letter-spacing:.14em;color:#767e8f}
+.stat b{color:#9fd0e8}
+.hint{font-size:9.5px;letter-spacing:.13em;color:#575f6f;text-align:center;max-width:750px;line-height:1.9}
+</style>
+</head>
+<body>
+<h1>Newton's Cradle <i>M95</i> · conservation, repeated</h1>
+<div id="rig"><canvas id="cv" width="760" height="520"></canvas></div>
+<div class="bar">
+  <button id="bLeft">↰ PULL LEFT</button>
+  <button id="bL1">LIFT ONE</button>
+  <button id="bL2">LIFT TWO</button>
+  <button id="bL3">LIFT THREE</button>
+  <button id="bStop">■ STOP ALL</button>
+  <span class="stat">strikes <b id="mS">0</b> · energy <b id="mE">0</b>% · ball <b id="mB">—</b></span>
+</div>
+<div class="hint">five polished bobs on strings trade momentum one collision at a time — drag any bob and let go, or lift a whole side · equal masses exchange velocities exactly, so what enters on the left must leave on the right</div>
+<script>
+(function(){
+"use strict";
+var cv=document.getElementById("cv"),ax=cv.getContext("2d");
+var W=760,H=520;
+var N=5,R=34,L=270,BEAM_Y=70;
+var PIV0=W/2-((N-1)*R*2)/2;
+var G=9.8;
+var th=[],om=[],strikes=0;
+for(var i=0;i<N;i++){th.push(0);om.push(0);}
+function pivot(i){return PIV0+i*R*2;}
+function bx(i){return pivot(i)+L*Math.sin(th[i]);}
+function by(i){return BEAM_Y+L*Math.cos(th[i]);}
+function vx(i){return L*Math.cos(th[i])*om[i];}
+var drag=-1,dragPrev=0,dragV=0,hover=-1;
+function lift(n,side){ // side +1 = right raised, -1 = left raised
+  for(var i=0;i<N;i++){th[i]=0;om[i]=0;}
+  for(var k=0;k<n;k++){
+    var idx=side>0?N-1-k:k;
+    th[idx]=side>0?1.05:-1.05;
+  }
+}
+document.getElementById("bLeft").addEventListener("click",function(){lift(1,-1);});
+document.getElementById("bL1").addEventListener("click",function(){lift(1,1);});
+document.getElementById("bL2").addEventListener("click",function(){lift(2,1);});
+document.getElementById("bL3").addEventListener("click",function(){lift(3,1);});
+document.getElementById("bStop").addEventListener("click",function(){
+  for(var i=0;i<N;i++){om[i]=0;th[i]=0;}
+});
+function ppos(e){
+  var r=cv.getBoundingClientRect();
+  return [(e.clientX-r.left)*W/r.width,(e.clientY-r.top)*H/r.height];
+}
+cv.addEventListener("pointerdown",function(e){
+  var q=ppos(e),best=-1,bd=1e9;
+  for(var i=0;i<N;i++){
+    var d=Math.hypot(q[0]-bx(i),q[1]-by(i));
+    if(d<R+14&&d<bd){bd=d;best=i;}
+  }
+  if(best>=0){
+    drag=best;dragPrev=th[best];dragV=0;
+    cv.setPointerCapture(e.pointerId);
+  }
+});
+cv.addEventListener("pointermove",function(e){
+  var q=ppos(e);
+  if(drag>=0){
+    var ang=Math.atan2(q[0]-pivot(drag),Math.max(20,q[1]-BEAM_Y));
+    ang=Math.max(-1.35,Math.min(1.35,ang));
+    dragV=dragV*0.6+(ang-dragPrev)*0.4;
+    dragPrev=ang;
+    th[drag]=ang;om[drag]=0;
+    return;
+  }
+  hover=-1;
+  for(var i=0;i<N;i++){
+    if(Math.hypot(q[0]-bx(i),q[1]-by(i))<R+14){hover=i;break;}
+  }
+});
+cv.addEventListener("pointerup",function(){
+  if(drag>=0){
+    om[drag]=Math.max(-6,Math.min(6,dragV*22));
+    drag=-1;
+  }
+});
+function phys(dt){
+  var h=Math.min(0.028,dt/1000);
+  for(var i=0;i<N;i++){
+    if(i===drag)continue;
+    var a=-(G/L)*Math.sin(th[i]);
+    om[i]=(om[i]+a*h)*0.9993;
+    th[i]+=om[i]*h;
+  }
+  // collisions: several passes to propagate the chain
+  for(var pass=0;pass<6;pass++){
+    for(var j=0;j<N-1;j++){
+      if(j===drag&&j+1===drag)continue;
+      var sep=(bx(j+1)-bx(j));
+      var contact=sep<2*R-0.02;
+      if(!contact)continue;
+      var vi=(j===drag)?om[j]*L*Math.cos(th[j]):vx(j);
+      var vj=(j+1===drag)?om[j+1]*L*Math.cos(th[j+1]):vx(j+1);
+      if(vj-vi<0){ // approaching → exchange velocities (equal masses)
+        var si=Math.cos(th[j])!==0?vi/(L*Math.cos(th[j])):0;
+        var sj=Math.cos(th[j+1])!==0?vj/(L*Math.cos(th[j+1])):0;
+        if(j!==drag)om[j]=sj;
+        if(j+1!==drag)om[j+1]=si;
+        if(Math.abs(vi)>0.6)strikes++;
+      }
+      // positional correction
+      var overlap=2*R-sep;
+      if(overlap>0){
+        var cj=Math.max(0.25,Math.cos(th[j])),ck=Math.max(0.25,Math.cos(th[j+1]));
+        var corr=overlap/2;
+        if(j!==drag)th[j]-=corr/(L*cj);
+        if(j+1!==drag)th[j+1]+=corr/(L*ck);
+      }
+    }
+  }
+}
+function energy(){
+  var e=0;
+  for(var i=0;i<N;i++)e+=0.5*om[i]*om[i];
+  return e;
+}
+function render(){
+  ax.fillStyle="#0d1014";ax.fillRect(0,0,W,H);
+  // floor
+  ax.strokeStyle="#242c3a";ax.lineWidth=2;
+  ax.beginPath();ax.moveTo(60,442);ax.lineTo(W-60,442);ax.stroke();
+  // legs + beam
+  ax.fillStyle="#39445a";
+  ax.fillRect(120,BEAM_Y-16,W-240,14);
+  ax.fillRect(132,BEAM_Y-2,10,300);
+  ax.fillRect(W-142,BEAM_Y-2,10,300);
+  ax.fillStyle="rgba(255,255,255,.08)";
+  ax.fillRect(120,BEAM_Y-16,W-240,4);
+  // strings + balls
+  for(var i=0;i<N;i++){
+    var x=bx(i),y=by(i);
+    ax.strokeStyle="rgba(200,214,230,.55)";
+    ax.lineWidth=1.4;
+    ax.beginPath();
+    ax.moveTo(pivot(i)-6,BEAM_Y-2);
+    ax.lineTo(x-R*0.34,y);
+    ax.moveTo(pivot(i)+6,BEAM_Y-2);
+    ax.lineTo(x+R*0.34,y);
+    ax.stroke();
+  }
+  // shadow
+  ax.fillStyle="rgba(0,0,0,.45)";
+  for(var s=0;s<N;s++){
+    var xs=bx(s);
+    ax.beginPath();
+    ax.ellipse(xs,440,R*0.9,R*0.24,0,0,6.2832);
+    ax.fill();
+  }
+  for(var k=0;k<N;k++){
+    var x2=bx(k),y2=by(k);
+    var g=ax.createRadialGradient(x2-R*0.4,y2-R*0.45,R*0.15,x2,y2,R);
+    g.addColorStop(0,"#f4f8fc");
+    g.addColorStop(0.4,"#aebccb");
+    g.addColorStop(0.75,"#5b6878");
+    g.addColorStop(1,"#2a3140");
+    ax.fillStyle=g;
+    ax.beginPath();ax.arc(x2,y2,R,0,6.2832);ax.fill();
+    if(k===hover||k===drag){
+      ax.strokeStyle=k===drag?"#e8b04c":"rgba(159,208,232,.9)";
+      ax.lineWidth=2;
+      ax.beginPath();ax.arc(x2,y2,R+5,0,6.2832);ax.stroke();
+    }
+    // specular streak
+    ax.strokeStyle="rgba(255,255,255,.5)";
+    ax.lineWidth=2;
+    ax.beginPath();ax.arc(x2,y2,R*0.62,3.6,4.6);ax.stroke();
+  }
+  // pivot pins
+  ax.fillStyle="#9fd0e8";
+  for(var p=0;p<N;p++){
+    ax.beginPath();ax.arc(pivot(p),BEAM_Y-9,3,0,6.2832);ax.fill();
+  }
+}
+var last=performance.now(),mAcc=0;
+function loop(now){
+  var dt=now-last;last=now;
+  phys(dt);
+  render();
+  mAcc+=dt;
+  if(mAcc>300){
+    mAcc=0;
+    document.getElementById("mS").textContent=strikes;
+    document.getElementById("mE").textContent=Math.min(100,Math.round(energy()*18));
+    document.getElementById("mB").textContent=drag>=0?("BOB "+(drag+1)+" held"):(hover>=0?("BOB "+(hover+1)):"—");
+  }
+  requestAnimationFrame(loop);
+}
+requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>

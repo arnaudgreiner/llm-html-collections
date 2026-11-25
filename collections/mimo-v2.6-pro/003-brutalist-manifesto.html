@@ -1,0 +1,186 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>003 · Brutalist Manifesto</title>
+<style>
+:root{--paper:#f4f1e6;--ink:#0b0b0b;--red:#ff2d16;--blue:#1a3cff;--yellow:#ffe500}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{background:var(--paper);color:var(--ink);font-family:Arial,Helvetica,sans-serif;
+  cursor:crosshair;overflow-x:hidden}
+body::before{content:"";position:fixed;inset:0;pointer-events:none;z-index:3;opacity:.5;
+  background:repeating-linear-gradient(45deg,rgba(0,0,0,.035) 0 2px,transparent 2px 7px)}
+/* ticker */
+.ticker{position:relative;z-index:5;background:var(--ink);color:var(--paper);overflow:hidden;
+  border-bottom:4px solid var(--ink);white-space:nowrap;padding:10px 0}
+.ticker div{display:inline-block;animation:slide 22s linear infinite;font-weight:900;
+  letter-spacing:.06em;font-size:15px;text-transform:uppercase}
+.ticker span{color:var(--yellow);margin:0 22px}
+@keyframes slide{to{transform:translateX(-50%)}}
+header.mast{border-bottom:6px solid var(--ink);padding:14px 20px;display:flex;justify-content:space-between;
+  align-items:flex-end;gap:16px;flex-wrap:wrap;position:relative;z-index:5;background:var(--paper)}
+.mast h1{margin:0;font-size:clamp(46px,11vw,150px);line-height:.8;letter-spacing:-.06em;
+  text-transform:uppercase;font-weight:900}
+.mast h1 em{font-style:normal;color:var(--red);-webkit-text-stroke:2px var(--ink)}
+.mast .meta{font-family:"Courier New",monospace;font-size:12px;text-align:right;line-height:1.7;
+  text-transform:uppercase;letter-spacing:.1em}
+.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:0;position:relative;z-index:4}
+.cell{border-right:3px solid var(--ink);border-bottom:3px solid var(--ink);padding:22px;min-height:170px;
+  position:relative;transition:background .18s,color .18s,transform .18s}
+.cell:hover{background:var(--ink);color:var(--paper);transform:translate(-4px,-4px);
+  box-shadow:8px 8px 0 var(--red)}
+.cell h3{margin:0 0 10px;font-size:clamp(20px,2.4vw,30px);text-transform:uppercase;letter-spacing:-.02em}
+.cell p{margin:0;font-size:14px;line-height:1.6;font-family:"Courier New",monospace}
+.cell .idx{position:absolute;right:10px;top:6px;font-size:64px;font-weight:900;opacity:.14}
+.s6{grid-column:span 6}.s4{grid-column:span 4}.s3{grid-column:span 3}.s8{grid-column:span 8}
+.s12{grid-column:span 12}
+.red{background:var(--red);color:#fff}
+.blue{background:var(--blue);color:#fff}
+.yellow{background:var(--yellow)}
+.black{background:var(--ink);color:var(--paper)}
+.cell.red:hover,.cell.blue:hover,.cell.black:hover{background:var(--paper);color:var(--ink);
+  box-shadow:8px 8px 0 var(--ink)}
+.cell.yellow:hover{background:var(--ink);color:var(--yellow)}
+.rule{font-size:clamp(30px,5vw,72px);font-weight:900;text-transform:uppercase;line-height:.95;
+  letter-spacing:-.04em;margin:0}
+.rule u{text-decoration:none;background:var(--ink);color:var(--paper);padding:0 .12em;
+  display:inline-block;transform:rotate(-1.2deg)}
+.sticker{position:absolute;right:16px;bottom:14px;background:var(--paper);color:var(--ink);
+  border:3px solid var(--ink);padding:6px 12px;font-weight:900;font-size:12px;letter-spacing:.14em;
+  text-transform:uppercase;transform:rotate(-6deg);box-shadow:4px 4px 0 var(--ink)}
+.marq2{background:var(--yellow);border-bottom:4px solid var(--ink);overflow:hidden;white-space:nowrap;
+  padding:12px 0;position:relative;z-index:4}
+.marq2 div{display:inline-block;animation:slide 16s linear infinite reverse;font-weight:900;
+  font-size:26px;text-transform:uppercase;letter-spacing:-.01em}
+.marq2 i{font-style:normal;margin:0 26px;color:var(--blue)}
+footer{padding:34px 20px 60px;position:relative;z-index:4;display:flex;justify-content:space-between;
+  gap:20px;flex-wrap:wrap;align-items:center;border-top:6px solid var(--ink)}
+.btnx{font:inherit;font-weight:900;text-transform:uppercase;letter-spacing:.1em;font-size:14px;
+  background:var(--ink);color:var(--paper);border:3px solid var(--ink);padding:16px 30px;cursor:pointer;
+  box-shadow:7px 7px 0 var(--red);transition:.15s}
+.btnx:hover{transform:translate(4px,4px);box-shadow:2px 2px 0 var(--red);background:var(--red);
+  border-color:var(--red);color:#fff}
+.btnx:active{transform:translate(7px,7px);box-shadow:0 0 0 var(--red)}
+.cross{position:fixed;width:26px;height:26px;pointer-events:none;z-index:99;mix-blend-mode:difference;
+  transition:transform .08s linear}
+.cross::before,.cross::after{content:"";position:absolute;background:#fff}
+.cross::before{left:12px;top:0;width:2px;height:26px}
+.cross::after{top:12px;left:0;height:2px;width:26px}
+@media(max-width:820px){.s6,.s4,.s3,.s8{grid-column:span 12}.cell{min-height:130px}}
+@media(prefers-reduced-motion:reduce){*{animation:none!important;transition:none!important}}
+</style>
+</head>
+<body>
+<div class="ticker" aria-hidden="true"><div>
+  NO ROUNDED CORNERS <span>★</span> NO SHADOWS WITHOUT WEIGHT <span>★</span> GRID IS LAW <span>★</span>
+  FUNCTION DICTATES FORM <span>★</span> NO ROUNDED CORNERS <span>★</span> NO SHADOWS WITHOUT WEIGHT <span>★</span>
+  GRID IS LAW <span>★</span> FUNCTION DICTATES FORM <span>★</span>
+</div></div>
+
+<header class="mast">
+  <h1>MANI<br><em>FESTO</em></h1>
+  <div class="meta">
+    DOCUMENT 003 / 100<br>
+    SET IN GROTESK &amp; MONO<br>
+    ISSUED WITHOUT PERMISSION<br>
+    <b id="stamp">REVISION —</b>
+  </div>
+</header>
+
+<div class="marq2" aria-hidden="true"><div>
+  FORM <i>/</i> FRICTION <i>/</i> WEIGHT <i>/</i> HONESTY <i>/</i> FORM <i>/</i> FRICTION <i>/</i>
+  WEIGHT <i>/</i> HONESTY <i>/</i> FORM <i>/</i> FRICTION <i>/</i> WEIGHT <i>/</i> HONESTY <i>/</i>
+</div></div>
+
+<main class="grid" id="grid">
+  <section class="cell s8 yellow"><span class="idx">01</span>
+    <h3>Reject the smooth</h3>
+    <p>Every edge declares its existence. We do not hide the seam, the border, the division between one
+    thing and the next — we make it three pixels thick and we let it hold the page together.</p>
+    <span class="sticker">RULE ONE</span>
+  </section>
+  <section class="cell s4 black"><span class="idx">02</span>
+    <h3>Type is structure</h3>
+    <p>Letters are not decoration. At 150px they become architecture; at 11px they become data.</p>
+  </section>
+  <section class="cell s3 red"><span class="idx">03</span>
+    <h3>Colour with force</h3>
+    <p>Three primaries. No tints. No gradients. Opacity is a compromise we refuse to make.</p>
+  </section>
+  <section class="cell s3"><span class="idx">04</span>
+    <h3>The grid shows</h3>
+    <p>Columns are drawn, not implied. Twelve tracks, no exceptions, no mercy for the content.</p>
+  </section>
+  <section class="cell s6 blue"><span class="idx">05</span>
+    <p class="rule" style="font-size:clamp(26px,3.6vw,52px)">WEIGHT IS <u>HONEST</u>.<br>BLUR IS A LIE.</p>
+  </section>
+  <section class="cell s4"><span class="idx">06</span>
+    <h3>Motion, not charm</h3>
+    <p>Movement exists to inform: a ticker reports, a hover inverts, a button presses. Nothing floats.</p>
+  </section>
+  <section class="cell s4 yellow"><span class="idx">07</span>
+    <h3>Content over comfort</h3>
+    <p>Whitespace is rationed like ink. If a region is empty, it is because the grid demanded it.</p>
+    <span class="sticker">RULE SEVEN</span>
+  </section>
+  <section class="cell s4 black"><span class="idx">08</span>
+    <h3>Ship it raw</h3>
+    <p>No polish pass. What you see is the artefact: markup, border, ink and nerve.</p>
+  </section>
+  <section class="cell s12 red">
+    <p class="rule">CLICK ANY BLOCK TO <u>RESHUFFLE</u> THE COMPOSITION</p>
+  </section>
+</main>
+
+<footer>
+  <div style="font-family:'Courier New',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase">
+    END OF DOCUMENT · HOVER TO INVERT · CLICK TO RECOMPOSE
+  </div>
+  <button class="btnx" id="shuffle">Shuffle layout</button>
+</footer>
+
+<div class="cross" id="cross" aria-hidden="true"></div>
+
+<script>
+(function(){
+  "use strict";
+  var reduce=window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* crosshair cursor */
+  var cross=document.getElementById("cross");
+  document.addEventListener("pointermove",function(e){
+    cross.style.transform="translate("+(e.clientX-13)+"px,"+(e.clientY-13)+"px)";
+  },{passive:true});
+
+  /* revision stamp */
+  document.getElementById("stamp").textContent="REVISION "+new Date().toISOString().slice(0,10);
+
+  /* reshuffle: each cell gets a new span + rotation-free colour assignment */
+  var grid=document.getElementById("grid");
+  var cells=Array.prototype.slice.call(grid.querySelectorAll(".cell"));
+  var spans=[3,4,6,8,12];
+  var tints=["","red","blue","yellow","black"];
+  function shuffle(){
+    var order=cells.slice();
+    for(var i=order.length-1;i>0;i--){
+      var j=(Math.random()*(i+1))|0, t=order[i]; order[i]=order[j]; order[j]=t;
+    }
+    order.forEach(function(c,i){
+      grid.appendChild(c);
+      var s=spans[(Math.random()*spans.length)|0];
+      c.className=c.className.replace(/\bs\d+\b/,"s"+s);
+      tints.forEach(function(t){ c.classList.remove(t); });
+      var tint=tints[(Math.random()*tints.length)|0];
+      if(tint) c.classList.add(tint);
+      c.animate?c.animate([{opacity:.2,transform:"translateY(14px)"},{opacity:1,transform:"none"}],
+        {duration:reduce?1:340,delay:reduce?0:i*40,easing:"cubic-bezier(.2,.9,.2,1)"}):null;
+    });
+  }
+  document.getElementById("shuffle").addEventListener("click",shuffle);
+  cells.forEach(function(c){ c.addEventListener("click",function(){ shuffle(); }); });
+})();
+</script>
+</body>
+</html>

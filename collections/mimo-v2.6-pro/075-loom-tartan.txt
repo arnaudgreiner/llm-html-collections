@@ -1,0 +1,17 @@
+TITLE: Loom Hall — Tartan Weave Bench
+
+FULL PROMPT:
+Create a self-contained, single-file interactive page titled "Loom Hall: Tartan Weave Bench". Render a 640×640 tartan cloth on canvas by true interlace logic: horizontal weft stripes drawn first as cylinder-gradient threads with fibre hairlines, then vertical warp segments stamped only on cells where the warp floats on top — for plain 1/1, 2/2 twill, herringbone (direction mirrored past mid-cloth) and 5-end sateen drafts. Each crossing gets edge shadows so the over-under reads physically; a radial vignette and hairline selvedge frame the cloth; optional fringed weft ends wobble out of both edges with deterministic randomness. A 74 px loupe follows the cursor at 3.4× magnification with crosshair ticks and an end/pick readout naming which yarn is over. Controls: four weave drafts, four tartan palettes rendered as swatch gradients (Highland, Indigo, Mono, Ember), sliders for sett (16–64 ends/inch), band scale and float gloss, a fringe toggle, a SHUTTLE button that permutes the stripe order, and a ½ TURN that swaps warp/weft colour assignment. Everything inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A weaver's bench: oiled-dark workshop chrome around one luminous square of cloth; the cloth is the only saturated thing on screen. The craft is honest structure — nothing is painted "to look woven", every visible segment is placed by the interlace rule, so changing the draft changes the fabric's geometry, not a texture.
+
+MAJOR VISUAL TECHNIQUES:
+- Interlace-driven painter's order: weft pass, then conditional warp segments per cell
+- Per-column cached thread gradients (dark→light cylinder) reused across rows
+- Symmetric mirrored band indexing for tartan sett repeats
+- Loupe via clipped drawImage crop scaled 3.4× from an offscreen cloth buffer
+- Deterministic sine-hash fringe wobble; gloss slider lifting float highlight lines
+
+INTENDED INTERACTION MODEL:
+Pick a draft and palette, drag sett/band/gloss sliders to re-weave live, shuffle the stripe order, flip the cloth half a turn, and sweep the cursor over the cloth to inspect any crossing through the loupe with its end/pick coordinates.

@@ -1,0 +1,17 @@
+TITLE: Enigma — Field Cipher Machine
+
+FULL PROMPT:
+Build a self-contained interactive page titled "Enigma: Field Cipher Machine" — a working rotor cipher on canvas. Implement three stepping rotors (I/II/III wirings, notches Q/E/V), reflectors B and C, ring settings 1–26, plugboard pairs, and M4 mode adding a non-stepping thin rotor (β/γ) between rotor I and the reflector. Signal path: plug → rotor III → II → I → (thin) → reflector → (thin) → I → II → III → plug, each rotor stage x↦(W[x+p−g]−p+g) mod 26 with inverse wiring for the return leg. Stepping before each key: right rotor advances; if it sat on its notch the middle advances too, and if the middle sat on its notch the left advances (historical double-step). Draw: bakelite case with brass rivets, 26-lamp board with amber afterglow on the output lamp, ivory rotor windows with neighbour-letter hints and notch flags, engraved ring badges, plugboard with colored bezier cables, IN/OUT ticker, keypress/turnover telemetry. Interaction: real keyboard input (A–Z, Backspace), tap lamps to type, click rotor windows/rings, click plugs to pair, buttons for mode/reflector/thin/random keys/random plugs/reset. All inline, no external resources.
+
+INTENDED DESIGN DESCRIPTION:
+A dark bakelite cipher box that actually encrypts — letters you type roll through three visible rotors, the lampboard flashes the scrambled output, and the notch flag warns you the next keypress will drag two rotors at once.
+
+MAJOR VISUAL TECHNIQUES:
+- True Enigma wiring math with ring offsets and inverse paths
+- Notch/double-step mechanics surfaced as a live "NOTCH ARMED" indicator
+- Amber lamp afterglow keyed to the last ciphertext letter
+- Bezier plugboard cables colored per pair
+- Brass-riveted bakelite cards with ivory window plates
+
+INTENDED INTERACTION MODEL:
+Type (keyboard or lamp taps) to encrypt; click windows to step rotors, ring badges to set rings, labels to swap rotor order, plug letters to pair/unpair; mode and randomize buttons reconfigure the machine live.

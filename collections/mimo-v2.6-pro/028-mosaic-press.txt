@@ -1,0 +1,18 @@
+TITLE: Mosaic Press — 32×32 Pixel Canvas Editor
+
+FULL PROMPT:
+Create exactly one self-contained HTML page, "Mosaic Press", with no external resources. Dark slate body, header with kicker, light/heavy title, a right-aligned "8 inks" counter. A tools bar holds eight square colour swatches (amber, rose, cyan, jade, violet, sand, ink, paper) with white selection ring, four tool buttons (Draw / Erase / Fill / Pick) where the active one is solid amber, a grid on/off state and toggle, and hairline separators. Centrepiece: a 512×512 <canvas> with image-rendering:pixelated and crosshair cursor, drawn from a 32×32 offscreen buffer upscaled with smoothing disabled, overlaid by a faint 32-line grid plus heavier guides every 8 cells. Under it a four-field readout (tool / ink / cell coordinate under pointer / percentage filled), an action row (Download PNG accent button, Mirror, Clear plate, Undo), dashed pill stamp buttons (Smiley, Heart, Ship, Sun) that stamp a random motif at a random position, and a two-part uppercase footer. Seed the plate with a 520-sample radial noise burst and a bottom rule so it is never blank.
+
+INTENDED DESIGN DESCRIPTION:
+A stationer's pixel plate: a dark machined workbench, one bright artwork surface, controls reduced to swatches and small tracked labels.
+
+MAJOR VISUAL TECHNIQUES:
+- Dual-canvas approach: N×N logical buffer → display canvas with imageSmoothingEnabled=false
+- Flood fill with an explicit stack over the grid array (index = y*N+x)
+- Pointer events with setPointerCapture so drags survive leaving the canvas
+- Undo history as an array of array slices (40 deep)
+- Grid rendering drawn in two passes: hairlines every cell, stronger guides every 8
+- PNG export re-rendered grid-free at 32px then Nearest-Neighbour upscaled to 256px via toDataURL
+
+INTENDED INTERACTION MODEL:
+Choose an ink, choose a tool, then press and drag to paint or erase; Fill floods a region; Pick samples the pixel and switches back to Draw. Pointer cell coordinates and fill percentage update live. Mirror flips the plate horizontally, Undo steps back, Clear empties it, Download PNG saves a grid-free upscale, and the stamp pills drop seeded motifs. Grid can be toggled for a clean preview. Reduced motion removes transitions; pointer/touch both work.
